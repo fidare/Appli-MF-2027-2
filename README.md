@@ -1,4 +1,27 @@
-# Mini-sondage — 2 questions, réponses stockées en base
+# Appli MF 2027 — Pronostics Miss France & mini-sondage
+
+## Application principale : `site/miss/` — Les Pronostics Miss France 2027
+
+Jeu de pronostics entre amis sur l'élection de Miss France, hébergé sur
+GitHub Pages (`/miss/`) avec une base **Supabase**.
+
+- `miss-france.sql` : script complet (tables, sécurité, fonctions, calcul
+  des scores en cascade) à coller dans Supabase → *SQL Editor* → Run.
+  Réexécutable sans risque.
+- Identification : chaque joueur clique sur sa photo d'enfance puis tape
+  son **PIN à 4 chiffres**. Les PIN sont visibles par l'organisateur
+  (page « Régie » de l'appli, ou Table Editor → `mf_joueurs`) mais
+  jamais exposés par l'API publique.
+- Déroulé piloté par l'organisateur (page « Régie ») en phases :
+  sélection des 15 → choix des 5 → ordre final → essais Miss France →
+  clôture (élection en direct) → résultats.
+- Le soir de l'élection, l'organisateur coche « Top 15 » et les rangs
+  1 à 5 des Miss : tous les scores, graphiques et classements se
+  recalculent instantanément chez tous les joueurs.
+- Candidates et photos : Table Editor → `mf_candidates`, images dans
+  Supabase Storage (bucket public `photos`).
+
+## Mini-sondage — 2 questions, réponses stockées en base
 
 Application de sondage à partager à 3 personnes.
 
