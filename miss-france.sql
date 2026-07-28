@@ -127,7 +127,7 @@ $$;
 
 -- Profil du joueur connecté (fige = dossier scellé pour la phase en cours).
 drop function if exists public.mf_mon_profil(uuid);
-create function public.mf_mon_profil(p_jeton uuid)
+create or replace function public.mf_mon_profil(p_jeton uuid)
 returns table (pseudo text, nom_affiche text, photo_url text, est_admin boolean, points_qcm numeric, fige boolean)
 language sql
 security definer set search_path = public
@@ -141,7 +141,7 @@ $$;
 
 -- Mes pronostics.
 drop function if exists public.mf_mes_pronostics(uuid);
-create function public.mf_mes_pronostics(p_jeton uuid)
+create or replace function public.mf_mes_pronostics(p_jeton uuid)
 returns table (candidate_id bigint, statut text, top5 boolean, rang int, essai int)
 language sql
 security definer set search_path = public
@@ -375,7 +375,7 @@ $$;
 
 -- Où en sont les autres joueurs (compteurs uniquement, jamais les choix).
 drop function if exists public.mf_avancement();
-create function public.mf_avancement()
+create or replace function public.mf_avancement()
 returns table (nom_affiche text, photo_url text, nb_top15 int, nb_top5 int, nb_ordre int, nb_essais int, fige boolean)
 language sql
 security definer set search_path = public
@@ -476,7 +476,7 @@ $$;
 -- Un rang donné est automatiquement retiré à toute autre Miss.
 -- Finaliste implique top 15 ; un rang implique finaliste.
 drop function if exists public.mf_admin_resultat(uuid, bigint, boolean, int);
-create function public.mf_admin_resultat(p_jeton uuid, p_candidate bigint, p_dans_top15 boolean, p_est_finaliste boolean, p_rang int)
+create or replace function public.mf_admin_resultat(p_jeton uuid, p_candidate bigint, p_dans_top15 boolean, p_est_finaliste boolean, p_rang int)
 returns void
 language plpgsql
 security definer set search_path = public
