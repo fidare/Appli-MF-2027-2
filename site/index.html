@@ -247,11 +247,11 @@
 </div>
 
 <script>
-  // Connexion à la base Supabase (clé « anon » : publiable, la table
+  // Connexion à la base Supabase (clé « publishable » : publiable, la table
   // n'autorise que l'insertion — personne ne peut lire via l'API).
   var SUPABASE = {
-    url: "",     // ex. https://abcdefgh.supabase.co
-    anonKey: ""  // clé « anon public » du projet
+    url: "https://vqzvwihmyzjnoqnqrtsv.supabase.co",
+    anonKey: "sb_publishable_7r4EbkKj3F5yLdgAUZn28w_EWwZZBCo"
   };
 
   var STORE_KEY = "mini-sondage-reponses";
@@ -309,7 +309,6 @@
       headers: {
         "Content-Type": "application/json",
         "apikey": SUPABASE.anonKey,
-        "Authorization": "Bearer " + SUPABASE.anonKey,
         "Prefer": "return=minimal"
       },
       body: JSON.stringify({ prenom: a.prenom, q1: a.q1, q2: a.q2 })
