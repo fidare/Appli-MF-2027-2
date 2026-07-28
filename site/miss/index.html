@@ -4,57 +4,88 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Miss France 2027 — Les Pronostics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #151022;
-    --card: #1f1833;
-    --card2: #261d3e;
-    --ink: #f7f2fa;
-    --text: #d9d0e4;
-    --muted: #9c90b2;
+    --bg: #0b0714;
+    --card: #171021;
+    --card2: #1f1630;
+    --ink: #f7f1f7;
+    --text: #d8cee0;
+    --muted: #988cab;
     --line: rgba(255, 255, 255, 0.09);
+    --goldline: rgba(240, 207, 125, 0.38);
     --pink: #ff4f9a;
     --pink-deep: #d63384;
-    --pink-soft: rgba(255, 79, 154, 0.16);
-    --gold: #e9b950;
-    --gold-soft: rgba(233, 185, 80, 0.16);
+    --pink-soft: rgba(255, 79, 154, 0.15);
+    --gold: #f0cf7d;
+    --gold-deep: #d3a43a;
+    --gold-soft: rgba(240, 207, 125, 0.14);
     --ok: #43cf96;
     --ok-soft: rgba(67, 207, 150, 0.15);
     --bad: #ff6d61;
     --bad-soft: rgba(255, 109, 97, 0.15);
-    --shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
-    --serif: "Didot", "Bodoni 72", "Playfair Display", Georgia, "Times New Roman", serif;
+    --shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
+    --serif: "Playfair Display", "Didot", "Bodoni 72", Georgia, serif;
+    --sans: "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
   * { box-sizing: border-box; }
   html { color-scheme: dark; }
   html, body { margin: 0; }
   body {
-    background: var(--bg);
+    background-color: var(--bg);
     background-image:
-      radial-gradient(70% 45% at 50% -5%, rgba(214, 51, 132, 0.30), transparent 70%),
-      radial-gradient(55% 35% at 85% 105%, rgba(233, 185, 80, 0.14), transparent 70%);
+      radial-gradient(1px 1px at 12% 18%, rgba(255,255,255,0.65), transparent 100%),
+      radial-gradient(1px 1px at 78% 9%, rgba(255,255,255,0.5), transparent 100%),
+      radial-gradient(1.5px 1.5px at 60% 32%, rgba(255,236,170,0.55), transparent 100%),
+      radial-gradient(1px 1px at 30% 60%, rgba(255,255,255,0.35), transparent 100%),
+      radial-gradient(1px 1px at 90% 70%, rgba(255,236,170,0.3), transparent 100%),
+      linear-gradient(115deg, rgba(255,236,170,0.10) 0%, transparent 42%),
+      linear-gradient(245deg, rgba(255,236,170,0.08) 0%, transparent 42%),
+      radial-gradient(85% 55% at 50% -10%, rgba(214,51,132,0.34), transparent 65%);
     background-attachment: fixed;
     color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family: var(--sans);
     line-height: 1.5;
     min-height: 100vh;
   }
-  .wrap { max-width: 640px; margin: 0 auto; padding: 1.2rem 0.9rem calc(6.5rem + env(safe-area-inset-bottom)); }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 1.1rem 0.9rem calc(7rem + env(safe-area-inset-bottom)); }
 
-  h1, h2, h3 { font-family: var(--serif); color: var(--ink); line-height: 1.15; font-weight: 600; }
-  h1 { font-size: 1.7rem; margin: 0.35rem 0; text-wrap: balance; letter-spacing: 0.01em; }
-  h2 { font-size: 1.35rem; margin: 1.7rem 0 0.5rem; }
-  h2::after { content: ""; display: block; width: 2.6rem; height: 2px; margin-top: 0.4rem; background: linear-gradient(90deg, var(--gold), transparent); border-radius: 2px; }
-  h3 { font-size: 1.03rem; margin: 0.9rem 0 0.4rem; }
-  .eyebrow { text-transform: uppercase; letter-spacing: 0.22em; font-size: 0.66rem; font-weight: 700; color: var(--gold); }
+  h1, h2, h3 { font-family: var(--serif); color: var(--ink); line-height: 1.12; font-weight: 600; }
+  h1 { font-size: 1.7rem; margin: 0.35rem 0; text-wrap: balance; }
+  h2 { display: flex; align-items: center; gap: 0.8rem; font-size: 1.32rem; margin: 1.8rem 0 0.6rem; font-style: italic; }
+  h2::before { content: ""; height: 1px; flex: 0 0 1.2rem; background: var(--goldline); }
+  h2::after { content: ""; height: 1px; flex: 1; background: linear-gradient(90deg, var(--goldline), transparent); }
+  h3 { font-size: 1.04rem; margin: 0.9rem 0 0.4rem; }
+  .eyebrow { text-transform: uppercase; letter-spacing: 0.32em; font-size: 0.64rem; font-weight: 600; color: var(--gold); }
   .muted { color: var(--muted); }
   .small { font-size: 0.85rem; }
   .center { text-align: center; }
   .cnt { font-weight: 700; color: var(--gold); }
 
+  .ic { width: 1.1em; height: 1.1em; vertical-align: -0.18em; }
+
+  .masthead { text-align: center; margin: 0.4rem 0 0.6rem; }
+  .brand { font-family: var(--serif); font-weight: 700; color: var(--ink); font-size: 2.15rem; line-height: 1.02; margin-top: 0.15rem; }
+  .brand em {
+    font-style: italic; font-weight: 600;
+    background: linear-gradient(180deg, #fbedb4, var(--gold-deep) 80%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .brand.big { font-size: 3.1rem; }
+  .brand-crown { color: var(--gold); filter: drop-shadow(0 3px 14px rgba(240, 207, 125, 0.6)); }
+  .brand-crown .ic { width: 2.3rem; height: 2.3rem; }
+
+  .greet { display: flex; align-items: center; justify-content: center; gap: 0.7rem; margin: 0.9rem 0 0.2rem; text-align: left; }
+  .greet .who { font-family: var(--serif); font-style: italic; font-size: 1.15rem; color: var(--ink); line-height: 1.15; }
+
   .card {
-    background: linear-gradient(160deg, var(--card2), var(--card));
-    border: 1px solid var(--line);
+    border: 1px solid transparent;
+    background:
+      linear-gradient(160deg, var(--card2), var(--card)) padding-box,
+      linear-gradient(140deg, rgba(240,207,125,0.55), rgba(240,207,125,0.07) 45%, rgba(255,79,154,0.35)) border-box;
     border-radius: 18px;
     box-shadow: var(--shadow);
     padding: 1.05rem 1.1rem;
@@ -64,9 +95,10 @@
   button, select, input { font: inherit; }
   .btn {
     display: inline-block; border: none; border-radius: 999px;
-    padding: 0.55rem 1.05rem; cursor: pointer; font-weight: 700; font-size: 0.85rem;
+    padding: 0.58rem 1.1rem; cursor: pointer; font-weight: 600; font-size: 0.85rem;
+    letter-spacing: 0.02em;
     background: linear-gradient(135deg, #ff5fa5, var(--pink-deep)); color: #fff;
-    box-shadow: 0 6px 16px rgba(214, 51, 132, 0.35);
+    box-shadow: 0 6px 20px rgba(214, 51, 132, 0.45);
     margin: 0.15rem 0.2rem 0.15rem 0; transition: filter 0.15s, transform 0.1s;
   }
   .btn:hover { filter: brightness(1.08); }
@@ -74,67 +106,105 @@
   .btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
   .btn.dark { background: rgba(255, 255, 255, 0.09); color: var(--ink); box-shadow: none; }
   .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); box-shadow: none; }
-  .btn.gold { background: linear-gradient(135deg, #f3cf7a, #d99b28); color: #241a06; box-shadow: 0 6px 16px rgba(233, 185, 80, 0.3); }
-  .btn.mini { padding: 0.38rem 0.75rem; font-size: 0.78rem; }
+  .btn.gold { background: linear-gradient(135deg, #f3cf7a, #cf9a2c); color: #241a06; box-shadow: 0 6px 20px rgba(240, 207, 125, 0.4); }
+  .btn.mini { padding: 0.4rem 0.78rem; font-size: 0.78rem; }
   .btn[disabled] { opacity: 0.5; cursor: not-allowed; }
 
   .badge {
     display: inline-block; border-radius: 999px; padding: 0.2rem 0.62rem;
-    font-size: 0.72rem; font-weight: 700; margin: 0.12rem 0.25rem 0.12rem 0;
-    border: 1px solid transparent;
+    font-size: 0.72rem; font-weight: 600; margin: 0.12rem 0.25rem 0.12rem 0;
+    border: 1px solid transparent; letter-spacing: 0.02em;
   }
   .badge.pink { background: var(--pink-soft); color: #ff9ac6; border-color: rgba(255, 79, 154, 0.35); }
   .badge.dark { background: rgba(255, 255, 255, 0.07); color: var(--muted); border-color: var(--line); }
-  .badge.gold { background: var(--gold-soft); color: #f0cd7e; border-color: rgba(233, 185, 80, 0.4); }
+  .badge.gold { background: var(--gold-soft); color: var(--gold); border-color: var(--goldline); }
   .badge.ok { background: var(--ok-soft); color: #7fe0b6; }
   .badge.bad { background: var(--bad-soft); color: #ff9d94; }
 
   nav.tabs {
-    position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+    position: fixed; left: 50%; transform: translateX(-50%);
+    bottom: calc(0.7rem + env(safe-area-inset-bottom)); z-index: 40;
+    width: min(94vw, 600px);
     display: flex; justify-content: space-around; align-items: stretch;
-    padding: 0.35rem 0.4rem calc(0.45rem + env(safe-area-inset-bottom));
-    background: rgba(17, 12, 28, 0.92);
-    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-    border-top: 1px solid var(--line);
+    padding: 0.4rem 0.45rem;
+    background: rgba(15, 10, 24, 0.88);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--goldline); border-radius: 999px;
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.55), 0 0 26px rgba(240, 207, 125, 0.12);
   }
   nav.tabs button {
-    flex: 1; max-width: 6.5rem; background: none; border: none; color: var(--muted); cursor: pointer;
-    display: flex; flex-direction: column; align-items: center; gap: 0.12rem;
-    font-size: 0.6rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
-    padding: 0.3rem 0; border-radius: 12px;
+    flex: 1; background: none; border: none; color: var(--muted); cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 0.14rem;
+    font-size: 0.56rem; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase;
+    padding: 0.3rem 0; border-radius: 999px;
   }
-  nav.tabs button .ico { font-size: 1.3rem; line-height: 1.15; filter: grayscale(0.4) opacity(0.75); }
+  nav.tabs button .ico .ic { width: 1.35rem; height: 1.35rem; vertical-align: 0; }
   nav.tabs button.on { color: var(--gold); }
-  nav.tabs button.on .ico { filter: none; transform: translateY(-1px); }
+  nav.tabs button.on .ico { filter: drop-shadow(0 0 8px rgba(240, 207, 125, 0.6)); }
   nav.tabs button:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; }
 
-  .phasebar {
-    background: linear-gradient(160deg, rgba(214, 51, 132, 0.20), rgba(233, 185, 80, 0.10));
-    border: 1px solid var(--line); border-radius: 16px;
-    padding: 0.8rem 1rem; margin: 1rem 0 1.1rem; text-align: center;
+  .steps { display: flex; margin: 1.2rem 0 0.2rem; }
+  .step { flex: 1; position: relative; text-align: center; }
+  .step::before {
+    content: ""; position: absolute; top: 0.85rem; left: -50%; width: 100%; height: 1px;
+    background: var(--line);
   }
-  .phasebar b { color: #ffd98a; font-family: var(--serif); font-size: 1.08rem; letter-spacing: 0.01em; }
+  .step:first-child::before { display: none; }
+  .step.done::before, .step.on::before { background: var(--goldline); }
+  .step .dot {
+    position: relative; z-index: 1; display: inline-flex; width: 1.7rem; height: 1.7rem;
+    border-radius: 50%; align-items: center; justify-content: center;
+    font-size: 0.78rem; font-weight: 700; font-family: var(--serif); font-style: italic;
+    background: var(--card2); border: 1px solid var(--line); color: var(--muted);
+  }
+  .step.done .dot { border-color: var(--goldline); color: var(--gold); }
+  .step.on .dot {
+    background: linear-gradient(135deg, #f3cf7a, #cf9a2c); color: #241a06; border: none;
+    box-shadow: 0 0 18px rgba(240, 207, 125, 0.55);
+  }
+  .step .lab { display: block; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 0.35rem; color: var(--muted); font-weight: 600; }
+  .step.on .lab { color: var(--gold); }
+  .phasedesc { text-align: center; font-size: 0.85rem; color: var(--muted); max-width: 34rem; margin: 0.7rem auto 1.1rem; }
+  .phasedesc b { color: var(--gold); font-weight: 600; }
 
   .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.7rem; }
   .miss {
-    background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+    position: relative;
+    border: 1px solid transparent;
+    background:
+      linear-gradient(var(--card), var(--card)) padding-box,
+      linear-gradient(160deg, rgba(240,207,125,0.6), rgba(122,90,28,0.16) 55%, rgba(240,207,125,0.35)) border-box;
+    border-radius: 16px;
     overflow: hidden; box-shadow: var(--shadow); display: flex; flex-direction: column;
   }
-  .miss.selected { border-color: rgba(255, 79, 154, 0.65); box-shadow: 0 0 0 1px rgba(255, 79, 154, 0.4), var(--shadow); }
+  .miss.selected {
+    background:
+      linear-gradient(var(--card), var(--card)) padding-box,
+      linear-gradient(160deg, #ff5fa5, #f0cf7d) border-box;
+    box-shadow: 0 0 24px rgba(255, 79, 154, 0.35), var(--shadow);
+  }
+  .miss.wide { grid-column: 1 / -1; }
+  .miss.wide .ph { aspect-ratio: 16 / 10; }
   .miss .ph {
     position: relative; aspect-ratio: 3 / 4;
-    background: linear-gradient(160deg, #3a2b52, #241b38);
+    background: linear-gradient(160deg, #322347, #1d1430);
     display: flex; align-items: center; justify-content: center; cursor: pointer;
-    font-size: 2.6rem; color: #6d5a8c; overflow: hidden;
+    color: #64517f; overflow: hidden;
   }
+  .miss .ph > .ic { width: 2.4rem; height: 2.4rem; }
   .miss .ph img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .miss .ph .num {
+    position: absolute; top: 0.15rem; left: 0.5rem; z-index: 1;
+    font-family: var(--serif); font-style: italic; font-weight: 600; font-size: 1.7rem;
+    color: rgba(255, 255, 255, 0.85); text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+  }
   .miss .ph .cap {
     position: absolute; left: 0; right: 0; bottom: 0;
-    padding: 1.8rem 0.6rem 0.5rem;
-    background: linear-gradient(180deg, transparent, rgba(9, 5, 17, 0.92));
+    padding: 1.9rem 0.6rem 0.5rem;
+    background: linear-gradient(180deg, transparent, rgba(7, 4, 14, 0.94));
   }
-  .miss .ph .cap .nom { font-family: var(--serif); color: #fff; font-size: 1rem; line-height: 1.2; text-shadow: 0 1px 6px rgba(0,0,0,0.6); }
-  .miss .ph .cap .reg { color: #eec87f; font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; margin-top: 0.15rem; }
+  .miss .ph .cap .nom { font-family: var(--serif); font-style: italic; color: #fff; font-size: 1.05rem; line-height: 1.15; text-shadow: 0 1px 6px rgba(0,0,0,0.6); }
+  .miss .ph .cap .reg { color: var(--gold); font-size: 0.62rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.16em; margin-top: 0.18rem; }
   .miss .body { padding: 0.55rem 0.6rem 0.7rem; display: flex; flex-direction: column; gap: 0.25rem; flex: 1; }
   .miss .meta { font-size: 0.75rem; color: var(--muted); }
   .miss .actions { margin-top: auto; padding-top: 0.35rem; }
@@ -144,24 +214,28 @@
     width: 3.2rem; height: 3.2rem; border-radius: 50%; object-fit: cover;
     background: var(--pink-soft); color: #ff9ac6; display: inline-flex;
     align-items: center; justify-content: center; font-weight: 700; overflow: hidden; flex: none;
+    font-family: var(--serif);
   }
   .avatar img { width: 100%; height: 100%; object-fit: cover; }
-  .avatar.big { width: 6.4rem; height: 6.4rem; font-size: 1.7rem; border: 2px solid rgba(233, 185, 80, 0.55); box-shadow: 0 0 0 5px rgba(233, 185, 80, 0.12); }
+  .avatar.big { width: 6.2rem; height: 6.2rem; font-size: 1.7rem; border: 2px solid var(--gold); box-shadow: 0 0 0 5px rgba(240, 207, 125, 0.12), 0 0 30px rgba(240, 207, 125, 0.4); }
 
   .logingrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.7rem; }
   .logingrid button {
-    background: linear-gradient(160deg, var(--card2), var(--card));
-    border: 1px solid var(--line); border-radius: 16px;
+    border: 1px solid transparent;
+    background:
+      linear-gradient(160deg, var(--card2), var(--card)) padding-box,
+      linear-gradient(160deg, rgba(240,207,125,0.45), rgba(240,207,125,0.06)) border-box;
+    border-radius: 16px;
     padding: 0.9rem 0.4rem; cursor: pointer; display: flex; flex-direction: column;
     align-items: center; gap: 0.5rem; box-shadow: var(--shadow);
   }
-  .logingrid button:hover, .logingrid button:focus-visible { border-color: rgba(233, 185, 80, 0.6); outline: none; }
-  .logingrid .nom { font-size: 0.75rem; font-weight: 700; color: var(--ink); }
+  .logingrid button:hover, .logingrid button:focus-visible { outline: none; box-shadow: 0 0 20px rgba(240, 207, 125, 0.25), var(--shadow); }
+  .logingrid .nom { font-size: 0.75rem; font-weight: 600; color: var(--ink); }
 
   .pin {
     font-size: 1.6rem; letter-spacing: 0.8rem; text-align: center; width: 11rem;
-    border: 1px solid var(--line); border-radius: 14px; padding: 0.55rem 0 0.55rem 0.8rem;
-    background: rgba(255, 255, 255, 0.06); color: var(--ink);
+    border: 1px solid var(--goldline); border-radius: 14px; padding: 0.55rem 0 0.55rem 0.8rem;
+    background: rgba(255, 255, 255, 0.05); color: var(--ink);
   }
   .pin:focus { outline: 2px solid var(--gold); }
 
@@ -174,14 +248,24 @@
   .bar .top { display: flex; justify-content: space-between; align-items: baseline; gap: 0.6rem; font-size: 0.82rem; margin-bottom: 0.28rem; }
   .bar .lbl { color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .bar .val { font-weight: 700; color: var(--ink); }
-  .bar .track { display: block; background: rgba(255, 255, 255, 0.08); border-radius: 999px; height: 0.62rem; overflow: hidden; }
-  .bar .fill { display: block; height: 100%; background: linear-gradient(90deg, var(--pink-deep), #ff5fa5); border-radius: 999px; min-width: 3px; transition: width 0.4s; }
-  .bar.me .lbl { color: #f0cd7e; font-weight: 700; }
-  .bar.me .fill { background: linear-gradient(90deg, #d99b28, #f3cf7a); }
+  .bar .track { display: block; background: rgba(255, 255, 255, 0.08); border-radius: 999px; height: 0.6rem; overflow: hidden; }
+  .bar .fill { display: block; height: 100%; background: linear-gradient(90deg, var(--pink-deep), #ff5fa5); border-radius: 999px; min-width: 3px; transition: width 0.4s; box-shadow: 0 0 10px rgba(255, 79, 154, 0.45); }
+  .bar.me .lbl { color: var(--gold); font-weight: 700; }
+  .bar.me .fill { background: linear-gradient(90deg, #cf9a2c, #f3cf7a); box-shadow: 0 0 10px rgba(240, 207, 125, 0.5); }
+
+  .rank {
+    width: 2.4rem; height: 2.4rem; border-radius: 50%; flex: none;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: var(--serif); font-style: italic; font-weight: 700; font-size: 1.05rem;
+    border: 1px solid var(--line); color: var(--muted);
+  }
+  .rank.r1 { background: linear-gradient(135deg, #f6dc94, #cf9a2c); color: #241a06; border: none; box-shadow: 0 0 16px rgba(240, 207, 125, 0.45); }
+  .rank.r2 { background: linear-gradient(135deg, #e6e6ee, #a9adc2); color: #23263a; border: none; }
+  .rank.r3 { background: linear-gradient(135deg, #e2aa7c, #a96a3c); color: #2e1806; border: none; }
 
   .search {
     width: 100%; border: 1px solid var(--line); border-radius: 999px;
-    background: rgba(255, 255, 255, 0.06); padding: 0.62rem 1.05rem;
+    background: rgba(255, 255, 255, 0.05); padding: 0.62rem 1.05rem;
     margin: 0.4rem 0 1rem; color: var(--ink);
   }
   .search::placeholder { color: var(--muted); }
@@ -192,13 +276,15 @@
   }
 
   .modal-bg {
-    position: fixed; inset: 0; background: rgba(8, 5, 15, 0.72);
+    position: fixed; inset: 0; background: rgba(6, 3, 12, 0.75);
     backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
     z-index: 50; display: flex; align-items: flex-end; justify-content: center;
   }
   .modal {
-    background: linear-gradient(160deg, var(--card2), var(--card));
-    border: 1px solid var(--line); border-bottom: none;
+    border: 1px solid transparent;
+    background:
+      linear-gradient(160deg, var(--card2), var(--card)) padding-box,
+      linear-gradient(140deg, rgba(240,207,125,0.55), rgba(240,207,125,0.08)) border-box;
     border-radius: 22px 22px 0 0; width: 100%; max-width: 520px;
     max-height: 92vh; overflow-y: auto; position: relative;
     padding: 1.1rem 1.1rem calc(1.3rem + env(safe-area-inset-bottom));
@@ -210,16 +296,17 @@
   }
   .modal .bigph {
     position: relative; border-radius: 14px; overflow: hidden; aspect-ratio: 3 / 4;
-    background: linear-gradient(160deg, #3a2b52, #241b38);
+    background: linear-gradient(160deg, #322347, #1d1430);
     display: flex; align-items: center; justify-content: center;
-    font-size: 4rem; color: #6d5a8c; margin-bottom: 0.7rem;
+    color: #64517f; margin-bottom: 0.7rem;
   }
+  .modal .bigph > .ic { width: 3.5rem; height: 3.5rem; }
   .modal .bigph img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 
   #toast {
-    position: fixed; bottom: calc(5.4rem + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
+    position: fixed; bottom: calc(5.8rem + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
     background: #f6efff; color: #241a38; border-radius: 999px; padding: 0.65rem 1.25rem;
-    font-size: 0.9rem; font-weight: 600; z-index: 100; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+    font-size: 0.9rem; font-weight: 600; z-index: 100; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
     max-width: 92vw; text-align: center; display: none;
   }
   #toast.err { background: var(--bad); color: #fff; }
@@ -228,7 +315,7 @@
 
   table.adm { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
   table.adm th, table.adm td { text-align: left; padding: 0.5rem 0.5rem; border-bottom: 1px solid var(--line); vertical-align: middle; }
-  table.adm th { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+  table.adm th { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); }
   table.adm input[type="checkbox"] { width: 1.15rem; height: 1.15rem; accent-color: var(--pink); }
 
   @media (prefers-reduced-motion: no-preference) {
@@ -239,9 +326,10 @@
   @media (min-width: 700px) {
     .wrap { max-width: 960px; padding-left: 1rem; padding-right: 1rem; }
     .grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.9rem; }
+    .miss.wide .ph { aspect-ratio: 21 / 9; }
     .logingrid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
     .modal-bg { align-items: center; padding: 1rem; }
-    .modal { border-radius: 22px; border-bottom: 1px solid var(--line); }
+    .modal { border-radius: 22px; }
   }
 </style>
 </head>
@@ -262,6 +350,26 @@ var SUPABASE = {
 };
 
 var STORE_KEY = "mf2027-session";
+
+// Icônes SVG dessinées en trait fin (stroke), teintées par la couleur du texte.
+var ICONS = {
+  crown: '<path d="M3 17.5h18M3.5 16l1.6-8.6 4.4 3.8L12 4.5l2.5 6.7 4.4-3.8L20.5 16z"/>',
+  list: '<rect x="5" y="3.5" width="14" height="17" rx="2.5"/><path d="M8.5 8h7M8.5 11.5h7M8.5 15h4"/>',
+  trophy: '<path d="M7 4h10v5a5 5 0 0 1-10 0zM7 5.5H4.5a3 3 0 0 0 3.2 4.4M17 5.5h2.5a3 3 0 0 1-3.2 4.4M12 14v3.5M8.5 20.5h7M12 17.5v3"/>',
+  chart: '<path d="M5 20v-6M11 20V6M17 20v-9M3 20h18"/>',
+  sliders: '<path d="M4 7h9M17 7h3M4 17h5M13 17h7"/><circle cx="15" cy="7" r="2"/><circle cx="11" cy="17" r="2"/>',
+  exit: '<path d="M15 4H5v16h10M10 12h10M17 9l3 3-3 3"/>',
+  award: '<circle cx="12" cy="8.5" r="5"/><path d="M8.8 12.8 7.5 20.5l4.5-2.6 4.5 2.6-1.3-7.7"/>',
+  star: '<path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8L3.5 9.7l5.9-.8z"/>',
+  heart: '<path d="M12 20s-7.5-4.6-9-9.2C1.9 7.4 4 4.5 7 4.5c2 0 3.5 1.1 5 3 1.5-1.9 3-3 5-3 3 0 5.1 2.9 4 6.3-1.5 4.6-9 9.2-9 9.2z"/>',
+  users: '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5M16 5.6a3.2 3.2 0 0 1 0 5.8M17.5 14.8c2 .6 3.4 2.2 3.9 4.7"/>',
+  trash: '<path d="M4.5 6.5h15M9.5 6V4.5h5V6M6.5 6.5l.8 13h9.4l.8-13M10 10.5v5.5M14 10.5v5.5"/>',
+  spark: '<path d="M12 4l1.7 4.8L18.5 10l-4.8 1.7L12 16.5l-1.7-4.8L5.5 10l4.8-1.7z"/><path d="M18.6 15.6l.65 1.85 1.85.65-1.85.65-.65 1.85-.65-1.85-1.85-.65 1.85-.65z"/>',
+  check: '<path d="M4.5 12.5 10 18 19.5 6.5"/>'
+};
+function icon(n) {
+  return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICONS[n] + '</svg>';
+}
 
 var PHASES = {
   preparation: { label: "Préparation du casting", desc: "Le tapis rouge se déroule, les paillettes se comptent… Le jeu n'est pas encore ouvert." },
@@ -525,28 +633,28 @@ function avatarHtml(nom, url, big) {
 
 function missPhoto(c, surprise) {
   var url = surprise && c.photo_surprise_url ? c.photo_surprise_url : c.photo_url;
-  return url ? '<img src="' + esc(url) + '" alt="' + esc(c.nom) + '" loading="lazy">' : "👑";
+  return url ? '<img src="' + esc(url) + '" alt="' + esc(c.nom) + '" loading="lazy">' : icon("crown");
 }
 
 function statutBadge(p) {
   if (!p) return "";
   var h = "";
-  if (p.statut === "top15") h += '<span class="badge pink">✓ Dans mon équipe</span>';
-  if (p.top5) h += '<span class="badge gold">⭐ Dans mes 5</span>';
+  if (p.statut === "top15") h += '<span class="badge pink">' + icon("check") + ' Dans mon équipe</span>';
+  if (p.top5) h += '<span class="badge gold">' + icon("star") + ' Dans mes 5</span>';
   if (p.rang) h += '<span class="badge gold">Mon ordre : Nº' + p.rang + '</span>';
-  if (p.essai === 1) h += '<span class="badge gold">👑 Essai 1</span>';
-  if (p.essai === 2) h += '<span class="badge gold">👑 Essai 2</span>';
+  if (p.essai === 1) h += '<span class="badge gold">' + icon("crown") + ' Essai 1</span>';
+  if (p.essai === 2) h += '<span class="badge gold">' + icon("crown") + ' Essai 2</span>';
   return h;
 }
 
 function finalisteBadge(c) {
-  if (c.est_finaliste) return '<span class="badge gold">👑 Finaliste officielle</span>';
+  if (c.est_finaliste) return '<span class="badge gold">' + icon("crown") + ' Finaliste officielle</span>';
   var ph = S.config.phase;
   var top15Connu = S.candidates.some(function (x) { return x.dans_top15; });
   if (top15Connu && (ph === "top5" || ph === "ordre" || ph === "cloture" || ph === "resultats")) {
     return c.dans_top15
-      ? '<span class="badge pink">🎯 Encore en lice</span>'
-      : '<span class="badge dark">✂️ Éliminée</span>';
+      ? '<span class="badge pink">Encore en lice</span>'
+      : '<span class="badge dark">Éliminée</span>';
   }
   return "";
 }
@@ -561,12 +669,12 @@ function missActions(c) {
   if (ph === "selection15") {
     if (st === "top15") h += btn("App.statut(" + c.id + ",'aucun')", "Retirer de mon équipe", "ghost mini");
     else h += btn("App.statut(" + c.id + ",'top15')", "Je la veux dans mon équipe !", "mini");
-    h += e === 1 ? btn("App.essai(1,null)", "Annuler l'essai Nº1", "ghost mini") : btn("App.essai(1," + c.id + ")", "👑 Mon essai Nº1", "gold mini");
+    h += e === 1 ? btn("App.essai(1,null)", "Annuler l'essai Nº1", "ghost mini") : btn("App.essai(1," + c.id + ")", icon("crown") + " Mon essai Nº1", "gold mini");
   } else if (ph === "top5") {
     if (!c.dans_top15) return "";
     if (p && p.top5) h += btn("App.statut(" + c.id + ",'aucun')", "Retirer de mes 5", "ghost mini");
-    else h += btn("App.statut(" + c.id + ",'top5')", "⭐ Dans mes 5 !", "mini");
-    h += e === 2 ? btn("App.essai(2,null)", "Annuler l'essai Nº2", "ghost mini") : btn("App.essai(2," + c.id + ")", "👑 Mon essai Nº2", "gold mini");
+    else h += btn("App.statut(" + c.id + ",'top5')", icon("star") + " Dans mes 5 !", "mini");
+    h += e === 2 ? btn("App.essai(2,null)", "Annuler l'essai Nº2", "ghost mini") : btn("App.essai(2," + c.id + ")", icon("crown") + " Mon essai Nº2", "gold mini");
   } else if (ph === "ordre") {
     if (c.est_finaliste) h += rangSelect(c.id, p && p.rang);
   }
@@ -612,10 +720,11 @@ function render() {
 
 // ----- Login -----
 function viewLogin() {
-  var h = '<header class="center">'
-    + '<div class="eyebrow">Miss France 2027 · Le grand pronostic</div>'
-    + '<h1>Qui es-tu, cher membre du jury ?</h1>'
-    + '<p class="muted small">Clique sur ta (superbe) photo d\'enfance, puis tape ton code PIN.</p></header>';
+  var h = '<header class="center" style="margin:1.6rem 0 1.4rem">'
+    + '<div class="brand-crown">' + icon("crown") + '</div>'
+    + '<div class="masthead"><span class="eyebrow">Miss France 2027</span>'
+    + '<div class="brand big">Le Grand<br><em>Pronostic</em></div></div>'
+    + '<p class="muted small" style="margin-top:0.9rem">Qui es-tu, cher membre du jury ?<br>Clique sur ta (superbe) photo d\'enfance, puis tape ton code PIN.</p></header>';
 
   if (!S.loginSel) {
     h += '<div class="logingrid">';
@@ -640,25 +749,40 @@ function viewLogin() {
 }
 
 // ----- Header commun -----
-function viewHeader() {
+function stepperHtml() {
+  var steps = [["selection15", "Les 15"], ["top5", "Les 5"], ["ordre", "L'ordre"], ["cloture", "Le sacre"]];
+  var idx = { preparation: -1, selection15: 0, top5: 1, ordre: 2, cloture: 3, resultats: 3 }[S.config.phase];
+  if (idx === undefined) idx = -1;
   var ph = PHASES[S.config.phase] || { label: S.config.phase, desc: "" };
-  var h = '<header class="center">'
-    + avatarHtml(S.profil.nom_affiche, S.profil.photo_url, true)
-    + '<h1>Bonsoir <span style="background:var(--pink-soft);padding:0 0.4rem;border-radius:8px">' + esc(S.profil.nom_affiche) + ' !</span></h1>'
+  var h = '<div class="steps">';
+  steps.forEach(function (s, i) {
+    var cls = i < idx ? "done" : i === idx ? "on" : "";
+    h += '<div class="step ' + cls + '"><span class="dot">' + (i < idx ? icon("check") : i + 1) + '</span><span class="lab">' + s[1] + '</span></div>';
+  });
+  h += '</div><p class="phasedesc">' + ph.desc + '</p>';
+  return h;
+}
+
+function viewHeader() {
+  var h = '<header>'
+    + '<div class="masthead"><span class="eyebrow">Miss France 2027</span>'
+    + '<div class="brand">Le Grand <em>Pronostic</em></div></div>'
+    + '<div class="greet">' + avatarHtml(S.profil.nom_affiche, S.profil.photo_url, false)
+    + '<div><span class="small muted">Bonsoir,</span><div class="who">' + esc(S.profil.nom_affiche) + '</div></div></div>'
     + (S.tab === "accueil"
-      ? '<p class="small muted" style="max-width:620px;margin:0.4rem auto">Bienvenue à l\'élection de Miss France, la soirée où les sourires sont figés, les talons vertigineux et les réponses… toujours pleines de surprises ! Alors, qui réussira à marcher droit, sourire grand et parler climat sans bafouiller ? /!\\ Spoiler /!\\ : Pas nous, mais on a le droit d\'y croire !</p>'
+      ? '<p class="small muted center" style="max-width:620px;margin:0.6rem auto 0">Bienvenue à l\'élection de Miss France, la soirée où les sourires sont figés, les talons vertigineux et les réponses… toujours pleines de surprises ! Alors, qui réussira à marcher droit, sourire grand et parler climat sans bafouiller ? /!\\ Spoiler /!\\ : Pas nous, mais on a le droit d\'y croire !</p>'
       : "")
     + '</header>';
 
-  var tabs = [["accueil", "👑", "Jeunettes"], ["selection", "📋", "Sélection"], ["resultat", "🏆", "Résultat"], ["benchmark", "📊", "Benchmark"]];
-  if (S.profil.est_admin) tabs.push(["admin", "🎛️", "Régie"]);
+  var tabs = [["accueil", "crown", "Jeunettes"], ["selection", "list", "Sélection"], ["resultat", "trophy", "Résultat"], ["benchmark", "chart", "Benchmark"]];
+  if (S.profil.est_admin) tabs.push(["admin", "sliders", "Régie"]);
   h += '<nav class="tabs">';
   tabs.forEach(function (t) {
-    h += '<button class="' + (S.tab === t[0] ? "on" : "") + '" onclick="App.goTab(\'' + t[0] + '\')"><span class="ico">' + t[1] + '</span>' + t[2] + '</button>';
+    h += '<button class="' + (S.tab === t[0] ? "on" : "") + '" onclick="App.goTab(\'' + t[0] + '\')"><span class="ico">' + icon(t[1]) + '</span>' + t[2] + '</button>';
   });
-  h += '<button onclick="App.logout()" title="Déconnexion"><span class="ico">🚪</span>Sortir</button></nav>';
+  h += '<button onclick="App.logout()" title="Déconnexion"><span class="ico">' + icon("exit") + '</span>Sortir</button></nav>';
 
-  h += '<div class="phasebar"><span class="eyebrow">Phase en cours</span><br><b>' + esc(ph.label) + '</b> — ' + ph.desc + '</div>';
+  h += stepperHtml();
   return h;
 }
 
@@ -681,8 +805,8 @@ function huissierCard() {
   if (ph !== "selection15" && ph !== "top5" && ph !== "ordre") return "";
   var c = myCounts();
   if (S.profil.fige) {
-    return '<div class="card center" style="border-color:var(--gold)">'
-      + '<span class="badge gold">⚖️ Dossier scellé chez l\'huissier de justice</span>'
+    return '<div class="card center">'
+      + '<span class="badge gold">' + icon("award") + ' Dossier scellé chez l\'huissier de justice</span>'
       + '<p class="small muted" style="margin:0.5rem 0">Ta sélection est officielle — plus aucune modification possible.</p>'
       + btn("App.defiger()", "Récupérer mon dossier", "ghost mini") + '</div>';
   }
@@ -702,9 +826,9 @@ function huissierCard() {
   var hint = "Avant de pouvoir sceller : " + manques.join(" et ") + ".";
   return '<div class="card center">'
     + (ready
-      ? btn("App.figer()", "⚖️ Envoyer à l'huissier de justice !", "gold")
+      ? btn("App.figer()", icon("award") + " Envoyer à l'huissier de justice !", "gold")
         + '<p class="small muted" style="margin:0.4rem 0 0">Sceller ta sélection la rend officielle (tu pourras récupérer ton dossier tant que la phase est ouverte).</p>'
-      : '<p class="small muted" style="margin:0">⚖️ ' + hint + '</p>')
+      : '<p class="small muted" style="margin:0">' + icon("award") + ' ' + hint + '</p>')
     + '</div>';
 }
 
@@ -714,7 +838,7 @@ function viewAccueil() {
   var h = '<h2>Les Jeunettes en lice :</h2>'
     + '<p class="small muted">Mon équipe : <span class="cnt">' + c.t15 + ' / 15</span> · Mes finalistes : <span class="cnt">' + c.t5 + ' / 5</span></p>'
     + huissierCard()
-    + '<input id="search-input" class="search" placeholder="🔎 Chercher un prénom, une région…" value="' + esc(S.q) + '" oninput="App.search(this)">';
+    + '<input id="search-input" class="search" placeholder="Chercher un prénom, une région…" value="' + esc(S.q) + '" oninput="App.search(this)">';
 
   var q = S.q.trim().toLowerCase();
   var list = S.candidates.filter(function (x) {
@@ -727,10 +851,11 @@ function viewAccueil() {
   if (!list.length) return h + '<div class="card center muted">Personne ne correspond à cette recherche.</div>';
 
   h += '<div class="grid">';
-  list.forEach(function (x) {
+  list.forEach(function (x, i) {
     var p = S.mine[x.id];
-    h += '<article class="miss' + (p && (p.statut === "top15" || p.top5) ? " selected" : "") + '">'
+    h += '<article class="miss' + (p && (p.statut === "top15" || p.top5) ? " selected" : "") + (i % 5 === 0 ? " wide" : "") + '">'
       + '<div class="ph" onclick="App.fiche(' + x.id + ')">' + missPhoto(x)
+      + '<div class="num">' + (i + 1 < 10 ? "0" : "") + (i + 1) + '</div>'
       + '<div class="cap"><div class="nom">' + esc(x.nom) + '</div>'
       + '<div class="reg">Miss ' + esc(x.region) + (x.age ? " · " + esc(x.age) + " ans" : "") + '</div></div></div>'
       + '<div class="body">'
@@ -769,14 +894,14 @@ function viewSelection() {
   }
 
   var h = '<h2>Ma sélection</h2>'
-    + '<p class="small muted">Miss retenues : <span class="cnt">' + c.t15 + ' / 15</span> — brouillon enregistré automatiquement ; scelle-le chez l\'huissier pour le rendre officiel. 🖋️</p>'
+    + '<p class="small muted">Miss retenues : <span class="cnt">' + c.t15 + ' / 15</span> — brouillon enregistré automatiquement ; scelle-le chez l\'huissier pour le rendre officiel.</p>'
     + huissierCard();
 
-  h += '<div class="card"><h3>⭐ Mes 5 finalistes (' + c.t5 + '/5)</h3>';
+  h += '<div class="card"><h3>' + icon("star") + ' Mes 5 finalistes (' + c.t5 + '/5)</h3>';
   var locked = !!S.profil.fige;
   h += top5.length ? top5.map(function (e) {
     var extra = "";
-    if (S.config.phase === "top5" && !locked) extra += btn("App.statut(" + e[0].id + ",'aucun')", "🗑", "ghost mini");
+    if (S.config.phase === "top5" && !locked) extra += btn("App.statut(" + e[0].id + ",'aucun')", icon("trash"), "ghost mini");
     return ligne(e[0], e[1], extra);
   }).join("") : '<p class="muted small">Personne pour l\'instant… (phase 2)</p>';
   h += '</div>';
@@ -784,7 +909,7 @@ function viewSelection() {
   var finalistes = S.candidates.filter(function (x) { return x.est_finaliste; });
   if (finalistes.length) {
     var ordreOuvert = S.config.phase === "ordre" && !locked;
-    h += '<div class="card"><h3>🏛️ Mon ordre final des 5 finalistes</h3>'
+    h += '<div class="card"><h3>' + icon("trophy") + ' Mon ordre final des 5 finalistes</h3>'
       + '<p class="small muted">La Nº1 est ta Miss France pronostiquée.</p>';
     finalistes.sort(function (a, b) {
       var pa = S.mine[a.id], pb = S.mine[b.id];
@@ -802,7 +927,7 @@ function viewSelection() {
     h += '</div>';
   }
 
-  h += '<div class="card"><h3>👑 Mes essais Miss France</h3>';
+  h += '<div class="card"><h3>' + icon("crown") + ' Mes essais Miss France</h3>';
   [1, 2].forEach(function (n) {
     var e = essais[n];
     h += '<div class="listline"><span class="badge gold">Essai ' + n + '</span><div class="grow">'
@@ -812,19 +937,19 @@ function viewSelection() {
   });
   h += '</div>';
 
-  h += '<div class="card"><h3>💖 Mon équipe des 15 (' + c.t15 + '/15)</h3>';
+  h += '<div class="card"><h3>' + icon("heart") + ' Mon équipe des 15 (' + c.t15 + '/15)</h3>';
   h += top15.length ? top15.map(function (e) {
     var extra = statutBadge(e[1]);
-    if (!locked && S.config.phase === "selection15") extra += btn("App.statut(" + e[0].id + ",'aucun')", "🗑", "ghost mini");
+    if (!locked && S.config.phase === "selection15") extra += btn("App.statut(" + e[0].id + ",'aucun')", icon("trash"), "ghost mini");
     return ligne(e[0], e[1], extra);
   }).join("") : '<p class="muted small">Ton équipe est vide. Fonce à l\'Accueil recruter !</p>';
   h += '</div>';
 
   if (S.avancement) {
-    h += '<div class="card"><h3>📡 Où en sont les autres ?</h3><p class="small muted">Leurs choix restent secrets — seul l\'avancement est visible.</p>';
+    h += '<div class="card"><h3>' + icon("users") + ' Où en sont les autres ?</h3><p class="small muted">Leurs choix restent secrets — seul l\'avancement est visible.</p>';
     S.avancement.forEach(function (a) {
       h += '<div class="listline">' + avatarHtml(a.nom_affiche, a.photo_url, false)
-        + '<div class="grow"><b>' + esc(a.nom_affiche) + '</b>' + (a.fige ? ' <span class="badge gold">⚖️ scellé</span>' : "")
+        + '<div class="grow"><b>' + esc(a.nom_affiche) + '</b>' + (a.fige ? ' <span class="badge gold">' + icon("award") + ' scellé</span>' : "")
         + '<div class="small muted">équipe ' + a.nb_top15 + '/15 · finalistes ' + a.nb_top5 + '/5 · rangs ' + a.nb_ordre + '/5 · essais ' + a.nb_essais + '/2</div></div></div>';
     });
     h += '</div>';
@@ -947,9 +1072,9 @@ function viewBenchmark() {
 
   h += '<h2>Le podium des jurés</h2>';
   rows.forEach(function (r, i) {
-    var medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : "Nº" + (i + 1);
-    h += '<div class="card"><div class="row">' + avatarHtml(r.nom_affiche, r.photo_url, false)
-      + '<div style="flex:1"><b style="font-size:1.05rem">' + medal + ' ' + esc(r.nom_affiche) + '</b>'
+    var rank = '<span class="rank r' + (i + 1) + '">' + (i + 1) + '</span>';
+    h += '<div class="card"><div class="row">' + rank + avatarHtml(r.nom_affiche, r.photo_url, false)
+      + '<div style="flex:1"><b style="font-size:1.05rem">' + esc(r.nom_affiche) + '</b>'
       + '<div class="small muted">QCM ' + r.pts_qcm + ' · 15 Miss ' + r.pts_15 + ' · 5 Miss ' + r.pts_5 + ' · Ordre ' + r.pts_ordre + ' · Essais ' + (r.pts_essai1 + r.pts_essai2) + '</div></div>'
       + '<div class="cnt" style="font-size:1.4rem">' + r.total + ' pts</div></div></div>';
   });
@@ -977,7 +1102,7 @@ function viewAdmin() {
     h += '<p class="muted small">Aucune candidate — ajoute-les dans Supabase (Table Editor → mf_candidates).</p>';
   } else {
     h += '<div class="center" style="margin-bottom:0.6rem">' + saveBtn + '</div>'
-      + '<input id="adm-search" class="search" placeholder="🔎 Filtrer par nom ou région…" value="' + esc(S.admQ || "") + '" oninput="App.admSearch(this)">';
+      + '<input id="adm-search" class="search" placeholder="Filtrer par nom ou région…" value="' + esc(S.admQ || "") + '" oninput="App.admSearch(this)">';
     var aq = (S.admQ || "").trim().toLowerCase();
     var alist = S.candidates.filter(function (x) {
       return !aq || (x.nom + " " + x.region).toLowerCase().indexOf(aq) >= 0;
@@ -1028,7 +1153,7 @@ function viewFiche() {
   var h = '<div class="modal-bg" onclick="if(event.target===this)App.closeFiche()"><div class="modal">'
     + '<button class="close" onclick="App.closeFiche()" aria-label="Fermer">✕</button>'
     + '<div class="bigph">' + missPhoto(x, S.ficheSurprise) + '</div>';
-  if (x.photo_surprise_url) h += '<p class="center" style="margin:0 0 0.5rem">' + btn("App.surprise()", S.ficheSurprise ? "Remettre la vraie photo" : "Surprise 🎁", "mini") + '</p>';
+  if (x.photo_surprise_url) h += '<p class="center" style="margin:0 0 0.5rem">' + btn("App.surprise()", S.ficheSurprise ? "Remettre la vraie photo" : icon("spark") + " Surprise", "mini") + '</p>';
   h += '<h2 class="center" style="margin:0.2rem 0 0">' + esc(x.nom) + '</h2>'
     + '<p class="center" style="color:var(--pink);font-weight:700;margin:0.1rem 0 0.6rem">Miss ' + esc(x.region) + '</p>'
     + '<ul class="small" style="color:var(--text)">'
