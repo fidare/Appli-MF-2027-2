@@ -34,8 +34,12 @@ create table if not exists public.mf_candidates (
   photo_url text,
   photo_surprise_url text,
   dans_top15 boolean not null default false,
+  est_finaliste boolean not null default false,
   rang_final int check (rang_final between 1 and 5)
 );
+
+alter table public.mf_candidates
+  add column if not exists est_finaliste boolean not null default false;
 
 create table if not exists public.mf_pronostics (
   id bigint generated always as identity primary key,
@@ -215,7 +219,9 @@ begin
 end;
 $$;
 
--- Classement de ses 5 finalistes (phase "ordre").
+-- Classement des 5 finalistes officielles (phase "ordre") :
+-- une fois les vraies finalistes annoncées, chaque joueur les classe
+-- de 1 (sa Miss France) à 5 — qu'elles soient ou non dans ses listes.
 create or replace function public.mf_definir_rang(p_jeton uuid, p_candidate bigint, p_rang int)
 returns void
 language plpgsql
@@ -224,27 +230,35 @@ as $$
 declare
   v_j bigint;
   v_phase text;
-  v_cur text;
 begin
   select id into v_j from mf_joueurs where jeton = p_jeton;
   if v_j is null then raise exception 'Session invalide, reconnecte-toi.'; end if;
   select phase into v_phase from mf_config where id = 1;
   if v_phase <> 'ordre' then
-    raise exception 'Le classement de tes 5 finalistes n''est pas ouvert en ce moment.';
+    raise exception 'Le classement des finalistes n''est pas ouvert en ce moment.';
   end if;
   if exists (select 1 from mf_validations v where v.joueur_id = v_j and v.phase = v_phase) then
     raise exception 'Ton dossier est scellé chez l''huissier ! Récupère-le pour modifier.';
   end if;
-  select statut into v_cur from mf_pronostics where joueur_id = v_j and candidate_id = p_candidate;
-  if coalesce(v_cur, '') <> 'top5' then
-    raise exception 'Seules tes 5 finalistes peuvent recevoir un rang.';
+  if not exists (select 1 from mf_candidates c where c.id = p_candidate and c.est_finaliste) then
+    raise exception 'Seules les 5 finalistes officielles peuvent être classées.';
   end if;
   if p_rang is not null then
     update mf_pronostics set rang = null, modifie_le = now()
       where joueur_id = v_j and rang = p_rang and candidate_id <> p_candidate;
   end if;
-  update mf_pronostics set rang = p_rang, modifie_le = now()
-    where joueur_id = v_j and candidate_id = p_candidate;
+  if p_rang is null then
+    update mf_pronostics set rang = null, modifie_le = now()
+      where joueur_id = v_j and candidate_id = p_candidate;
+    delete from mf_pronostics
+      where joueur_id = v_j and candidate_id = p_candidate
+        and statut is null and rang is null and essai is null;
+  else
+    insert into mf_pronostics (joueur_id, candidate_id, rang)
+      values (v_j, p_candidate, p_rang)
+    on conflict (joueur_id, candidate_id) do update
+      set rang = excluded.rang, modifie_le = now();
+  end if;
 end;
 $$;
 
@@ -310,9 +324,9 @@ begin
     end if;
   elsif v_phase = 'ordre' then
     select count(*) into v_nb from mf_pronostics
-      where joueur_id = v_j and statut = 'top5' and rang is not null;
+      where joueur_id = v_j and rang is not null;
     if v_nb <> 5 then
-      raise exception 'L''huissier exige un rang pour chacune de tes 5 finalistes (% posé(s)) !', v_nb;
+      raise exception 'L''huissier exige un rang pour chacune des 5 finalistes (% posé(s)) !', v_nb;
     end if;
   elsif v_phase = 'essais' then
     if not exists (select 1 from mf_pronostics where joueur_id = v_j and essai = 1) then
@@ -391,9 +405,9 @@ begin
       cfg.pts_top15 * (select count(*) from mf_pronostics p join mf_candidates c on c.id = p.candidate_id
         where p.joueur_id = j.id and p.statut in ('top15', 'top5') and c.dans_top15) as pts_15,
       cfg.pts_top5 * (select count(*) from mf_pronostics p join mf_candidates c on c.id = p.candidate_id
-        where p.joueur_id = j.id and p.statut = 'top5' and c.rang_final is not null) as pts_5,
+        where p.joueur_id = j.id and p.statut = 'top5' and c.est_finaliste) as pts_5,
       cfg.pts_ordre * (select count(*) from mf_pronostics p join mf_candidates c on c.id = p.candidate_id
-        where p.joueur_id = j.id and p.statut = 'top5' and p.rang = c.rang_final) as pts_ordre,
+        where p.joueur_id = j.id and p.rang = c.rang_final) as pts_ordre,
       case when exists (select 1 from mf_pronostics p join mf_candidates c on c.id = p.candidate_id
         where p.joueur_id = j.id and p.essai = 1 and c.rang_final = 1) then cfg.pts_essai1 else 0 end as pts_essai1,
       case when exists (select 1 from mf_pronostics p join mf_candidates c on c.id = p.candidate_id
@@ -401,7 +415,7 @@ begin
       (select coalesce(json_agg(json_build_object(
            'candidate_id', p.candidate_id, 'nom', c.nom, 'region', c.region,
            'statut', p.statut, 'rang', p.rang, 'essai', p.essai,
-           'dans_top15', c.dans_top15, 'rang_final', c.rang_final)), '[]'::json)
+           'dans_top15', c.dans_top15, 'est_finaliste', c.est_finaliste, 'rang_final', c.rang_final)), '[]'::json)
          from mf_pronostics p join mf_candidates c on c.id = p.candidate_id
          where p.joueur_id = j.id) as pronostics
     from mf_joueurs j
@@ -441,10 +455,12 @@ begin
 end;
 $$;
 
--- Saisir le résultat réel d'une Miss : top 15 (case à cocher)
--- et rang final 1 à 5 (null si hors top 5). Un rang donné est
--- automatiquement retiré à toute autre Miss qui l'avait.
-create or replace function public.mf_admin_resultat(p_jeton uuid, p_candidate bigint, p_dans_top15 boolean, p_rang int)
+-- Saisir le résultat réel d'une Miss : top 15, finaliste (top 5
+-- officiel annoncé pendant la soirée) et rang final 1 à 5.
+-- Un rang donné est automatiquement retiré à toute autre Miss.
+-- Finaliste implique top 15 ; un rang implique finaliste.
+drop function if exists public.mf_admin_resultat(uuid, bigint, boolean, int);
+create function public.mf_admin_resultat(p_jeton uuid, p_candidate bigint, p_dans_top15 boolean, p_est_finaliste boolean, p_rang int)
 returns void
 language plpgsql
 security definer set search_path = public
@@ -456,7 +472,8 @@ begin
       where rang_final = p_rang and id <> p_candidate;
   end if;
   update mf_candidates
-    set dans_top15 = (p_dans_top15 or p_rang is not null),
+    set dans_top15 = (p_dans_top15 or p_est_finaliste or p_rang is not null),
+        est_finaliste = (p_est_finaliste or p_rang is not null),
         rang_final = p_rang
     where id = p_candidate;
 end;

@@ -208,9 +208,9 @@ var STORE_KEY = "mf2027-session";
 var PHASES = {
   preparation: { label: "Préparation du casting", desc: "Le tapis rouge se déroule, les paillettes se comptent… Le jeu n'est pas encore ouvert." },
   selection15: { label: "Sélection des 15", desc: "Compose ta liste de <b>15 Miss</b> pour ton équipe." },
-  top5:        { label: "Choix des 5 finalistes", desc: "Parmi tes 15, choisis tes <b>5 finalistes</b>." },
-  ordre:       { label: "L'ordre final", desc: "Classe tes 5 finalistes de la <b>1<sup>re</sup></b> (Miss France) à la <b>5<sup>e</sup></b> place." },
+  top5:        { label: "Choix des 5", desc: "Parmi tes 15, choisis les <b>5</b> que tu vois en finale." },
   essais:      { label: "Essais Miss France", desc: "Tes <b>2 essais</b> pour la couronne : essai 1 (gros lot) et essai 2 (filet de secours)." },
+  ordre:       { label: "L'ordre final", desc: "Les <b>5 finalistes officielles</b> sont connues ! Classe-les de la <b>1<sup>re</sup></b> (ta Miss France) à la <b>5<sup>e</sup></b>." },
   cloture:     { label: "Élection en direct !", desc: "Pronostics verrouillés chez l'huissier. Les points tombent en direct — onglet <b>Résultat</b> !" },
   resultats:   { label: "Résultats officiels", desc: "Tout est publié : tes points dans <b>Résultat</b>, la confrontation générale dans <b>Benchmark</b>." }
 };
@@ -405,9 +405,10 @@ window.App = {
   },
   aResultat: function (cid) {
     var chk = document.getElementById("adm-t15-" + cid);
+    var fin = document.getElementById("adm-fin-" + cid);
     var sel = document.getElementById("adm-rang-" + cid);
     var rang = sel.value === "" ? null : parseInt(sel.value, 10);
-    rpc("mf_admin_resultat", { p_jeton: S.session.jeton, p_candidate: cid, p_dans_top15: chk.checked, p_rang: rang })
+    rpc("mf_admin_resultat", { p_jeton: S.session.jeton, p_candidate: cid, p_dans_top15: chk.checked, p_est_finaliste: fin.checked, p_rang: rang })
       .then(function () { toast("Résultat enregistré ✓"); return loadCandidates().then(render); })
       .catch(function (e) { toast(e.message, true); });
   },
@@ -452,11 +453,16 @@ function missPhoto(c, surprise) {
 function statutBadge(p) {
   if (!p) return "";
   var h = "";
-  if (p.statut === "top5") h += '<span class="badge gold">⭐ Finaliste' + (p.rang ? " — Nº" + p.rang : "") + '</span>';
+  if (p.statut === "top5") h += '<span class="badge gold">⭐ Dans mes 5</span>';
   else if (p.statut === "top15") h += '<span class="badge pink">✓ Dans mon équipe</span>';
+  if (p.rang) h += '<span class="badge gold">Mon ordre : Nº' + p.rang + '</span>';
   if (p.essai === 1) h += '<span class="badge gold">👑 Essai 1</span>';
   if (p.essai === 2) h += '<span class="badge gold">👑 Essai 2</span>';
   return h;
+}
+
+function finalisteBadge(c) {
+  return c.est_finaliste ? '<span class="badge gold">👑 Finaliste officielle</span>' : "";
 }
 
 function missActions(c) {
@@ -472,7 +478,7 @@ function missActions(c) {
     if (st === "top15") h += btn("App.statut(" + c.id + ",'top5')", "⭐ Dans mes 5 finalistes !", "mini");
     else if (st === "top5") h += btn("App.statut(" + c.id + ",'top15')", "Redescendre dans les 15", "ghost mini");
   } else if (ph === "ordre") {
-    if (st === "top5") h += rangSelect(c.id, p && p.rang);
+    if (c.est_finaliste) h += rangSelect(c.id, p && p.rang);
   } else if (ph === "essais") {
     var e = p ? p.essai : null;
     h += e === 1 ? btn("App.essai(1,null)", "Annuler l'essai 1", "ghost mini") : btn("App.essai(1," + c.id + ")", "👑 Essai 1", "gold mini");
@@ -573,7 +579,8 @@ function myCounts() {
   Object.keys(S.mine).forEach(function (k) {
     var p = S.mine[k];
     if (p.statut === "top15" || p.statut === "top5") t15++;
-    if (p.statut === "top5") { t5++; if (p.rang) ranges++; }
+    if (p.statut === "top5") t5++;
+    if (p.rang) ranges++;
     if (p.essai === 1) e1 = true;
   });
   return { t15: t15, t5: t5, ranges: ranges, e1: e1 };
@@ -639,7 +646,7 @@ function viewAccueil() {
       + '<span class="nom" onclick="App.fiche(' + x.id + ')">' + esc(x.nom) + '</span>'
       + '<span class="meta">Miss ' + esc(x.region) + (x.age ? " · " + esc(x.age) + " ans" : "") + '</span>'
       + (x.profession ? '<span class="meta">' + esc(x.profession) + '</span>' : "")
-      + '<div>' + statutBadge(p) + '</div>'
+      + '<div>' + finalisteBadge(x) + statutBadge(p) + '</div>'
       + '<div class="actions">' + missActions(x) + '</div>'
       + '</div></article>';
   });
@@ -678,12 +685,32 @@ function viewSelection() {
   h += '<div class="card"><h3>⭐ Mes 5 finalistes (' + c.t5 + '/5)</h3>';
   var locked = !!S.profil.fige;
   h += top5.length ? top5.map(function (e) {
-    var extra = (S.config.phase === "ordre" && !locked) ? rangSelect(e[0].id, e[1].rang)
-      : (e[1].rang ? '<span class="badge gold">Nº' + e[1].rang + '</span>' : "");
+    var extra = "";
     if (S.config.phase === "top5" && !locked) extra += btn("App.statut(" + e[0].id + ",'top15')", "↩︎", "ghost mini");
     return ligne(e[0], e[1], extra);
   }).join("") : '<p class="muted small">Personne pour l\'instant…</p>';
   h += '</div>';
+
+  var finalistes = S.candidates.filter(function (x) { return x.est_finaliste; });
+  if (finalistes.length) {
+    var ordreOuvert = S.config.phase === "ordre" && !locked;
+    h += '<div class="card"><h3>🏛️ Mon ordre final des 5 finalistes</h3>'
+      + '<p class="small muted">La Nº1 est ta Miss France pronostiquée.</p>';
+    finalistes.sort(function (a, b) {
+      var pa = S.mine[a.id], pb = S.mine[b.id];
+      return ((pa && pa.rang) || 9) - ((pb && pb.rang) || 9);
+    });
+    finalistes.forEach(function (x) {
+      var p = S.mine[x.id];
+      var extra = ordreOuvert ? rangSelect(x.id, p && p.rang)
+        : (p && p.rang ? '<span class="badge gold">Nº' + p.rang + '</span>' : '<span class="small muted">—</span>');
+      h += '<div class="listline"><span class="avatar" style="cursor:pointer" onclick="App.fiche(' + x.id + ')">' + missPhoto(x) + '</span>'
+        + '<div class="grow"><b style="color:var(--pink);cursor:pointer" onclick="App.fiche(' + x.id + ')">' + esc(x.nom) + '</b>'
+        + '<div class="small muted">Miss ' + esc(x.region) + '</div></div>'
+        + '<div>' + extra + '</div></div>';
+    });
+    h += '</div>';
+  }
 
   h += '<div class="card"><h3>👑 Mes essais Miss France</h3>';
   [1, 2].forEach(function (n) {
@@ -752,14 +779,20 @@ function viewResultat() {
     return mini(e[0], ok);
   }).join("");
   var h5 = mine5.map(function (e) {
-    var ok = e[0].rang_final != null;
+    var ok = e[0].est_finaliste;
     if (ok) pts5 += cfg.pts_top5;
     return mini(e[0], ok);
   }).join("");
-  var hOrd = mine5.map(function (e) {
-    var ok = e[1].rang != null && e[1].rang === e[0].rang_final;
+  var ranked = [];
+  Object.keys(S.mine).forEach(function (k) {
+    var p = S.mine[k], x = byId[k];
+    if (x && p.rang) ranked.push([x, p]);
+  });
+  ranked.sort(function (a, b) { return a[1].rang - b[1].rang; });
+  var hOrd = ranked.map(function (e) {
+    var ok = e[1].rang === e[0].rang_final;
     if (ok) ptsOrd += cfg.pts_ordre;
-    var sub = "mon rang : " + (e[1].rang ? "Nº" + e[1].rang : "—") + " · réel : " + (e[0].rang_final ? "Nº" + e[0].rang_final : "hors top 5");
+    var sub = "mon rang : Nº" + e[1].rang + " · réel : " + (e[0].rang_final ? "Nº" + e[0].rang_final : "à venir…");
     return mini(e[0], ok, sub);
   }).join("");
   var hE = [1, 2].map(function (n) {
@@ -780,7 +813,7 @@ function viewResultat() {
 
   h += '<div class="card"><h3>15 Miss sélectionnées <span class="small muted">(' + cfg.pts_top15 + ' pts par Miss trouvée)</span> — <span class="cnt">' + pts15 + ' pts</span></h3>' + (h15 || '<p class="muted small">Aucune sélection.</p>') + '</div>';
   h += '<div class="card"><h3>5 Miss sélectionnées <span class="small muted">(' + cfg.pts_top5 + ' pts par Miss trouvée)</span> — <span class="cnt">' + pts5 + ' pts</span></h3>' + (h5 || '<p class="muted small">Aucune finaliste.</p>') + '</div>';
-  h += '<div class="card"><h3>5 Miss dans le bon ordre <span class="small muted">(' + cfg.pts_ordre + ' pts par bon rang)</span> — <span class="cnt">' + ptsOrd + ' pts</span></h3>' + (hOrd || '<p class="muted small">Aucun classement.</p>') + '</div>';
+  h += '<div class="card"><h3>Les 5 finalistes dans le bon ordre <span class="small muted">(' + cfg.pts_ordre + ' pts par bon rang)</span> — <span class="cnt">' + ptsOrd + ' pts</span></h3>' + (hOrd || '<p class="muted small">Aucun classement.</p>') + '</div>';
   h += '<div class="card"><h3>2 essais Miss France — <span class="cnt">' + (ptsE1 + ptsE2) + ' pts</span></h3>' + hE + '</div>';
   h += '<div class="card"><h3>QCM — <span class="cnt">' + qcm + ' pts</span></h3><p class="small muted">Notés à la main par le président du jury, décimales vexantes incluses.</p></div>';
   return h;
@@ -847,14 +880,15 @@ function viewAdmin() {
   h += '</select></div>';
 
   h += '<div class="card"><h3>Résultats réels des Miss</h3>'
-    + '<p class="small muted">Le soir de l\'élection : coche « Top 15 » au fil des annonces, puis choisis les rangs 1 à 5. Chaque coche recalcule tous les scores instantanément.</p>';
+    + '<p class="small muted">Le soir de l\'élection : coche « Top 15 » au fil des annonces, puis « Finaliste » pour les 5 du top 5 officiel (ouvre le revote de l\'ordre), et enfin les rangs 1 à 5. Chaque coche recalcule tous les scores instantanément.</p>';
   if (!S.candidates.length) {
     h += '<p class="muted small">Aucune candidate — ajoute-les dans Supabase (Table Editor → mf_candidates).</p>';
   } else {
-    h += '<div style="overflow-x:auto"><table class="adm"><thead><tr><th>Miss</th><th>Top 15</th><th>Rang final</th><th></th></tr></thead><tbody>';
+    h += '<div style="overflow-x:auto"><table class="adm"><thead><tr><th>Miss</th><th>Top 15</th><th>Finaliste</th><th>Rang final</th><th></th></tr></thead><tbody>';
     S.candidates.forEach(function (x) {
       h += '<tr><td><b>' + esc(x.nom) + '</b><br><span class="small muted">Miss ' + esc(x.region) + '</span></td>'
         + '<td><input type="checkbox" id="adm-t15-' + x.id + '"' + (x.dans_top15 ? " checked" : "") + '></td>'
+        + '<td><input type="checkbox" id="adm-fin-' + x.id + '"' + (x.est_finaliste ? " checked" : "") + '></td>'
         + '<td><select class="inp" id="adm-rang-' + x.id + '"><option value="">—</option>';
       for (var i = 1; i <= 5; i++) h += '<option value="' + i + '"' + (x.rang_final === i ? " selected" : "") + '>Nº' + i + '</option>';
       h += '</select></td><td>' + btn("App.aResultat(" + x.id + ")", "💾", "mini") + '</td></tr>';
@@ -896,7 +930,7 @@ function viewFiche() {
     + (x.age ? "<li>" + esc(x.age) + " ans</li>" : "")
     + (x.taille ? "<li>" + esc(x.taille) + "</li>" : "")
     + (x.profession ? "<li>" + esc(x.profession) + "</li>" : "")
-    + '</ul><div class="center">' + statutBadge(p) + '</div>'
+    + '</ul><div class="center">' + finalisteBadge(x) + statutBadge(p) + '</div>'
     + '<div class="center" style="margin-top:0.6rem">' + missActions(x) + '</div>'
     + '</div></div>';
   return h;
