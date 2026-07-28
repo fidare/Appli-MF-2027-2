@@ -46,11 +46,18 @@ create table if not exists public.mf_pronostics (
   joueur_id bigint not null references public.mf_joueurs (id) on delete cascade,
   candidate_id bigint not null references public.mf_candidates (id) on delete cascade,
   statut text check (statut in ('ballotage', 'top15', 'top5')),
+  top5 boolean not null default false,
   rang int check (rang between 1 and 5),
   essai int check (essai in (1, 2)),
   modifie_le timestamptz not null default now(),
   unique (joueur_id, candidate_id)
 );
+
+-- Migration : les « 5 » deviennent un choix indépendant (parmi le vrai
+-- top 15), portés par la colonne booléenne top5.
+alter table public.mf_pronostics
+  add column if not exists top5 boolean not null default false;
+update public.mf_pronostics set top5 = true, statut = 'top15' where statut = 'top5';
 
 create table if not exists public.mf_config (
   id int primary key default 1 check (id = 1),
@@ -133,19 +140,21 @@ as $$
 $$;
 
 -- Mes pronostics.
-create or replace function public.mf_mes_pronostics(p_jeton uuid)
-returns table (candidate_id bigint, statut text, rang int, essai int)
+drop function if exists public.mf_mes_pronostics(uuid);
+create function public.mf_mes_pronostics(p_jeton uuid)
+returns table (candidate_id bigint, statut text, top5 boolean, rang int, essai int)
 language sql
 security definer set search_path = public
 as $$
-  select p.candidate_id, p.statut, p.rang, p.essai
+  select p.candidate_id, p.statut, p.top5, p.rang, p.essai
   from mf_pronostics p
   join mf_joueurs j on j.id = p.joueur_id
   where j.jeton = p_jeton;
 $$;
 
--- Sélection / ballotage / finalistes.
--- p_statut : 'top15' | 'top5' | 'ballotage' | 'aucun' (= retirer)
+-- Sélections.
+-- Phase 1 (selection15) : p_statut 'top15' (rejoindre l'équipe) ou 'aucun'.
+-- Phase 2 (top5) : p_statut 'top5' (parmi le vrai top 15) ou 'aucun'.
 create or replace function public.mf_definir_statut(p_jeton uuid, p_candidate bigint, p_statut text)
 returns void
 language plpgsql
@@ -154,68 +163,65 @@ as $$
 declare
   v_j bigint;
   v_phase text;
-  v_cur text;
   v_nb int;
 begin
   select id into v_j from mf_joueurs where jeton = p_jeton;
   if v_j is null then raise exception 'Session invalide, reconnecte-toi.'; end if;
-  if p_statut not in ('top15', 'top5', 'ballotage', 'aucun') then
+  if p_statut not in ('top15', 'top5', 'aucun') then
     raise exception 'Statut inconnu.';
   end if;
   select phase into v_phase from mf_config where id = 1;
   if exists (select 1 from mf_validations v where v.joueur_id = v_j and v.phase = v_phase) then
     raise exception 'Ton dossier est scellé chez l''huissier ! Récupère-le pour modifier.';
   end if;
-  select statut into v_cur from mf_pronostics where joueur_id = v_j and candidate_id = p_candidate;
 
   if v_phase = 'selection15' then
-    if p_statut = 'top5' then
-      raise exception 'Le choix des 5 finalistes ouvrira plus tard !';
+    if p_statut = 'top15' then
+      select count(*) into v_nb from mf_pronostics
+        where joueur_id = v_j and statut = 'top15';
+      if v_nb >= 15 and not exists (select 1 from mf_pronostics
+          where joueur_id = v_j and candidate_id = p_candidate and statut = 'top15') then
+        raise exception 'Ta liste des 15 est pleine ! Retire quelqu''un d''abord.';
+      end if;
+      insert into mf_pronostics (joueur_id, candidate_id, statut)
+        values (v_j, p_candidate, 'top15')
+      on conflict (joueur_id, candidate_id) do update
+        set statut = 'top15', modifie_le = now();
+    elsif p_statut = 'aucun' then
+      update mf_pronostics set statut = null, modifie_le = now()
+        where joueur_id = v_j and candidate_id = p_candidate;
+    else
+      raise exception 'En phase 1, on compose son équipe de 15 !';
     end if;
+
   elsif v_phase = 'top5' then
     if p_statut = 'top5' then
-      if coalesce(v_cur, '') <> 'top15' then
-        raise exception 'Tes 5 finalistes doivent venir de ta liste des 15.';
+      if not exists (select 1 from mf_candidates c where c.id = p_candidate and c.dans_top15) then
+        raise exception 'Cette Miss n''est plus en lice — choisis parmi les 15 encore en course !';
       end if;
-    elsif p_statut = 'top15' and coalesce(v_cur, '') = 'top5' then
-      null; -- redescendre une finaliste dans les 15 : autorisé
+      select count(*) into v_nb from mf_pronostics where joueur_id = v_j and top5;
+      if v_nb >= 5 and not exists (select 1 from mf_pronostics
+          where joueur_id = v_j and candidate_id = p_candidate and top5) then
+        raise exception 'Tu as déjà 5 finalistes ! Retires-en une d''abord.';
+      end if;
+      insert into mf_pronostics (joueur_id, candidate_id, top5)
+        values (v_j, p_candidate, true)
+      on conflict (joueur_id, candidate_id) do update
+        set top5 = true, modifie_le = now();
+    elsif p_statut = 'aucun' then
+      update mf_pronostics set top5 = false, modifie_le = now()
+        where joueur_id = v_j and candidate_id = p_candidate;
     else
-      raise exception 'En ce moment, on choisit uniquement ses 5 finalistes parmi ses 15.';
+      raise exception 'En phase 2, on choisit ses 5 parmi les 15 en lice !';
     end if;
+
   else
     raise exception 'Les sélections sont fermées dans la phase actuelle.';
   end if;
 
-  if p_statut = 'top15' and coalesce(v_cur, '') not in ('top15', 'top5') then
-    select count(*) into v_nb from mf_pronostics
-      where joueur_id = v_j and statut in ('top15', 'top5');
-    if v_nb >= 15 then
-      raise exception 'Ta liste des 15 est pleine ! Retire quelqu''un d''abord.';
-    end if;
-  end if;
-
-  if p_statut = 'top5' then
-    select count(*) into v_nb from mf_pronostics
-      where joueur_id = v_j and statut = 'top5';
-    if v_nb >= 5 then
-      raise exception 'Tu as déjà 5 finalistes ! Redescends-en une d''abord.';
-    end if;
-  end if;
-
-  if p_statut = 'aucun' then
-    update mf_pronostics set statut = null, rang = null, modifie_le = now()
-      where joueur_id = v_j and candidate_id = p_candidate;
-    delete from mf_pronostics
-      where joueur_id = v_j and candidate_id = p_candidate
-        and statut is null and essai is null;
-  else
-    insert into mf_pronostics (joueur_id, candidate_id, statut)
-      values (v_j, p_candidate, p_statut)
-    on conflict (joueur_id, candidate_id) do update
-      set statut = excluded.statut,
-          rang = case when excluded.statut = 'top5' then mf_pronostics.rang else null end,
-          modifie_le = now();
-  end if;
+  delete from mf_pronostics
+    where joueur_id = v_j and candidate_id = p_candidate
+      and statut is null and not top5 and rang is null and essai is null;
 end;
 $$;
 
@@ -252,7 +258,7 @@ begin
       where joueur_id = v_j and candidate_id = p_candidate;
     delete from mf_pronostics
       where joueur_id = v_j and candidate_id = p_candidate
-        and statut is null and rang is null and essai is null;
+        and statut is null and not top5 and rang is null and essai is null;
   else
     insert into mf_pronostics (joueur_id, candidate_id, rang)
       values (v_j, p_candidate, p_rang)
@@ -262,7 +268,8 @@ begin
 end;
 $$;
 
--- Essais Miss France (phase "essais").
+-- Essais Miss France : l'essai Nº1 se joue en phase 1 (parmi les 30),
+-- l'essai Nº2 en phase 2 (parmi les 15 encore en lice).
 -- p_candidate à null pour effacer l'essai p_essai.
 create or replace function public.mf_definir_essai(p_jeton uuid, p_essai int, p_candidate bigint)
 returns void
@@ -277,17 +284,24 @@ begin
   if v_j is null then raise exception 'Session invalide, reconnecte-toi.'; end if;
   if p_essai not in (1, 2) then raise exception 'Essai inconnu.'; end if;
   select phase into v_phase from mf_config where id = 1;
-  if v_phase <> 'essais' then
-    raise exception 'Les essais Miss France ne sont pas ouverts en ce moment.';
+  if p_essai = 1 and v_phase <> 'selection15' then
+    raise exception 'L''essai Nº1 se joue pendant la phase 1 (sélection des 15).';
+  end if;
+  if p_essai = 2 and v_phase <> 'top5' then
+    raise exception 'L''essai Nº2 se joue pendant la phase 2 (choix des 5).';
   end if;
   if exists (select 1 from mf_validations v where v.joueur_id = v_j and v.phase = v_phase) then
     raise exception 'Ton dossier est scellé chez l''huissier ! Récupère-le pour modifier.';
+  end if;
+  if p_essai = 2 and p_candidate is not null
+     and not exists (select 1 from mf_candidates c where c.id = p_candidate and c.dans_top15) then
+    raise exception 'Cette Miss n''est plus en lice — choisis parmi les 15 encore en course !';
   end if;
   update mf_pronostics set essai = null, modifie_le = now()
     where joueur_id = v_j and essai = p_essai
       and (p_candidate is null or candidate_id <> p_candidate);
   delete from mf_pronostics
-    where joueur_id = v_j and statut is null and rang is null and essai is null;
+    where joueur_id = v_j and statut is null and not top5 and rang is null and essai is null;
   if p_candidate is not null then
     insert into mf_pronostics (joueur_id, candidate_id, essai)
       values (v_j, p_candidate, p_essai)
@@ -313,24 +327,26 @@ begin
   select phase into v_phase from mf_config where id = 1;
   if v_phase = 'selection15' then
     select count(*) into v_nb from mf_pronostics
-      where joueur_id = v_j and statut in ('top15', 'top5');
+      where joueur_id = v_j and statut = 'top15';
     if v_nb <> 15 then
       raise exception 'L''huissier exige exactement 15 Miss dans ton équipe (tu en as %) !', v_nb;
     end if;
+    if not exists (select 1 from mf_pronostics where joueur_id = v_j and essai = 1) then
+      raise exception 'L''huissier exige aussi ton essai Miss France Nº1 !';
+    end if;
   elsif v_phase = 'top5' then
-    select count(*) into v_nb from mf_pronostics where joueur_id = v_j and statut = 'top5';
+    select count(*) into v_nb from mf_pronostics where joueur_id = v_j and top5;
     if v_nb <> 5 then
       raise exception 'L''huissier exige 5 finalistes (tu en as %) !', v_nb;
+    end if;
+    if not exists (select 1 from mf_pronostics where joueur_id = v_j and essai = 2) then
+      raise exception 'L''huissier exige aussi ton essai Miss France Nº2 !';
     end if;
   elsif v_phase = 'ordre' then
     select count(*) into v_nb from mf_pronostics
       where joueur_id = v_j and rang is not null;
     if v_nb <> 5 then
       raise exception 'L''huissier exige un rang pour chacune des 5 finalistes (% posé(s)) !', v_nb;
-    end if;
-  elsif v_phase = 'essais' then
-    if not exists (select 1 from mf_pronostics where joueur_id = v_j and essai = 1) then
-      raise exception 'L''huissier exige au moins ton essai 1 !';
     end if;
   else
     raise exception 'Rien à déposer chez l''huissier dans cette phase.';
@@ -365,8 +381,8 @@ language sql
 security definer set search_path = public
 as $$
   select j.nom_affiche, j.photo_url,
-    (select count(*)::int from mf_pronostics p where p.joueur_id = j.id and p.statut in ('top15', 'top5')),
-    (select count(*)::int from mf_pronostics p where p.joueur_id = j.id and p.statut = 'top5'),
+    (select count(*)::int from mf_pronostics p where p.joueur_id = j.id and p.statut = 'top15'),
+    (select count(*)::int from mf_pronostics p where p.joueur_id = j.id and p.top5),
     (select count(*)::int from mf_pronostics p where p.joueur_id = j.id and p.rang is not null),
     (select count(*)::int from mf_pronostics p where p.joueur_id = j.id and p.essai is not null),
     exists (select 1 from mf_validations v, mf_config c
@@ -403,9 +419,9 @@ begin
       j.id, j.pseudo, j.nom_affiche, j.photo_url,
       j.points_qcm as pts_qcm,
       cfg.pts_top15 * (select count(*) from mf_pronostics p join mf_candidates c on c.id = p.candidate_id
-        where p.joueur_id = j.id and p.statut in ('top15', 'top5') and c.dans_top15) as pts_15,
+        where p.joueur_id = j.id and p.statut = 'top15' and c.dans_top15) as pts_15,
       cfg.pts_top5 * (select count(*) from mf_pronostics p join mf_candidates c on c.id = p.candidate_id
-        where p.joueur_id = j.id and p.statut = 'top5' and c.est_finaliste) as pts_5,
+        where p.joueur_id = j.id and p.top5 and c.est_finaliste) as pts_5,
       cfg.pts_ordre * (select count(*) from mf_pronostics p join mf_candidates c on c.id = p.candidate_id
         where p.joueur_id = j.id and p.rang = c.rang_final) as pts_ordre,
       case when exists (select 1 from mf_pronostics p join mf_candidates c on c.id = p.candidate_id
@@ -414,7 +430,7 @@ begin
         where p.joueur_id = j.id and p.essai = 2 and c.rang_final = 1) then cfg.pts_essai2 else 0 end as pts_essai2,
       (select coalesce(json_agg(json_build_object(
            'candidate_id', p.candidate_id, 'nom', c.nom, 'region', c.region,
-           'statut', p.statut, 'rang', p.rang, 'essai', p.essai,
+           'statut', p.statut, 'top5', p.top5, 'rang', p.rang, 'essai', p.essai,
            'dans_top15', c.dans_top15, 'est_finaliste', c.est_finaliste, 'rang_final', c.rang_final)), '[]'::json)
          from mf_pronostics p join mf_candidates c on c.id = p.candidate_id
          where p.joueur_id = j.id) as pronostics

@@ -207,10 +207,9 @@ var STORE_KEY = "mf2027-session";
 
 var PHASES = {
   preparation: { label: "Préparation du casting", desc: "Le tapis rouge se déroule, les paillettes se comptent… Le jeu n'est pas encore ouvert." },
-  selection15: { label: "Sélection des 15", desc: "Compose ta liste de <b>15 Miss</b> pour ton équipe." },
-  top5:        { label: "Choix des 5", desc: "Parmi tes 15, choisis les <b>5</b> que tu vois en finale." },
-  essais:      { label: "Essais Miss France", desc: "Tes <b>2 essais</b> pour la couronne : essai 1 (gros lot) et essai 2 (filet de secours)." },
-  ordre:       { label: "L'ordre final", desc: "Les <b>5 finalistes officielles</b> sont connues ! Classe-les de la <b>1<sup>re</sup></b> (ta Miss France) à la <b>5<sup>e</sup></b>." },
+  selection15: { label: "Phase 1 — Tes 15 + Essai Nº1", desc: "Compose ton équipe de <b>15 Miss</b> et pose ton <b>essai Miss France Nº1</b> (le gros lot)." },
+  top5:        { label: "Phase 2 — Tes 5 + Essai Nº2", desc: "Il reste <b>15 Miss en lice</b> : choisis les <b>5</b> que tu vois en finale et pose ton <b>essai Nº2</b> (le filet de secours)." },
+  ordre:       { label: "Phase 3 — L'ordre final", desc: "Les <b>5 finalistes officielles</b> sont connues ! Classe-les de la <b>1<sup>re</sup></b> (ta Miss France) à la <b>5<sup>e</sup></b>." },
   cloture:     { label: "Élection en direct !", desc: "Pronostics verrouillés chez l'huissier. Les points tombent en direct — onglet <b>Résultat</b> !" },
   resultats:   { label: "Résultats officiels", desc: "Tout est publié : tes points dans <b>Résultat</b>, la confrontation générale dans <b>Benchmark</b>." }
 };
@@ -375,7 +374,8 @@ window.App = {
       .catch(function (e) { toast(e.message, true); });
   },
 
-  search: function (inp) { S.q = inp.value; renderKeepFocus(inp); },
+  search: function (inp) { S.q = inp.value; renderKeepFocus(inp, "search-input"); },
+  admSearch: function (inp) { S.admQ = inp.value; renderKeepFocus(inp, "adm-search"); },
   fiche: function (cid) { S.fiche = cid; S.ficheSurprise = false; render(); },
   closeFiche: function () { S.fiche = null; render(); },
   surprise: function () { S.ficheSurprise = !S.ficheSurprise; render(); },
@@ -453,8 +453,8 @@ function missPhoto(c, surprise) {
 function statutBadge(p) {
   if (!p) return "";
   var h = "";
-  if (p.statut === "top5") h += '<span class="badge gold">⭐ Dans mes 5</span>';
-  else if (p.statut === "top15") h += '<span class="badge pink">✓ Dans mon équipe</span>';
+  if (p.statut === "top15") h += '<span class="badge pink">✓ Dans mon équipe</span>';
+  if (p.top5) h += '<span class="badge gold">⭐ Dans mes 5</span>';
   if (p.rang) h += '<span class="badge gold">Mon ordre : Nº' + p.rang + '</span>';
   if (p.essai === 1) h += '<span class="badge gold">👑 Essai 1</span>';
   if (p.essai === 2) h += '<span class="badge gold">👑 Essai 2</span>';
@@ -462,7 +462,15 @@ function statutBadge(p) {
 }
 
 function finalisteBadge(c) {
-  return c.est_finaliste ? '<span class="badge gold">👑 Finaliste officielle</span>' : "";
+  if (c.est_finaliste) return '<span class="badge gold">👑 Finaliste officielle</span>';
+  var ph = S.config.phase;
+  var top15Connu = S.candidates.some(function (x) { return x.dans_top15; });
+  if (top15Connu && (ph === "top5" || ph === "ordre" || ph === "cloture" || ph === "resultats")) {
+    return c.dans_top15
+      ? '<span class="badge pink">🎯 Encore en lice</span>'
+      : '<span class="badge dark">✂️ Éliminée</span>';
+  }
+  return "";
 }
 
 function missActions(c) {
@@ -471,18 +479,18 @@ function missActions(c) {
   var ph = S.config.phase;
   var st = p ? p.statut : null;
   var h = "";
+  var e = p ? p.essai : null;
   if (ph === "selection15") {
     if (st === "top15") h += btn("App.statut(" + c.id + ",'aucun')", "Retirer de mon équipe", "ghost mini");
     else h += btn("App.statut(" + c.id + ",'top15')", "Je la veux dans mon équipe !", "mini");
+    h += e === 1 ? btn("App.essai(1,null)", "Annuler l'essai Nº1", "ghost mini") : btn("App.essai(1," + c.id + ")", "👑 Mon essai Nº1", "gold mini");
   } else if (ph === "top5") {
-    if (st === "top15") h += btn("App.statut(" + c.id + ",'top5')", "⭐ Dans mes 5 finalistes !", "mini");
-    else if (st === "top5") h += btn("App.statut(" + c.id + ",'top15')", "Redescendre dans les 15", "ghost mini");
+    if (!c.dans_top15) return "";
+    if (p && p.top5) h += btn("App.statut(" + c.id + ",'aucun')", "Retirer de mes 5", "ghost mini");
+    else h += btn("App.statut(" + c.id + ",'top5')", "⭐ Dans mes 5 !", "mini");
+    h += e === 2 ? btn("App.essai(2,null)", "Annuler l'essai Nº2", "ghost mini") : btn("App.essai(2," + c.id + ")", "👑 Mon essai Nº2", "gold mini");
   } else if (ph === "ordre") {
     if (c.est_finaliste) h += rangSelect(c.id, p && p.rang);
-  } else if (ph === "essais") {
-    var e = p ? p.essai : null;
-    h += e === 1 ? btn("App.essai(1,null)", "Annuler l'essai 1", "ghost mini") : btn("App.essai(1," + c.id + ")", "👑 Essai 1", "gold mini");
-    h += e === 2 ? btn("App.essai(2,null)", "Annuler l'essai 2", "ghost mini") : btn("App.essai(2," + c.id + ")", "Essai 2", "dark mini");
   }
   return h;
 }
@@ -501,10 +509,10 @@ function rangSelect(cid, cur) {
   return h + "</select>";
 }
 
-function renderKeepFocus(inp) {
+function renderKeepFocus(inp, id) {
   var pos = inp.selectionStart;
   render();
-  var el = document.getElementById("search-input");
+  var el = document.getElementById(id);
   if (el) { el.focus(); el.setSelectionRange(pos, pos); }
 }
 
@@ -575,21 +583,22 @@ function viewHeader() {
 }
 
 function myCounts() {
-  var t15 = 0, t5 = 0, ranges = 0, e1 = false;
+  var t15 = 0, t5 = 0, ranges = 0, e1 = false, e2 = false;
   Object.keys(S.mine).forEach(function (k) {
     var p = S.mine[k];
-    if (p.statut === "top15" || p.statut === "top5") t15++;
-    if (p.statut === "top5") t5++;
+    if (p.statut === "top15") t15++;
+    if (p.top5) t5++;
     if (p.rang) ranges++;
     if (p.essai === 1) e1 = true;
+    if (p.essai === 2) e2 = true;
   });
-  return { t15: t15, t5: t5, ranges: ranges, e1: e1 };
+  return { t15: t15, t5: t5, ranges: ranges, e1: e1, e2: e2 };
 }
 
 // Encadré « huissier de justice » : sceller / récupérer sa sélection.
 function huissierCard() {
   var ph = S.config.phase;
-  if (ph !== "selection15" && ph !== "top5" && ph !== "ordre" && ph !== "essais") return "";
+  if (ph !== "selection15" && ph !== "top5" && ph !== "ordre") return "";
   var c = myCounts();
   if (S.profil.fige) {
     return '<div class="card center" style="border-color:var(--gold)">'
@@ -597,20 +606,20 @@ function huissierCard() {
       + '<p class="small muted" style="margin:0.5rem 0">Ta sélection est officielle — plus aucune modification possible.</p>'
       + btn("App.defiger()", "Récupérer mon dossier", "ghost mini") + '</div>';
   }
-  var ready = false, hint = "";
+  var ready = false, manques = [];
   if (ph === "selection15") {
-    ready = c.t15 === 15;
-    hint = "Encore " + (15 - c.t15) + " Miss à recruter avant de pouvoir sceller.";
+    if (c.t15 < 15) manques.push((15 - c.t15) + " Miss à recruter");
+    if (!c.e1) manques.push("ton essai Miss France Nº1 à poser");
+    ready = !manques.length;
   } else if (ph === "top5") {
-    ready = c.t5 === 5;
-    hint = "Encore " + (5 - c.t5) + " finaliste(s) à choisir avant de pouvoir sceller.";
+    if (c.t5 < 5) manques.push((5 - c.t5) + " finaliste(s) à choisir");
+    if (!c.e2) manques.push("ton essai Nº2 à poser");
+    ready = !manques.length;
   } else if (ph === "ordre") {
-    ready = c.ranges === 5;
-    hint = "Encore " + (5 - c.ranges) + " rang(s) à attribuer avant de pouvoir sceller.";
-  } else if (ph === "essais") {
-    ready = c.e1;
-    hint = "Choisis au moins ton essai 1 avant de pouvoir sceller.";
+    if (c.ranges < 5) manques.push((5 - c.ranges) + " rang(s) à attribuer");
+    ready = !manques.length;
   }
+  var hint = "Avant de pouvoir sceller : " + manques.join(" et ") + ".";
   return '<div class="card center">'
     + (ready
       ? btn("App.figer()", "⚖️ Envoyer à l'huissier de justice !", "gold")
@@ -662,12 +671,13 @@ function viewSelection() {
     var p = S.mine[k], x = byId[k];
     if (!x) return;
     if (p.statut === "top15") top15.push([x, p]);
-    if (p.statut === "top5") top5.push([x, p]);
+    if (p.top5) top5.push([x, p]);
     if (p.essai === 1) essais[1] = [x, p];
     if (p.essai === 2) essais[2] = [x, p];
   });
-  top5.sort(function (a, b) { return (a[1].rang || 9) - (b[1].rang || 9); });
-  top15.sort(function (a, b) { return a[0].nom.localeCompare(b[0].nom); });
+  var sortNom = function (a, b) { return a[0].nom.localeCompare(b[0].nom); };
+  top5.sort(sortNom);
+  top15.sort(sortNom);
   var c = myCounts();
 
   function ligne(x, p, extra) {
@@ -686,9 +696,9 @@ function viewSelection() {
   var locked = !!S.profil.fige;
   h += top5.length ? top5.map(function (e) {
     var extra = "";
-    if (S.config.phase === "top5" && !locked) extra += btn("App.statut(" + e[0].id + ",'top15')", "↩︎", "ghost mini");
+    if (S.config.phase === "top5" && !locked) extra += btn("App.statut(" + e[0].id + ",'aucun')", "🗑", "ghost mini");
     return ligne(e[0], e[1], extra);
-  }).join("") : '<p class="muted small">Personne pour l\'instant…</p>';
+  }).join("") : '<p class="muted small">Personne pour l\'instant… (phase 2)</p>';
   h += '</div>';
 
   var finalistes = S.candidates.filter(function (x) { return x.est_finaliste; });
@@ -717,16 +727,15 @@ function viewSelection() {
     var e = essais[n];
     h += '<div class="listline"><span class="badge gold">Essai ' + n + '</span><div class="grow">'
       + (e ? '<b style="color:var(--pink)">' + esc(e[0].nom) + '</b> <span class="small muted">Miss ' + esc(e[0].region) + '</span>' : '<span class="muted small">— pas encore choisie —</span>')
-      + '</div>' + (e && S.config.phase === "essais" && !locked ? btn("App.essai(" + n + ",null)", "Annuler", "ghost mini") : "") + '</div>';
+      + '</div>' + (e && !locked && ((n === 1 && S.config.phase === "selection15") || (n === 2 && S.config.phase === "top5"))
+        ? btn("App.essai(" + n + ",null)", "Annuler", "ghost mini") : "") + '</div>';
   });
   h += '</div>';
 
   h += '<div class="card"><h3>💖 Mon équipe des 15 (' + c.t15 + '/15)</h3>';
-  var equipe = top5.concat(top15);
-  h += equipe.length ? equipe.map(function (e) {
+  h += top15.length ? top15.map(function (e) {
     var extra = statutBadge(e[1]);
-    if (!locked && S.config.phase === "selection15" && e[1].statut === "top15") extra += btn("App.statut(" + e[0].id + ",'aucun')", "🗑", "ghost mini");
-    if (!locked && S.config.phase === "top5" && e[1].statut === "top15") extra += btn("App.statut(" + e[0].id + ",'top5')", "⭐", "mini");
+    if (!locked && S.config.phase === "selection15") extra += btn("App.statut(" + e[0].id + ",'aucun')", "🗑", "ghost mini");
     return ligne(e[0], e[1], extra);
   }).join("") : '<p class="muted small">Ton équipe est vide. Fonce à l\'Accueil recruter !</p>';
   h += '</div>';
@@ -757,13 +766,14 @@ function viewResultat() {
   Object.keys(S.mine).forEach(function (k) {
     var p = S.mine[k], x = byId[k];
     if (!x) return;
-    if (p.statut === "top15" || p.statut === "top5") mine15.push([x, p]);
-    if (p.statut === "top5") mine5.push([x, p]);
+    if (p.statut === "top15") mine15.push([x, p]);
+    if (p.top5) mine5.push([x, p]);
     if (p.essai === 1) essais[1] = [x, p];
     if (p.essai === 2) essais[2] = [x, p];
   });
-  mine5.sort(function (a, b) { return (a[1].rang || 9) - (b[1].rang || 9); });
-  mine15.sort(function (a, b) { return a[0].nom.localeCompare(b[0].nom); });
+  var triNom = function (a, b) { return a[0].nom.localeCompare(b[0].nom); };
+  mine5.sort(triNom);
+  mine15.sort(triNom);
 
   var pts15 = 0, pts5 = 0, ptsOrd = 0, ptsE1 = 0, ptsE2 = 0;
 
@@ -884,8 +894,14 @@ function viewAdmin() {
   if (!S.candidates.length) {
     h += '<p class="muted small">Aucune candidate — ajoute-les dans Supabase (Table Editor → mf_candidates).</p>';
   } else {
+    h += '<input id="adm-search" class="search" placeholder="🔎 Filtrer par nom ou région…" value="' + esc(S.admQ || "") + '" oninput="App.admSearch(this)">';
+    var aq = (S.admQ || "").trim().toLowerCase();
+    var alist = S.candidates.filter(function (x) {
+      return !aq || (x.nom + " " + x.region).toLowerCase().indexOf(aq) >= 0;
+    });
+    if (!alist.length) h += '<p class="muted small">Aucune Miss ne correspond à ce filtre.</p>';
     h += '<div style="overflow-x:auto"><table class="adm"><thead><tr><th>Miss</th><th>Top 15</th><th>Finaliste</th><th>Rang final</th><th></th></tr></thead><tbody>';
-    S.candidates.forEach(function (x) {
+    alist.forEach(function (x) {
       h += '<tr><td><b>' + esc(x.nom) + '</b><br><span class="small muted">Miss ' + esc(x.region) + '</span></td>'
         + '<td><input type="checkbox" id="adm-t15-' + x.id + '"' + (x.dans_top15 ? " checked" : "") + '></td>'
         + '<td><input type="checkbox" id="adm-fin-' + x.id + '"' + (x.est_finaliste ? " checked" : "") + '></td>'
