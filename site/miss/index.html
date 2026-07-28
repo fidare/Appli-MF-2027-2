@@ -101,6 +101,7 @@
   .miss .nom { font-weight: 700; color: var(--pink); cursor: pointer; }
   .miss .meta { font-size: 0.83rem; color: var(--muted); }
   .miss .actions { margin-top: auto; padding-top: 0.5rem; }
+  .miss .actions .btn { display: block; width: 100%; margin: 0.3rem 0 0; text-align: center; }
 
   .avatar {
     width: 3.2rem; height: 3.2rem; border-radius: 50%; object-fit: cover;
@@ -484,6 +485,7 @@ function missActions(c) {
 }
 
 function btn(onclick, label, cls) {
+  label = label.replace(/ !/g, "&nbsp;!");
   return '<button class="btn ' + (cls || "") + '" onclick="' + onclick + '">' + label + '</button>';
 }
 
