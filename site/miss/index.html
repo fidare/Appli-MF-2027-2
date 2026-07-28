@@ -379,6 +379,23 @@ window.App = {
   closeFiche: function () { S.fiche = null; render(); },
   surprise: function () { S.ficheSurprise = !S.ficheSurprise; render(); },
 
+  figer: function () {
+    rpc("mf_figer", { p_jeton: S.session.jeton })
+      .then(function () {
+        toast("Dossier scellé chez l'huissier de justice ! ⚖️");
+        return Promise.all([loadProfil(), loadMine()]).then(render);
+      })
+      .catch(function (e) { toast(e.message, true); });
+  },
+  defiger: function () {
+    rpc("mf_defiger", { p_jeton: S.session.jeton })
+      .then(function () {
+        toast("Dossier récupéré — tu peux modifier à nouveau.");
+        return Promise.all([loadProfil(), loadMine()]).then(render);
+      })
+      .catch(function (e) { toast(e.message, true); });
+  },
+
   // ----- admin -----
   aPhase: function (sel) {
     rpc("mf_admin_phase", { p_jeton: S.session.jeton, p_phase: sel.value })
@@ -443,6 +460,7 @@ function statutBadge(p) {
 }
 
 function missActions(c) {
+  if (S.profil && S.profil.fige) return "";
   var p = S.mine[c.id];
   var ph = S.config.phase;
   var st = p ? p.statut : null;
@@ -552,13 +570,47 @@ function viewHeader() {
 }
 
 function myCounts() {
-  var t15 = 0, t5 = 0;
+  var t15 = 0, t5 = 0, ranges = 0, e1 = false;
   Object.keys(S.mine).forEach(function (k) {
-    var st = S.mine[k].statut;
-    if (st === "top15" || st === "top5") t15++;
-    if (st === "top5") t5++;
+    var p = S.mine[k];
+    if (p.statut === "top15" || p.statut === "top5") t15++;
+    if (p.statut === "top5") { t5++; if (p.rang) ranges++; }
+    if (p.essai === 1) e1 = true;
   });
-  return { t15: t15, t5: t5 };
+  return { t15: t15, t5: t5, ranges: ranges, e1: e1 };
+}
+
+// Encadré « huissier de justice » : sceller / récupérer sa sélection.
+function huissierCard() {
+  var ph = S.config.phase;
+  if (ph !== "selection15" && ph !== "top5" && ph !== "ordre" && ph !== "essais") return "";
+  var c = myCounts();
+  if (S.profil.fige) {
+    return '<div class="card center" style="border-color:var(--gold)">'
+      + '<span class="badge gold">⚖️ Dossier scellé chez l\'huissier de justice</span>'
+      + '<p class="small muted" style="margin:0.5rem 0">Ta sélection est officielle — plus aucune modification possible.</p>'
+      + btn("App.defiger()", "Récupérer mon dossier", "ghost mini") + '</div>';
+  }
+  var ready = false, hint = "";
+  if (ph === "selection15") {
+    ready = c.t15 === 15;
+    hint = "Encore " + (15 - c.t15) + " Miss à recruter avant de pouvoir sceller.";
+  } else if (ph === "top5") {
+    ready = c.t5 === 5;
+    hint = "Encore " + (5 - c.t5) + " finaliste(s) à choisir avant de pouvoir sceller.";
+  } else if (ph === "ordre") {
+    ready = c.ranges === 5;
+    hint = "Encore " + (5 - c.ranges) + " rang(s) à attribuer avant de pouvoir sceller.";
+  } else if (ph === "essais") {
+    ready = c.e1;
+    hint = "Choisis au moins ton essai 1 avant de pouvoir sceller.";
+  }
+  return '<div class="card center">'
+    + (ready
+      ? btn("App.figer()", "⚖️ Envoyer à l'huissier de justice !", "gold")
+        + '<p class="small muted" style="margin:0.4rem 0 0">Sceller ta sélection la rend officielle (tu pourras récupérer ton dossier tant que la phase est ouverte).</p>'
+      : '<p class="small muted" style="margin:0">⚖️ ' + hint + '</p>')
+    + '</div>';
 }
 
 // ----- Accueil : galerie -----
@@ -566,6 +618,7 @@ function viewAccueil() {
   var c = myCounts();
   var h = '<h2>Les Jeunettes en lice :</h2>'
     + '<p class="small muted">Mon équipe : <span class="cnt">' + c.t15 + ' / 15</span> · Mes finalistes : <span class="cnt">' + c.t5 + ' / 5</span></p>'
+    + huissierCard()
     + '<input id="search-input" class="search" placeholder="🔎 Chercher un prénom, une région…" value="' + esc(S.q) + '" oninput="App.search(this)">';
 
   var q = S.q.trim().toLowerCase();
@@ -622,13 +675,15 @@ function viewSelection() {
   }
 
   var h = '<h2>Ma sélection</h2>'
-    + '<p class="small muted">Miss retenues : <span class="cnt">' + c.t15 + ' / 15</span> — tout est enregistré automatiquement chez l\'huissier de justice. 🖋️</p>';
+    + '<p class="small muted">Miss retenues : <span class="cnt">' + c.t15 + ' / 15</span> — brouillon enregistré automatiquement ; scelle-le chez l\'huissier pour le rendre officiel. 🖋️</p>'
+    + huissierCard();
 
   h += '<div class="card"><h3>⭐ Mes 5 finalistes (' + c.t5 + '/5)</h3>';
+  var locked = !!S.profil.fige;
   h += top5.length ? top5.map(function (e) {
-    var extra = S.config.phase === "ordre" ? rangSelect(e[0].id, e[1].rang)
+    var extra = (S.config.phase === "ordre" && !locked) ? rangSelect(e[0].id, e[1].rang)
       : (e[1].rang ? '<span class="badge gold">Nº' + e[1].rang + '</span>' : "");
-    if (S.config.phase === "top5") extra += btn("App.statut(" + e[0].id + ",'top15')", "↩︎", "ghost mini");
+    if (S.config.phase === "top5" && !locked) extra += btn("App.statut(" + e[0].id + ",'top15')", "↩︎", "ghost mini");
     return ligne(e[0], e[1], extra);
   }).join("") : '<p class="muted small">Personne pour l\'instant…</p>';
   h += '</div>';
@@ -638,7 +693,7 @@ function viewSelection() {
     var e = essais[n];
     h += '<div class="listline"><span class="badge gold">Essai ' + n + '</span><div class="grow">'
       + (e ? '<b style="color:var(--pink)">' + esc(e[0].nom) + '</b> <span class="small muted">Miss ' + esc(e[0].region) + '</span>' : '<span class="muted small">— pas encore choisie —</span>')
-      + '</div>' + (e && S.config.phase === "essais" ? btn("App.essai(" + n + ",null)", "Annuler", "ghost mini") : "") + '</div>';
+      + '</div>' + (e && S.config.phase === "essais" && !locked ? btn("App.essai(" + n + ",null)", "Annuler", "ghost mini") : "") + '</div>';
   });
   h += '</div>';
 
@@ -646,8 +701,8 @@ function viewSelection() {
   var equipe = top5.concat(top15);
   h += equipe.length ? equipe.map(function (e) {
     var extra = statutBadge(e[1]);
-    if (S.config.phase === "selection15" && e[1].statut === "top15") extra += btn("App.statut(" + e[0].id + ",'aucun')", "🗑", "ghost mini");
-    if (S.config.phase === "top5" && e[1].statut === "top15") extra += btn("App.statut(" + e[0].id + ",'top5')", "⭐", "mini");
+    if (!locked && S.config.phase === "selection15" && e[1].statut === "top15") extra += btn("App.statut(" + e[0].id + ",'aucun')", "🗑", "ghost mini");
+    if (!locked && S.config.phase === "top5" && e[1].statut === "top15") extra += btn("App.statut(" + e[0].id + ",'top5')", "⭐", "mini");
     return ligne(e[0], e[1], extra);
   }).join("") : '<p class="muted small">Ton équipe est vide. Fonce à l\'Accueil recruter !</p>';
   h += '</div>';
@@ -655,7 +710,7 @@ function viewSelection() {
   h += '<div class="card"><h3>⏳ Mes Miss en ballotage</h3>';
   h += ball.length ? ball.map(function (e) {
     var extra = "";
-    if (S.config.phase === "selection15") {
+    if (S.config.phase === "selection15" && !locked) {
       extra = btn("App.statut(" + e[0].id + ",'top15')", "Je la veux !", "mini") + btn("App.statut(" + e[0].id + ",'aucun')", "🗑", "ghost mini");
     }
     return ligne(e[0], e[1], extra);
@@ -666,7 +721,7 @@ function viewSelection() {
     h += '<div class="card"><h3>📡 Où en sont les autres ?</h3><p class="small muted">Leurs choix restent secrets — seul l\'avancement est visible.</p>';
     S.avancement.forEach(function (a) {
       h += '<div class="listline">' + avatarHtml(a.nom_affiche, a.photo_url, false)
-        + '<div class="grow"><b>' + esc(a.nom_affiche) + '</b></div>'
+        + '<div class="grow"><b>' + esc(a.nom_affiche) + '</b>' + (a.fige ? ' <span class="badge gold">⚖️ scellé</span>' : "") + '</div>'
         + '<span class="small muted">équipe ' + a.nb_top15 + '/15 · finalistes ' + a.nb_top5 + '/5 · rangs ' + a.nb_ordre + '/5 · essais ' + a.nb_essais + '/2</span></div>';
     });
     h += '</div>';
@@ -873,7 +928,7 @@ setInterval(function () {
       if (S.tab === "benchmark") loadBenchmark(); else render();
     }).catch(function () {});
   } else {
-    loadConfig().then(function () { render(); }).catch(function () {});
+    Promise.all([loadConfig(), loadProfil()]).then(function () { render(); }).catch(function () {});
   }
 }, 45000);
 

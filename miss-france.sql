@@ -61,6 +61,16 @@ create table if not exists public.mf_config (
 
 insert into public.mf_config (id) values (1) on conflict (id) do nothing;
 
+-- Dossiers déposés « chez l'huissier » : un joueur qui a scellé sa
+-- sélection pour la phase en cours ne peut plus la modifier (tant
+-- qu'il ne récupère pas son dossier).
+create table if not exists public.mf_validations (
+  joueur_id bigint not null references public.mf_joueurs (id) on delete cascade,
+  phase text not null,
+  valide_le timestamptz not null default now(),
+  primary key (joueur_id, phase)
+);
+
 -- ------------------------------------------------------------
 -- 2. Verrouillage API : RLS activé, aucune policy = aucun accès
 --    direct. Seules exceptions : lecture publique de la config
@@ -71,6 +81,7 @@ alter table public.mf_joueurs enable row level security;
 alter table public.mf_candidates enable row level security;
 alter table public.mf_pronostics enable row level security;
 alter table public.mf_config enable row level security;
+alter table public.mf_validations enable row level security;
 
 drop policy if exists "lecture publique config" on public.mf_config;
 create policy "lecture publique config" on public.mf_config
@@ -103,13 +114,16 @@ as $$
   where j.pseudo = p_pseudo and j.pin = p_pin;
 $$;
 
--- Profil du joueur connecté.
-create or replace function public.mf_mon_profil(p_jeton uuid)
-returns table (pseudo text, nom_affiche text, photo_url text, est_admin boolean, points_qcm numeric)
+-- Profil du joueur connecté (fige = dossier scellé pour la phase en cours).
+drop function if exists public.mf_mon_profil(uuid);
+create function public.mf_mon_profil(p_jeton uuid)
+returns table (pseudo text, nom_affiche text, photo_url text, est_admin boolean, points_qcm numeric, fige boolean)
 language sql
 security definer set search_path = public
 as $$
-  select j.pseudo, j.nom_affiche, j.photo_url, j.est_admin, j.points_qcm
+  select j.pseudo, j.nom_affiche, j.photo_url, j.est_admin, j.points_qcm,
+    exists (select 1 from mf_validations v, mf_config c
+            where c.id = 1 and v.joueur_id = j.id and v.phase = c.phase)
   from mf_joueurs j
   where j.jeton = p_jeton;
 $$;
@@ -145,6 +159,9 @@ begin
     raise exception 'Statut inconnu.';
   end if;
   select phase into v_phase from mf_config where id = 1;
+  if exists (select 1 from mf_validations v where v.joueur_id = v_j and v.phase = v_phase) then
+    raise exception 'Ton dossier est scellé chez l''huissier ! Récupère-le pour modifier.';
+  end if;
   select statut into v_cur from mf_pronostics where joueur_id = v_j and candidate_id = p_candidate;
 
   if v_phase = 'selection15' then
@@ -215,6 +232,9 @@ begin
   if v_phase <> 'ordre' then
     raise exception 'Le classement de tes 5 finalistes n''est pas ouvert en ce moment.';
   end if;
+  if exists (select 1 from mf_validations v where v.joueur_id = v_j and v.phase = v_phase) then
+    raise exception 'Ton dossier est scellé chez l''huissier ! Récupère-le pour modifier.';
+  end if;
   select statut into v_cur from mf_pronostics where joueur_id = v_j and candidate_id = p_candidate;
   if coalesce(v_cur, '') <> 'top5' then
     raise exception 'Seules tes 5 finalistes peuvent recevoir un rang.';
@@ -246,6 +266,9 @@ begin
   if v_phase <> 'essais' then
     raise exception 'Les essais Miss France ne sont pas ouverts en ce moment.';
   end if;
+  if exists (select 1 from mf_validations v where v.joueur_id = v_j and v.phase = v_phase) then
+    raise exception 'Ton dossier est scellé chez l''huissier ! Récupère-le pour modifier.';
+  end if;
   update mf_pronostics set essai = null, modifie_le = now()
     where joueur_id = v_j and essai = p_essai
       and (p_candidate is null or candidate_id <> p_candidate);
@@ -260,9 +283,70 @@ begin
 end;
 $$;
 
+-- Sceller sa sélection chez l'huissier (phase en cours, complétude exigée).
+create or replace function public.mf_figer(p_jeton uuid)
+returns void
+language plpgsql
+security definer set search_path = public
+as $$
+declare
+  v_j bigint;
+  v_phase text;
+  v_nb int;
+begin
+  select id into v_j from mf_joueurs where jeton = p_jeton;
+  if v_j is null then raise exception 'Session invalide, reconnecte-toi.'; end if;
+  select phase into v_phase from mf_config where id = 1;
+  if v_phase = 'selection15' then
+    select count(*) into v_nb from mf_pronostics
+      where joueur_id = v_j and statut in ('top15', 'top5');
+    if v_nb <> 15 then
+      raise exception 'L''huissier exige exactement 15 Miss dans ton équipe (tu en as %) !', v_nb;
+    end if;
+  elsif v_phase = 'top5' then
+    select count(*) into v_nb from mf_pronostics where joueur_id = v_j and statut = 'top5';
+    if v_nb <> 5 then
+      raise exception 'L''huissier exige 5 finalistes (tu en as %) !', v_nb;
+    end if;
+  elsif v_phase = 'ordre' then
+    select count(*) into v_nb from mf_pronostics
+      where joueur_id = v_j and statut = 'top5' and rang is not null;
+    if v_nb <> 5 then
+      raise exception 'L''huissier exige un rang pour chacune de tes 5 finalistes (% posé(s)) !', v_nb;
+    end if;
+  elsif v_phase = 'essais' then
+    if not exists (select 1 from mf_pronostics where joueur_id = v_j and essai = 1) then
+      raise exception 'L''huissier exige au moins ton essai 1 !';
+    end if;
+  else
+    raise exception 'Rien à déposer chez l''huissier dans cette phase.';
+  end if;
+  insert into mf_validations (joueur_id, phase) values (v_j, v_phase)
+    on conflict (joueur_id, phase) do nothing;
+end;
+$$;
+
+-- Récupérer son dossier chez l'huissier (rouvre les modifications).
+create or replace function public.mf_defiger(p_jeton uuid)
+returns void
+language plpgsql
+security definer set search_path = public
+as $$
+declare
+  v_j bigint;
+  v_phase text;
+begin
+  select id into v_j from mf_joueurs where jeton = p_jeton;
+  if v_j is null then raise exception 'Session invalide, reconnecte-toi.'; end if;
+  select phase into v_phase from mf_config where id = 1;
+  delete from mf_validations where joueur_id = v_j and phase = v_phase;
+end;
+$$;
+
 -- Où en sont les autres joueurs (compteurs uniquement, jamais les choix).
-create or replace function public.mf_avancement()
-returns table (nom_affiche text, photo_url text, nb_top15 int, nb_top5 int, nb_ordre int, nb_essais int)
+drop function if exists public.mf_avancement();
+create function public.mf_avancement()
+returns table (nom_affiche text, photo_url text, nb_top15 int, nb_top5 int, nb_ordre int, nb_essais int, fige boolean)
 language sql
 security definer set search_path = public
 as $$
@@ -270,7 +354,9 @@ as $$
     (select count(*)::int from mf_pronostics p where p.joueur_id = j.id and p.statut in ('top15', 'top5')),
     (select count(*)::int from mf_pronostics p where p.joueur_id = j.id and p.statut = 'top5'),
     (select count(*)::int from mf_pronostics p where p.joueur_id = j.id and p.rang is not null),
-    (select count(*)::int from mf_pronostics p where p.joueur_id = j.id and p.essai is not null)
+    (select count(*)::int from mf_pronostics p where p.joueur_id = j.id and p.essai is not null),
+    exists (select 1 from mf_validations v, mf_config c
+            where c.id = 1 and v.joueur_id = j.id and v.phase = c.phase)
   from mf_joueurs j
   order by j.nom_affiche;
 $$;
@@ -400,6 +486,54 @@ begin
     from mf_joueurs j order by j.nom_affiche;
 end;
 $$;
+
+-- Ajouter/mettre à jour une candidate (clé = région).
+create or replace function public.mf_admin_candidate_upsert(
+  p_jeton uuid, p_nom text, p_region text,
+  p_age int default null, p_taille text default null, p_profession text default null,
+  p_photo_url text default null, p_photo_surprise_url text default null)
+returns bigint
+language plpgsql
+security definer set search_path = public
+as $fn$
+declare
+  v_id bigint;
+begin
+  perform mf_admin_id(p_jeton);
+  select id into v_id from mf_candidates where region = p_region;
+  if v_id is null then
+    insert into mf_candidates (nom, region, age, taille, profession, photo_url, photo_surprise_url)
+      values (p_nom, p_region, p_age, p_taille, p_profession, p_photo_url, p_photo_surprise_url)
+      returning id into v_id;
+  else
+    update mf_candidates
+      set nom = p_nom,
+          age = coalesce(p_age, age),
+          taille = coalesce(p_taille, taille),
+          profession = coalesce(p_profession, profession),
+          photo_url = coalesce(p_photo_url, photo_url),
+          photo_surprise_url = coalesce(p_photo_surprise_url, photo_surprise_url)
+      where id = v_id;
+  end if;
+  return v_id;
+end;
+$fn$;
+
+-- Supprimer une candidate (p_candidate) ou tout le plateau (null).
+create or replace function public.mf_admin_candidate_supprimer(p_jeton uuid, p_candidate bigint default null)
+returns void
+language plpgsql
+security definer set search_path = public
+as $fn$
+begin
+  perform mf_admin_id(p_jeton);
+  if p_candidate is null then
+    delete from mf_candidates;
+  else
+    delete from mf_candidates where id = p_candidate;
+  end if;
+end;
+$fn$;
 
 -- ------------------------------------------------------------
 -- 5. Les 11 joueurs (PIN par défaut, modifiables dans Table Editor)
