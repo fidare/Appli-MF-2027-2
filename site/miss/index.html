@@ -207,7 +207,7 @@ var STORE_KEY = "mf2027-session";
 
 var PHASES = {
   preparation: { label: "Préparation du casting", desc: "Le tapis rouge se déroule, les paillettes se comptent… Le jeu n'est pas encore ouvert." },
-  selection15: { label: "Sélection des 15", desc: "Compose ta liste de <b>15 Miss</b> — et gare ton indécision au <b>ballotage</b> (illimité)." },
+  selection15: { label: "Sélection des 15", desc: "Compose ta liste de <b>15 Miss</b> pour ton équipe." },
   top5:        { label: "Choix des 5 finalistes", desc: "Parmi tes 15, choisis tes <b>5 finalistes</b>." },
   ordre:       { label: "L'ordre final", desc: "Classe tes 5 finalistes de la <b>1<sup>re</sup></b> (Miss France) à la <b>5<sup>e</sup></b> place." },
   essais:      { label: "Essais Miss France", desc: "Tes <b>2 essais</b> pour la couronne : essai 1 (gros lot) et essai 2 (filet de secours)." },
@@ -454,7 +454,6 @@ function statutBadge(p) {
   var h = "";
   if (p.statut === "top5") h += '<span class="badge gold">⭐ Finaliste' + (p.rang ? " — Nº" + p.rang : "") + '</span>';
   else if (p.statut === "top15") h += '<span class="badge pink">✓ Dans mon équipe</span>';
-  else if (p.statut === "ballotage") h += '<span class="badge dark">⏳ En ballotage</span>';
   if (p.essai === 1) h += '<span class="badge gold">👑 Essai 1</span>';
   if (p.essai === 2) h += '<span class="badge gold">👑 Essai 2</span>';
   return h;
@@ -469,8 +468,6 @@ function missActions(c) {
   if (ph === "selection15") {
     if (st === "top15") h += btn("App.statut(" + c.id + ",'aucun')", "Retirer de mon équipe", "ghost mini");
     else h += btn("App.statut(" + c.id + ",'top15')", "Je la veux dans mon équipe !", "mini");
-    if (st === "ballotage") h += btn("App.statut(" + c.id + ",'aucun')", "Sortir du ballotage", "ghost mini");
-    else if (st !== "top15") h += btn("App.statut(" + c.id + ",'ballotage')", "Bof ! Mais à revoir plus tard", "dark mini");
   } else if (ph === "top5") {
     if (st === "top15") h += btn("App.statut(" + c.id + ",'top5')", "⭐ Dans mes 5 finalistes !", "mini");
     else if (st === "top5") h += btn("App.statut(" + c.id + ",'top15')", "Redescendre dans les 15", "ghost mini");
@@ -653,19 +650,17 @@ function viewAccueil() {
 function viewSelection() {
   var byId = {};
   S.candidates.forEach(function (x) { byId[x.id] = x; });
-  var top15 = [], top5 = [], ball = [], essais = [null, null, null];
+  var top15 = [], top5 = [], essais = [null, null, null];
   Object.keys(S.mine).forEach(function (k) {
     var p = S.mine[k], x = byId[k];
     if (!x) return;
     if (p.statut === "top15") top15.push([x, p]);
     if (p.statut === "top5") top5.push([x, p]);
-    if (p.statut === "ballotage") ball.push([x, p]);
     if (p.essai === 1) essais[1] = [x, p];
     if (p.essai === 2) essais[2] = [x, p];
   });
   top5.sort(function (a, b) { return (a[1].rang || 9) - (b[1].rang || 9); });
-  var sortNom = function (a, b) { return a[0].nom.localeCompare(b[0].nom); };
-  top15.sort(sortNom); ball.sort(sortNom);
+  top15.sort(function (a, b) { return a[0].nom.localeCompare(b[0].nom); });
   var c = myCounts();
 
   function ligne(x, p, extra) {
@@ -707,16 +702,6 @@ function viewSelection() {
     if (!locked && S.config.phase === "top5" && e[1].statut === "top15") extra += btn("App.statut(" + e[0].id + ",'top5')", "⭐", "mini");
     return ligne(e[0], e[1], extra);
   }).join("") : '<p class="muted small">Ton équipe est vide. Fonce à l\'Accueil recruter !</p>';
-  h += '</div>';
-
-  h += '<div class="card"><h3>⏳ Mes Miss en ballotage</h3>';
-  h += ball.length ? ball.map(function (e) {
-    var extra = "";
-    if (S.config.phase === "selection15" && !locked) {
-      extra = btn("App.statut(" + e[0].id + ",'top15')", "Je la veux !", "mini") + btn("App.statut(" + e[0].id + ",'aucun')", "🗑", "ghost mini");
-    }
-    return ligne(e[0], e[1], extra);
-  }).join("") : '<p class="muted small">Le purgatoire est vide.</p>';
   h += '</div>';
 
   if (S.avancement) {
