@@ -403,13 +403,33 @@ window.App = {
       .then(function () { toast("Phase changée : " + PHASES[sel.value].label); return refresh(true); })
       .catch(function (e) { toast(e.message, true); });
   },
-  aResultat: function (cid) {
-    var chk = document.getElementById("adm-t15-" + cid);
-    var fin = document.getElementById("adm-fin-" + cid);
+  admEdit: function (cid) {
+    S.admEdits = S.admEdits || {};
     var sel = document.getElementById("adm-rang-" + cid);
-    var rang = sel.value === "" ? null : parseInt(sel.value, 10);
-    rpc("mf_admin_resultat", { p_jeton: S.session.jeton, p_candidate: cid, p_dans_top15: chk.checked, p_est_finaliste: fin.checked, p_rang: rang })
-      .then(function () { toast("Résultat enregistré ✓"); return loadCandidates().then(render); })
+    S.admEdits[cid] = {
+      t15: document.getElementById("adm-t15-" + cid).checked,
+      fin: document.getElementById("adm-fin-" + cid).checked,
+      rang: sel.value === "" ? null : parseInt(sel.value, 10)
+    };
+    render();
+  },
+  aResultatsAll: function () {
+    var edits = S.admEdits || {};
+    var rows = S.candidates.map(function (x) {
+      var ed = edits[x.id];
+      return {
+        id: x.id,
+        dans_top15: ed ? ed.t15 : x.dans_top15,
+        est_finaliste: ed ? ed.fin : x.est_finaliste,
+        rang_final: ed ? ed.rang : x.rang_final
+      };
+    });
+    rpc("mf_admin_resultats_bulk", { p_jeton: S.session.jeton, p_resultats: rows })
+      .then(function () {
+        S.admEdits = {};
+        toast("Tous les résultats enregistrés ✓");
+        return loadCandidates().then(render);
+      })
       .catch(function (e) { toast(e.message, true); });
   },
   aQcm: function (jid) {
@@ -889,27 +909,36 @@ function viewAdmin() {
   });
   h += '</select></div>';
 
+  var nbEdits = Object.keys(S.admEdits || {}).length;
+  var saveBtn = btn("App.aResultatsAll()", "💾 Enregistrer toute la liste" + (nbEdits ? " (" + nbEdits + " modif.)" : ""), nbEdits ? "gold" : "");
   h += '<div class="card"><h3>Résultats réels des Miss</h3>'
-    + '<p class="small muted">Le soir de l\'élection : coche « Top 15 » au fil des annonces, puis « Finaliste » pour les 5 du top 5 officiel (ouvre le revote de l\'ordre), et enfin les rangs 1 à 5. Chaque coche recalcule tous les scores instantanément.</p>';
+    + '<p class="small muted">Le soir de l\'élection : coche « Top 15 » au fil des annonces, puis « Finaliste » pour les 5 du top 5 officiel (ouvre le revote de l\'ordre), et enfin les rangs 1 à 5. Coche tout tranquillement (le filtre ne perd rien), puis un seul clic sur « Enregistrer » applique tout et recalcule les scores.</p>';
   if (!S.candidates.length) {
     h += '<p class="muted small">Aucune candidate — ajoute-les dans Supabase (Table Editor → mf_candidates).</p>';
   } else {
-    h += '<input id="adm-search" class="search" placeholder="🔎 Filtrer par nom ou région…" value="' + esc(S.admQ || "") + '" oninput="App.admSearch(this)">';
+    h += '<div class="center" style="margin-bottom:0.6rem">' + saveBtn + '</div>'
+      + '<input id="adm-search" class="search" placeholder="🔎 Filtrer par nom ou région…" value="' + esc(S.admQ || "") + '" oninput="App.admSearch(this)">';
     var aq = (S.admQ || "").trim().toLowerCase();
     var alist = S.candidates.filter(function (x) {
       return !aq || (x.nom + " " + x.region).toLowerCase().indexOf(aq) >= 0;
     });
     if (!alist.length) h += '<p class="muted small">Aucune Miss ne correspond à ce filtre.</p>';
-    h += '<div style="overflow-x:auto"><table class="adm"><thead><tr><th>Miss</th><th>Top 15</th><th>Finaliste</th><th>Rang final</th><th></th></tr></thead><tbody>';
+    h += '<div style="overflow-x:auto"><table class="adm"><thead><tr><th>Miss</th><th>Top 15</th><th>Finaliste</th><th>Rang final</th></tr></thead><tbody>';
+    var edits = S.admEdits || {};
     alist.forEach(function (x) {
-      h += '<tr><td><b>' + esc(x.nom) + '</b><br><span class="small muted">Miss ' + esc(x.region) + '</span></td>'
-        + '<td><input type="checkbox" id="adm-t15-' + x.id + '"' + (x.dans_top15 ? " checked" : "") + '></td>'
-        + '<td><input type="checkbox" id="adm-fin-' + x.id + '"' + (x.est_finaliste ? " checked" : "") + '></td>'
-        + '<td><select class="inp" id="adm-rang-' + x.id + '"><option value="">—</option>';
-      for (var i = 1; i <= 5; i++) h += '<option value="' + i + '"' + (x.rang_final === i ? " selected" : "") + '>Nº' + i + '</option>';
-      h += '</select></td><td>' + btn("App.aResultat(" + x.id + ")", "💾", "mini") + '</td></tr>';
+      var ed = edits[x.id];
+      var t15 = ed ? ed.t15 : x.dans_top15;
+      var fin = ed ? ed.fin : x.est_finaliste;
+      var rang = ed ? ed.rang : x.rang_final;
+      h += '<tr' + (ed ? ' style="background:var(--pink-soft)"' : "") + '><td><b>' + esc(x.nom) + '</b><br><span class="small muted">Miss ' + esc(x.region) + '</span></td>'
+        + '<td><input type="checkbox" id="adm-t15-' + x.id + '"' + (t15 ? " checked" : "") + ' onchange="App.admEdit(' + x.id + ')"></td>'
+        + '<td><input type="checkbox" id="adm-fin-' + x.id + '"' + (fin ? " checked" : "") + ' onchange="App.admEdit(' + x.id + ')"></td>'
+        + '<td><select class="inp" id="adm-rang-' + x.id + '" onchange="App.admEdit(' + x.id + ')"><option value="">—</option>';
+      for (var i = 1; i <= 5; i++) h += '<option value="' + i + '"' + (rang === i ? " selected" : "") + '>Nº' + i + '</option>';
+      h += '</select></td></tr>';
     });
-    h += '</tbody></table></div>';
+    h += '</tbody></table></div>'
+      + '<div class="center" style="margin-top:0.8rem">' + saveBtn + '</div>';
   }
   h += '</div>';
 

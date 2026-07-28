@@ -495,6 +495,35 @@ begin
 end;
 $$;
 
+-- Enregistrer les résultats réels de TOUTES les Miss en un seul appel.
+-- p_resultats : [{"id":1,"dans_top15":true,"est_finaliste":false,"rang_final":null}, …]
+-- Un rang implique finaliste ; finaliste implique top 15.
+-- Refuse deux Miss au même rang final.
+create or replace function public.mf_admin_resultats_bulk(p_jeton uuid, p_resultats json)
+returns void
+language plpgsql
+security definer set search_path = public
+as $$
+declare
+  r record;
+begin
+  perform mf_admin_id(p_jeton);
+  for r in select * from json_to_recordset(p_resultats)
+      as t(id bigint, dans_top15 boolean, est_finaliste boolean, rang_final int)
+  loop
+    update mf_candidates
+      set dans_top15 = (coalesce(r.dans_top15, false) or coalesce(r.est_finaliste, false) or r.rang_final is not null),
+          est_finaliste = (coalesce(r.est_finaliste, false) or r.rang_final is not null),
+          rang_final = r.rang_final
+      where id = r.id;
+  end loop;
+  if exists (select 1 from mf_candidates where rang_final is not null
+             group by rang_final having count(*) > 1) then
+    raise exception 'Deux Miss ont le même rang final — corrige avant d''enregistrer !';
+  end if;
+end;
+$$;
+
 -- Saisir les points QCM d'un joueur.
 create or replace function public.mf_admin_qcm(p_jeton uuid, p_joueur bigint, p_points numeric)
 returns void
