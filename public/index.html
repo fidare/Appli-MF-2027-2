@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mini-sondage — 2 questions</title>
+<style>
+  :root {
+    --paper: #f5f6f8;
+    --card: #ffffff;
+    --ink: #1b2a4a;
+    --text: #3c4658;
+    --muted: #71809a;
+    --line: #dfe3ea;
+    --accent: #b98f1f;
+    --accent-soft: #f4ecd7;
+    --success: #2e7d5b;
+    --shadow: 0 10px 30px rgba(27, 42, 74, 0.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #141a26;
+      --card: #1d2534;
+      --ink: #e8ecf4;
+      --text: #c3cbd9;
+      --muted: #8a94a8;
+      --line: #313c50;
+      --accent: #d4ab3a;
+      --accent-soft: #3a3421;
+      --success: #5cb890;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--paper);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.55;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 2.5rem 1rem 4rem;
+  }
+  .wrap { width: 100%; max-width: 560px; }
+
+  header { text-align: center; margin-bottom: 2rem; }
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--accent);
+  }
+  h1 {
+    font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
+    color: var(--ink);
+    font-size: 1.9rem;
+    line-height: 1.2;
+    margin: 0.4rem 0 0.5rem;
+    text-wrap: balance;
+    font-weight: 600;
+  }
+  header p { margin: 0; color: var(--muted); font-size: 0.95rem; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    padding: 1.75rem;
+  }
+
+  .step-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-bottom: 0.35rem;
+  }
+  .question {
+    font-family: Georgia, "Iowan Old Style", serif;
+    color: var(--ink);
+    font-size: 1.2rem;
+    line-height: 1.35;
+    margin: 0 0 1.1rem;
+    text-wrap: balance;
+  }
+
+  fieldset { border: 0; padding: 0; margin: 0 0 1.6rem; }
+  label.option {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.7rem 0.9rem;
+    margin-bottom: 0.55rem;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    color: var(--text);
+  }
+  label.option:hover { border-color: var(--accent); }
+  label.option:has(input:checked) {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--ink);
+  }
+  label.option input { accent-color: var(--accent); width: 1.05rem; height: 1.05rem; flex: none; }
+
+  input[type="text"], textarea {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--paper);
+    color: var(--ink);
+    font: inherit;
+    padding: 0.7rem 0.9rem;
+  }
+  textarea { min-height: 110px; resize: vertical; }
+  input[type="text"]:focus, textarea:focus, label.option:has(input:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+  .field { margin-bottom: 1.6rem; }
+  .field > label:not(.option) {
+    display: block;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 0.45rem;
+    font-size: 0.95rem;
+  }
+
+  button {
+    font: inherit;
+    font-weight: 600;
+    border-radius: 10px;
+    padding: 0.75rem 1.3rem;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: filter 0.15s;
+  }
+  button:hover { filter: brightness(1.08); }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button[disabled] { opacity: 0.6; cursor: wait; }
+  .primary { background: var(--ink); color: var(--paper); width: 100%; }
+  .secondary {
+    background: transparent;
+    color: var(--ink);
+    border-color: var(--line);
+    width: 100%;
+  }
+  .actions { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1.2rem; }
+
+  .error {
+    color: #b3423f;
+    font-size: 0.88rem;
+    margin: 0.6rem 0 0;
+    display: none;
+  }
+  .error.visible { display: block; }
+
+  #recap { display: none; }
+  .recap-check {
+    width: 3rem; height: 3rem;
+    border-radius: 50%;
+    background: var(--success);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem;
+    margin: 0 auto 0.9rem;
+  }
+  #recap h2 {
+    font-family: Georgia, serif;
+    color: var(--ink);
+    text-align: center;
+    font-size: 1.35rem;
+    margin: 0 0 0.3rem;
+  }
+  #recap .hint { text-align: center; color: var(--muted); font-size: 0.92rem; margin: 0 0 1.3rem; }
+  .summary {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 1rem 1.1rem;
+    margin-bottom: 1.2rem;
+  }
+  .summary dt { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-top: 0.8rem; }
+  .summary dt:first-child { margin-top: 0; }
+  .summary dd { margin: 0.15rem 0 0; color: var(--ink); white-space: pre-wrap; }
+  footer { text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 1.6rem; }
+  @media (prefers-reduced-motion: no-preference) {
+    .card { animation: rise 0.35s ease-out; }
+    @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Mini-sondage · 2 questions · 1 minute</div>
+    <h1>Avant notre prochain moment d'équipe…</h1>
+    <p>Deux petites questions pour mieux se connaître. Vos réponses sont enregistrées automatiquement.</p>
+  </header>
+
+  <div class="card" id="form-card">
+    <form id="survey" novalidate>
+      <div class="field">
+        <label for="name">Votre prénom</label>
+        <input type="text" id="name" name="name" autocomplete="given-name" placeholder="Ex. : Antoine">
+      </div>
+
+      <fieldset>
+        <div class="step-label">Question 1 / 2</div>
+        <legend class="question">Pour bien démarrer la journée, vous êtes plutôt…</legend>
+        <label class="option"><input type="radio" name="q1" value="Café serré, sans discussion"> Café serré, sans discussion ☕</label>
+        <label class="option"><input type="radio" name="q1" value="Thé, tranquillement"> Thé, tranquillement 🍵</label>
+        <label class="option"><input type="radio" name="q1" value="Chocolat chaud + viennoiserie"> Chocolat chaud + viennoiserie 🥐</label>
+        <label class="option"><input type="radio" name="q1" value="Rien du tout, on attaque direct"> Rien du tout, on attaque direct ⚡</label>
+      </fieldset>
+
+      <div class="field">
+        <div class="step-label">Question 2 / 2</div>
+        <label for="q2" class="question" style="display:block">Si l'équipe partait un week-end ensemble, quelle destination proposeriez-vous, et pourquoi ?</label>
+        <textarea id="q2" name="q2" placeholder="Ex. : Saint-Malo, pour les remparts, les huîtres et l'air marin…"></textarea>
+      </div>
+
+      <button type="submit" class="primary" id="submit-btn">Envoyer mes réponses</button>
+      <p class="error" id="error-msg"></p>
+    </form>
+  </div>
+
+  <div class="card" id="recap">
+    <div class="recap-check" aria-hidden="true">✓</div>
+    <h2>Merci, vos réponses sont enregistrées !</h2>
+    <p class="hint">Elles sont stockées dans la base du sondage. Vous pouvez les modifier tant que le sondage est ouvert.</p>
+    <dl class="summary" id="summary"></dl>
+    <div class="actions">
+      <button type="button" class="secondary" id="edit-answers">Modifier mes réponses</button>
+    </div>
+  </div>
+
+  <footer>Sondage privé · réponses attendues de 3 personnes</footer>
+</div>
+
+<script>
+  var STORE_KEY = "mini-sondage-reponses";
+  var form = document.getElementById("survey");
+  var formCard = document.getElementById("form-card");
+  var recap = document.getElementById("recap");
+  var errorMsg = document.getElementById("error-msg");
+  var submitBtn = document.getElementById("submit-btn");
+
+  function readAnswers() {
+    var q1el = form.querySelector('input[name="q1"]:checked');
+    return {
+      prenom: document.getElementById("name").value.trim(),
+      q1: q1el ? q1el.value : "",
+      q2: document.getElementById("q2").value.trim()
+    };
+  }
+
+  function showError(msg) {
+    errorMsg.textContent = msg;
+    errorMsg.classList.add("visible");
+  }
+
+  function showRecap(a) {
+    var esc = function (s) {
+      return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    };
+    document.getElementById("summary").innerHTML =
+      "<dt>Prénom</dt><dd>" + esc(a.prenom) + "</dd>" +
+      "<dt>Question 1 — le matin</dt><dd>" + esc(a.q1) + "</dd>" +
+      "<dt>Question 2 — le week-end d'équipe</dt><dd>" + esc(a.q2) + "</dd>";
+    formCard.style.display = "none";
+    recap.style.display = "block";
+  }
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var a = readAnswers();
+    if (!a.prenom || !a.q1 || !a.q2) {
+      showError("Merci d'indiquer votre prénom et de répondre aux deux questions.");
+      return;
+    }
+    errorMsg.classList.remove("visible");
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Enregistrement…";
+
+    fetch("/api/reponses", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(a)
+    }).then(function (res) {
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      try { localStorage.setItem(STORE_KEY, JSON.stringify(a)); } catch (err) {}
+      showRecap(a);
+    }).catch(function () {
+      showError("L'enregistrement a échoué. Vérifiez votre connexion puis réessayez.");
+    }).finally(function () {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Envoyer mes réponses";
+    });
+  });
+
+  document.getElementById("edit-answers").addEventListener("click", function () {
+    recap.style.display = "none";
+    formCard.style.display = "block";
+  });
+
+  // Pré-remplissage si la personne revient sur la page
+  try {
+    var saved = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
+    if (saved && saved.prenom) {
+      document.getElementById("name").value = saved.prenom;
+      document.getElementById("q2").value = saved.q2 || "";
+      var radios = form.querySelectorAll('input[name="q1"]');
+      for (var i = 0; i < radios.length; i++) {
+        if (radios[i].value === saved.q1) radios[i].checked = true;
+      }
+    }
+  } catch (err) {}
+</script>
+</body>
+</html>
