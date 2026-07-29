@@ -673,6 +673,7 @@ window.App = {
 
   search: function (inp) { S.q = inp.value; renderKeepFocus(inp, "search-input"); },
   admSearch: function (inp) { S.admQ = inp.value; renderKeepFocus(inp, "adm-search"); },
+  admFiltre: function (f) { S.admFilter = f; render(); },
   fiche: function (cid) { S.fiche = cid; S.ficheSurprise = false; render(); },
   closeFiche: function () { S.fiche = null; render(); },
   surprise: function () { S.ficheSurprise = !S.ficheSurprise; render(); },
@@ -1241,31 +1242,53 @@ function viewAdmin() {
   h += '</select></div>';
 
   var nbEdits = Object.keys(S.admEdits || {}).length;
-  var saveBtn = btn("App.aResultatsAll()", "💾 Enregistrer toute la liste" + (nbEdits ? " (" + nbEdits + " modif.)" : ""), nbEdits ? "gold" : "");
+  var saveBtn = btn("App.aResultatsAll()", "Enregistrer toute la liste" + (nbEdits ? " (" + nbEdits + " modif.)" : ""), nbEdits ? "gold" : "");
   h += '<div class="card"><h3>Résultats réels des Miss</h3>'
-    + '<p class="small muted">Le soir de l\'élection : coche « Top 15 » au fil des annonces, puis « Finaliste » pour les 5 du top 5 officiel (ouvre le revote de l\'ordre), et enfin les rangs 1 à 5. Coche tout tranquillement (le filtre ne perd rien), puis un seul clic sur « Enregistrer » applique tout et recalcule les scores.</p>';
+    + '<p class="small muted">Le soir de l\'élection : coche « Top 15 » au fil des annonces — chaque Miss cochée quitte la vue « En attente ». Au moment du top 5, bascule sur l\'onglet « Top 15 » pour cocher les Finalistes, puis les rangs 1 à 5. Un seul clic sur « Enregistrer » applique tout et recalcule les scores.</p>';
   if (!S.candidates.length) {
     h += '<p class="muted small">Aucune candidate — ajoute-les dans Supabase (Table Editor → mf_candidates).</p>';
   } else {
+    var edits = S.admEdits || {};
+    function val(x) {
+      var ed = edits[x.id];
+      return {
+        t15: ed ? ed.t15 : x.dans_top15,
+        fin: ed ? ed.fin : x.est_finaliste,
+        rang: ed ? ed.rang : x.rang_final,
+        modif: !!ed
+      };
+    }
+    var nT15 = 0, nFin = 0;
+    S.candidates.forEach(function (x) { var v = val(x); if (v.t15) nT15++; if (v.fin) nFin++; });
+    var f = S.admFilter || "attente";
+
     h += '<div class="center" style="margin-bottom:0.6rem">' + saveBtn + '</div>'
-      + '<input id="adm-search" class="search" placeholder="Filtrer par nom ou région…" value="' + esc(S.admQ || "") + '" oninput="App.admSearch(this)">';
+      + '<input id="adm-search" class="search" placeholder="Filtrer par nom ou région…" value="' + esc(S.admQ || "") + '" oninput="App.admSearch(this)">'
+      + '<div class="center" style="margin-bottom:0.7rem">'
+      + btn("App.admFiltre('attente')", "En attente (" + (S.candidates.length - nT15) + ")", "mini" + (f === "attente" ? "" : " ghost"))
+      + btn("App.admFiltre('top15')", "Top 15 (" + nT15 + "/15)", "mini" + (f === "top15" ? "" : " ghost"))
+      + btn("App.admFiltre('finalistes')", "Finalistes (" + nFin + "/5)", "mini" + (f === "finalistes" ? "" : " ghost"))
+      + btn("App.admFiltre('toutes')", "Toutes", "mini" + (f === "toutes" ? "" : " ghost"))
+      + '</div>';
+
     var aq = (S.admQ || "").trim().toLowerCase();
     var alist = S.candidates.filter(function (x) {
-      return !aq || (x.nom + " " + x.region).toLowerCase().indexOf(aq) >= 0;
+      if (aq && (x.nom + " " + x.region).toLowerCase().indexOf(aq) < 0) return false;
+      var v = val(x);
+      if (f === "attente") return !v.t15;
+      if (f === "top15") return v.t15;
+      if (f === "finalistes") return v.fin;
+      return true;
     });
-    if (!alist.length) h += '<p class="muted small">Aucune Miss ne correspond à ce filtre.</p>';
+    if (!alist.length) h += '<p class="muted small center">Aucune Miss dans cette vue.</p>';
     h += '<div style="overflow-x:auto"><table class="adm"><thead><tr><th>Miss</th><th>Top 15</th><th>Finaliste</th><th>Rang final</th></tr></thead><tbody>';
-    var edits = S.admEdits || {};
     alist.forEach(function (x) {
-      var ed = edits[x.id];
-      var t15 = ed ? ed.t15 : x.dans_top15;
-      var fin = ed ? ed.fin : x.est_finaliste;
-      var rang = ed ? ed.rang : x.rang_final;
-      h += '<tr' + (ed ? ' style="background:var(--pink-soft)"' : "") + '><td style="white-space:nowrap"><b>' + esc(x.nom) + '</b> <span class="small muted">· ' + esc(x.region) + '</span></td>'
-        + '<td><input type="checkbox" id="adm-t15-' + x.id + '"' + (t15 ? " checked" : "") + ' onchange="App.admEdit(' + x.id + ')"></td>'
-        + '<td><input type="checkbox" id="adm-fin-' + x.id + '"' + (fin ? " checked" : "") + ' onchange="App.admEdit(' + x.id + ')"></td>'
+      var v = val(x);
+      h += '<tr' + (v.modif ? ' style="background:var(--pink-soft)"' : "") + '><td style="white-space:nowrap"><b>' + esc(x.nom) + '</b> <span class="small muted">· ' + esc(x.region) + '</span></td>'
+        + '<td><input type="checkbox" id="adm-t15-' + x.id + '"' + (v.t15 ? " checked" : "") + ' onchange="App.admEdit(' + x.id + ')"></td>'
+        + '<td><input type="checkbox" id="adm-fin-' + x.id + '"' + (v.fin ? " checked" : "") + ' onchange="App.admEdit(' + x.id + ')"></td>'
         + '<td><select class="inp" id="adm-rang-' + x.id + '" onchange="App.admEdit(' + x.id + ')"><option value="">—</option>';
-      for (var i = 1; i <= 5; i++) h += '<option value="' + i + '"' + (rang === i ? " selected" : "") + '>Nº' + i + '</option>';
+      for (var i = 1; i <= 5; i++) h += '<option value="' + i + '"' + (v.rang === i ? " selected" : "") + '>Nº' + i + '</option>';
       h += '</select></td></tr>';
     });
     h += '</tbody></table></div>'
