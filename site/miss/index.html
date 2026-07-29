@@ -316,6 +316,8 @@
   table.adm th { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); }
   table.adm input[type="checkbox"] { width: 1.15rem; height: 1.15rem; accent-color: var(--pink); }
 
+  #app.noanim .card, #app.noanim .miss { animation: none !important; }
+
   #glitter { position: fixed; inset: 0; z-index: 150; overflow: hidden; pointer-events: none; }
   #glitter .gl {
     position: absolute; display: block; border-radius: 1px;
@@ -704,13 +706,23 @@ window.App = {
   },
   admEdit: function (cid) {
     S.admEdits = S.admEdits || {};
+    var chk = document.getElementById("adm-t15-" + cid);
     var sel = document.getElementById("adm-rang-" + cid);
     S.admEdits[cid] = {
-      t15: document.getElementById("adm-t15-" + cid).checked,
+      t15: chk.checked,
       fin: document.getElementById("adm-fin-" + cid).checked,
       rang: sel.value === "" ? null : parseInt(sel.value, 10)
     };
-    render();
+    // Mise à jour chirurgicale, sans redessiner la page : surlignage de
+    // la ligne + compteur sur les boutons Enregistrer.
+    var tr = chk.closest("tr");
+    if (tr) tr.style.background = "var(--pink-soft)";
+    var n = Object.keys(S.admEdits).length;
+    var btns = document.querySelectorAll(".adm-save");
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].textContent = "Enregistrer toute la liste (" + n + " modif.)";
+      btns[i].classList.add("gold");
+    }
   },
   aResultatsAll: function () {
     var edits = S.admEdits || {};
@@ -850,6 +862,12 @@ function renderKeepFocus(inp, id) {
 
 function render() {
   var app = document.getElementById("app");
+  // Les animations d'apparition ne jouent que lors d'un vrai changement
+  // d'écran — jamais sur une simple mise à jour du même écran (vote,
+  // rafraîchissement auto, frappe dans la recherche…).
+  var sig = !S.config ? "boot" : (!S.session || !S.profil) ? "login" : S.tab + "|" + S.config.phase;
+  app.classList.toggle("noanim", sig === S.lastSig);
+  S.lastSig = sig;
   if (!S.config) { app.innerHTML = '<div class="card center">Base non initialisée : exécute <code>miss-france.sql</code> dans Supabase.</div>'; return; }
   if (!S.session || !S.profil) { app.innerHTML = viewLogin(); return; }
 
@@ -1258,7 +1276,7 @@ function viewAdmin() {
   h += '</select></div>';
 
   var nbEdits = Object.keys(S.admEdits || {}).length;
-  var saveBtn = btn("App.aResultatsAll()", "Enregistrer toute la liste" + (nbEdits ? " (" + nbEdits + " modif.)" : ""), nbEdits ? "gold" : "");
+  var saveBtn = btn("App.aResultatsAll()", "Enregistrer toute la liste" + (nbEdits ? " (" + nbEdits + " modif.)" : ""), (nbEdits ? "gold" : "") + " adm-save");
   h += '<div class="card"><h3>Résultats réels des Miss</h3>'
     + '<p class="small muted">Le soir de l\'élection : coche « Top 15 » au fil des annonces, puis « Finaliste » pour les 5 du top 5 officiel, et enfin les rangs 1 à 5. Un seul clic sur « Enregistrer » applique tout et recalcule les scores. Côté joueurs, la galerie se filtre automatiquement : seules les Miss encore en course restent affichées.</p>';
   if (!S.candidates.length) {
@@ -1357,7 +1375,11 @@ setInterval(function () {
       if (S.tab === "benchmark") loadBenchmark(); else render();
     }).catch(function () {});
   } else {
-    Promise.all([loadConfig(), loadProfil()]).then(function () { render(); }).catch(function () {});
+    var avant = S.config.phase + "|" + (S.profil && S.profil.fige);
+    Promise.all([loadConfig(), loadProfil()]).then(function () {
+      var apres = S.config.phase + "|" + (S.profil && S.profil.fige);
+      if (apres !== avant) render();
+    }).catch(function () {});
   }
 }, 45000);
 
