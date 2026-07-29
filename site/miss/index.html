@@ -673,7 +673,6 @@ window.App = {
 
   search: function (inp) { S.q = inp.value; renderKeepFocus(inp, "search-input"); },
   admSearch: function (inp) { S.admQ = inp.value; renderKeepFocus(inp, "adm-search"); },
-  admFiltre: function (f) { S.admFilter = f; render(); },
   fiche: function (cid) { S.fiche = cid; S.ficheSurprise = false; render(); },
   closeFiche: function () { S.fiche = null; render(); },
   surprise: function () { S.ficheSurprise = !S.ficheSurprise; render(); },
@@ -987,8 +986,25 @@ function viewAccueil() {
     + huissierCard()
     + '<input id="search-input" class="search" placeholder="Chercher un prénom, une région…" value="' + esc(S.q) + '" oninput="App.search(this)">';
 
+  // Filtrage automatique selon les résultats réels saisis en Régie :
+  // dès que le top 15 officiel est connu, les éliminées disparaissent ;
+  // en phase d'ordre final, seules les 5 finalistes restent.
+  var ph = S.config.phase;
+  var base = S.candidates;
+  var finConnues = S.candidates.some(function (x) { return x.est_finaliste; });
+  var top15Connu = S.candidates.some(function (x) { return x.dans_top15; });
+  var note = "";
+  if (ph === "ordre" && finConnues) {
+    base = base.filter(function (x) { return x.est_finaliste; });
+    note = "Les 5 finalistes officielles — les autres ont quitté la scène.";
+  } else if ((ph === "top5" || ph === "ordre" || ph === "cloture" || ph === "resultats") && top15Connu) {
+    base = base.filter(function (x) { return x.dans_top15; });
+    note = "Les " + base.length + " Miss encore en course — les éliminées ont quitté la scène.";
+  }
+  if (note) h += '<p class="small muted center" style="margin:0 0 0.6rem">' + note + '</p>';
+
   var q = S.q.trim().toLowerCase();
-  var list = S.candidates.filter(function (x) {
+  var list = base.filter(function (x) {
     return !q || (x.nom + " " + x.region).toLowerCase().indexOf(q) >= 0;
   });
 
@@ -1244,7 +1260,7 @@ function viewAdmin() {
   var nbEdits = Object.keys(S.admEdits || {}).length;
   var saveBtn = btn("App.aResultatsAll()", "Enregistrer toute la liste" + (nbEdits ? " (" + nbEdits + " modif.)" : ""), nbEdits ? "gold" : "");
   h += '<div class="card"><h3>Résultats réels des Miss</h3>'
-    + '<p class="small muted">Le soir de l\'élection : coche « Top 15 » au fil des annonces — chaque Miss cochée quitte la vue « En attente ». Au moment du top 5, bascule sur l\'onglet « Top 15 » pour cocher les Finalistes, puis les rangs 1 à 5. Un seul clic sur « Enregistrer » applique tout et recalcule les scores.</p>';
+    + '<p class="small muted">Le soir de l\'élection : coche « Top 15 » au fil des annonces, puis « Finaliste » pour les 5 du top 5 officiel, et enfin les rangs 1 à 5. Un seul clic sur « Enregistrer » applique tout et recalcule les scores. Côté joueurs, la galerie se filtre automatiquement : seules les Miss encore en course restent affichées.</p>';
   if (!S.candidates.length) {
     h += '<p class="muted small">Aucune candidate — ajoute-les dans Supabase (Table Editor → mf_candidates).</p>';
   } else {
@@ -1260,27 +1276,16 @@ function viewAdmin() {
     }
     var nT15 = 0, nFin = 0;
     S.candidates.forEach(function (x) { var v = val(x); if (v.t15) nT15++; if (v.fin) nFin++; });
-    var f = S.admFilter || "attente";
 
     h += '<div class="center" style="margin-bottom:0.6rem">' + saveBtn + '</div>'
-      + '<input id="adm-search" class="search" placeholder="Filtrer par nom ou région…" value="' + esc(S.admQ || "") + '" oninput="App.admSearch(this)">'
-      + '<div class="center" style="margin-bottom:0.7rem">'
-      + btn("App.admFiltre('attente')", "En attente (" + (S.candidates.length - nT15) + ")", "mini" + (f === "attente" ? "" : " ghost"))
-      + btn("App.admFiltre('top15')", "Top 15 (" + nT15 + "/15)", "mini" + (f === "top15" ? "" : " ghost"))
-      + btn("App.admFiltre('finalistes')", "Finalistes (" + nFin + "/5)", "mini" + (f === "finalistes" ? "" : " ghost"))
-      + btn("App.admFiltre('toutes')", "Toutes", "mini" + (f === "toutes" ? "" : " ghost"))
-      + '</div>';
+      + '<p class="center small" style="margin:0 0 0.5rem">Top 15 : <span class="cnt">' + nT15 + '/15</span> · Finalistes : <span class="cnt">' + nFin + '/5</span></p>'
+      + '<input id="adm-search" class="search" placeholder="Filtrer par nom ou région…" value="' + esc(S.admQ || "") + '" oninput="App.admSearch(this)">';
 
     var aq = (S.admQ || "").trim().toLowerCase();
     var alist = S.candidates.filter(function (x) {
-      if (aq && (x.nom + " " + x.region).toLowerCase().indexOf(aq) < 0) return false;
-      var v = val(x);
-      if (f === "attente") return !v.t15;
-      if (f === "top15") return v.t15;
-      if (f === "finalistes") return v.fin;
-      return true;
+      return !aq || (x.nom + " " + x.region).toLowerCase().indexOf(aq) >= 0;
     });
-    if (!alist.length) h += '<p class="muted small center">Aucune Miss dans cette vue.</p>';
+    if (!alist.length) h += '<p class="muted small center">Aucune Miss ne correspond à cette recherche.</p>';
     h += '<div style="overflow-x:auto"><table class="adm"><thead><tr><th>Miss</th><th>Top 15</th><th>Finaliste</th><th>Rang final</th></tr></thead><tbody>';
     alist.forEach(function (x) {
       var v = val(x);
