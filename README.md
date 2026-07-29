@@ -16,8 +16,12 @@ GitHub Pages (`/miss/`) avec une base **Supabase**.
   sélection des 15 → choix des 5 → ordre final → essais Miss France →
   clôture (élection en direct) → résultats.
 - Le soir de l'élection, l'organisateur coche « Top 15 » et les rangs
-  1 à 5 des Miss : tous les scores, graphiques et classements se
-  recalculent instantanément chez tous les joueurs.
+  1 à 5 des Miss au fil des annonces : les scores se recalculent, mais
+  restent invisibles pour les joueurs.
+- Le classement des joueurs se dévoile ensuite depuis la Régie,
+  **place par place en partant de la dernière** : chaque joueur ne
+  découvre son score qu'au moment où son nom est appelé, le vainqueur
+  en dernier.
 - Candidates et photos : Table Editor → `mf_candidates`, images dans
   Supabase Storage (bucket public `photos`).
 

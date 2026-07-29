@@ -67,8 +67,15 @@ create table if not exists public.mf_config (
   pts_top5 int not null default 10,
   pts_ordre int not null default 10,
   pts_essai1 int not null default 50,
-  pts_essai2 int not null default 25
+  pts_essai2 int not null default 25,
+  -- Nombre de places déjà dévoilées par l'organisateur, en partant de la
+  -- DERNIÈRE : 1 = la dernière place est connue, 2 = les deux dernières…
+  -- et reveal_n = nombre de joueurs = tout est dévoilé (dont le vainqueur).
+  reveal_n int not null default 0
 );
+
+alter table public.mf_config
+  add column if not exists reveal_n int not null default 0;
 
 insert into public.mf_config (id) values (1) on conflict (id) do nothing;
 
@@ -391,9 +398,15 @@ as $$
   order by j.nom_affiche;
 $$;
 
--- Résultats complets + scores de tous les joueurs.
--- Ouvert à tous en phase "resultats" ; aux admins dès la clôture
--- (pour vérifier pendant la soirée).
+-- Résultats complets + scores de tous les joueurs, avec la place au
+-- classement général (1 = vainqueur).
+--
+-- Ouvert aux admins dès la clôture (pour vérifier pendant la soirée).
+-- Pour les joueurs : uniquement en phase "resultats", et uniquement les
+-- places déjà dévoilées par l'organisateur (mf_config.reveal_n), qui
+-- descend depuis la dernière place jusqu'à la première. Le filtrage est
+-- fait ICI, côté serveur : tant qu'une place n'est pas dévoilée, ni son
+-- nom ni ses points ne sortent de la base.
 create or replace function public.mf_resultats(p_jeton uuid default null)
 returns json
 language plpgsql
@@ -402,6 +415,7 @@ as $$
 declare
   cfg record;
   v_admin boolean := false;
+  v_nb int;
   v_out json;
 begin
   select * into cfg from mf_config where id = 1;
@@ -410,11 +424,20 @@ begin
     v_admin := coalesce(v_admin, false);
   end if;
   if cfg.phase <> 'resultats' and not v_admin then
-    raise exception 'Le Benchmark ouvrira quand les résultats seront publiés !';
+    raise exception 'Patience ! Le classement sera dévoilé par l''organisateur.';
   end if;
+  select count(*) into v_nb from mf_joueurs;
 
-  select json_agg(row_to_json(t)) into v_out
+  select json_agg(row_to_json(t) order by t.place) into v_out
   from (
+    select b.*,
+      (b.pts_qcm + b.pts_15 + b.pts_5 + b.pts_ordre + b.pts_essai1 + b.pts_essai2) as total,
+      row_number() over (order by
+        (b.pts_qcm + b.pts_15 + b.pts_5 + b.pts_ordre + b.pts_essai1 + b.pts_essai2) desc,
+        b.nom_affiche asc)::int as place,
+      v_nb as nb_joueurs,
+      cfg.reveal_n as reveal_n
+    from (
     select
       j.id, j.pseudo, j.nom_affiche, j.photo_url,
       j.points_qcm as pts_qcm,
@@ -435,7 +458,11 @@ begin
          from mf_pronostics p join mf_candidates c on c.id = p.candidate_id
          where p.joueur_id = j.id) as pronostics
     from mf_joueurs j
-  ) t;
+    ) b
+  ) t
+  -- L'organisateur voit tout (il pilote le dévoilement) ; les joueurs ne
+  -- reçoivent que les places déjà annoncées, en partant de la dernière.
+  where v_admin or t.place > v_nb - cfg.reveal_n;
 
   return coalesce(v_out, '[]'::json);
 end;
@@ -459,7 +486,9 @@ begin
 end;
 $$;
 
--- Changer la phase du jeu.
+-- Changer la phase du jeu. Toute phase autre que « resultats » remet le
+-- dévoilement à zéro : on n'entre jamais dans les résultats avec des
+-- places déjà découvertes.
 create or replace function public.mf_admin_phase(p_jeton uuid, p_phase text)
 returns void
 language plpgsql
@@ -467,7 +496,30 @@ security definer set search_path = public
 as $$
 begin
   perform mf_admin_id(p_jeton);
-  update mf_config set phase = p_phase where id = 1;
+  update mf_config
+    set phase = p_phase,
+        reveal_n = case when p_phase = 'resultats' then reveal_n else 0 end
+    where id = 1;
+end;
+$$;
+
+-- Dévoiler le classement des joueurs, place par place, en partant de la
+-- DERNIÈRE : p_n = nombre de places désormais visibles par tout le monde
+-- (0 = rien, count(joueurs) = tout, vainqueur compris).
+create or replace function public.mf_admin_reveal(p_jeton uuid, p_n int)
+returns int
+language plpgsql
+security definer set search_path = public
+as $$
+declare
+  v_nb int;
+  v_n int;
+begin
+  perform mf_admin_id(p_jeton);
+  select count(*) into v_nb from mf_joueurs;
+  v_n := greatest(0, least(coalesce(p_n, 0), v_nb));
+  update mf_config set reveal_n = v_n where id = 1;
+  return v_n;
 end;
 $$;
 
@@ -551,7 +603,7 @@ begin
   delete from mf_validations where true;
   update mf_candidates set dans_top15 = false, est_finaliste = false, rang_final = null where true;
   update mf_joueurs set points_qcm = 0 where true;
-  update mf_config set phase = 'preparation' where id = 1;
+  update mf_config set phase = 'preparation', reveal_n = 0 where id = 1;
 end;
 $$;
 

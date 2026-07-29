@@ -424,8 +424,8 @@ var PHASES = {
   selection15: { label: "Phase 1 — Tes 15 + Essai Nº1", desc: "Compose ton équipe de <b>15 Miss</b> et pose ton <b>essai Miss France Nº1</b> (le gros lot)." },
   top5:        { label: "Phase 2 — Tes 5 + Essai Nº2", desc: "Il reste <b>15 Miss en lice</b> : choisis les <b>5</b> que tu vois en finale et pose ton <b>essai Nº2</b> (le filet de secours)." },
   ordre:       { label: "Phase 3 — L'ordre final", desc: "Les <b>5 finalistes officielles</b> sont connues ! Classe-les de la <b>1<sup>re</sup></b> (ta Miss France) à la <b>5<sup>e</sup></b>." },
-  cloture:     { label: "Élection en direct !", desc: "Pronostics verrouillés chez l'huissier. Les points tombent en direct — onglet <b>Résultat</b> !" },
-  resultats:   { label: "Résultats officiels", desc: "Tout est publié : tes points dans <b>Résultat</b>, la confrontation générale dans <b>Benchmark</b>." }
+  cloture:     { label: "Élection en direct !", desc: "Pronostics verrouillés chez l'huissier. Les Miss sont annoncées dans l'ordre, mais <b>les points restent sous scellés</b> : personne ne voit son score." },
+  resultats:   { label: "Résultats officiels", desc: "L'organisateur dévoile le classement <b>place par place</b>, de la dernière à la première. Ton résultat s'ouvre quand ta place est annoncée." }
 };
 
 var S = {
@@ -683,13 +683,13 @@ window.App = {
   goTab: function (t) {
     S.tab = t; S.res = null; S.avancement = null; S.admJoueurs = null;
     render();
-    if (t === "benchmark") loadBenchmark();
+    // Le classement (et donc « ma place est-elle annoncée ? ») vient du
+    // serveur : ces trois onglets en ont besoin.
+    var phRes = S.config && S.config.phase === "resultats";
+    if (t === "benchmark" || t === "admin" || (t === "resultat" && phRes)) loadBenchmark();
     if (t === "selection") loadAvancement();
     if (t === "admin") loadAdmin();
-    if (S.config && S.config.phase === "resultats" && (t === "resultat" || t === "benchmark") && !S.sacreShown) {
-      S.sacreShown = true;
-      glitterRain(4000);
-    }
+    if (t === "resultat" || t === "benchmark") maybeSacre();
   },
   pickJoueur: function (id) {
     S.loginSel = S.joueurs.find(function (j) { return j.id === id; }) || null;
@@ -823,6 +823,18 @@ window.App = {
       })
       .catch(function (e) { toast(e.message, true); });
   },
+  // Dévoiler / remasquer des places du classement (p_n = nombre de
+  // places publiques, comptées depuis la dernière).
+  aReveal: function (n) {
+    rpc("mf_admin_reveal", { p_jeton: S.session.jeton, p_n: n })
+      .then(function (v) {
+        var nb = Number(v) || 0;
+        toast(nb === 0 ? "Classement remasqué." : "Places annoncées : " + nb);
+        if (nb) burst();
+        return loadConfig().then(function () { loadBenchmark(); });
+      })
+      .catch(function (e) { toast(e.message, true); });
+  },
   aQcm: function (jid) {
     var v = parseFloat(document.getElementById("adm-qcm-" + jid).value || "0");
     rpc("mf_admin_qcm", { p_jeton: S.session.jeton, p_joueur: jid, p_points: isNaN(v) ? 0 : v })
@@ -836,7 +848,7 @@ function loadAvancement() {
 }
 function loadBenchmark() {
   rpc("mf_resultats", { p_jeton: S.session.jeton })
-    .then(function (r) { S.res = r || []; render(); })
+    .then(function (r) { S.res = r || []; render(); maybeSacre(); })
     .catch(function (e) { S.res = { err: e.message }; render(); });
 }
 function loadAdmin() {
@@ -1016,6 +1028,33 @@ function viewHeader() {
 
   h += stepperHtml();
   return h;
+}
+
+// ------------------------------------------------------------------
+// Dévoilement du classement (phase « Résultats officiels »)
+// ------------------------------------------------------------------
+// L'organisateur annonce les places une par une en partant de la
+// DERNIÈRE : mf_config.reveal_n = nombre de places déjà publiques. Une
+// place est donc dévoilée dès qu'elle est strictement supérieure au
+// seuil (nb de joueurs − reveal_n). Le serveur applique exactement la
+// même règle avant de renvoyer quoi que ce soit aux joueurs.
+function revealInfo() {
+  var nb = 0;
+  if (S.res && S.res.length && S.res[0].nb_joueurs) nb = S.res[0].nb_joueurs;
+  else if (S.joueurs) nb = S.joueurs.length;
+  var n = (S.config && S.config.reveal_n) || 0;
+  if (n > nb) n = nb;
+  return { nb: nb, n: n, seuil: nb - n, complet: nb > 0 && n >= nb };
+}
+function placeRevelee(place) { return place > revealInfo().seuil; }
+
+// Paillettes du sacre : une seule fois, quand la dernière place (la 1re)
+// vient d'être annoncée.
+function maybeSacre() {
+  if (S.sacreShown || !S.config || S.config.phase !== "resultats") return;
+  if (!revealInfo().complet) return;
+  S.sacreShown = true;
+  glitterRain(4000);
 }
 
 function myCounts() {
@@ -1212,6 +1251,34 @@ function viewResultat() {
   if (ph !== "cloture" && ph !== "resultats") {
     return '<h2>Résultat</h2><div class="card center muted">Patience… Cette page s\'allumera le soir de l\'élection, quand les résultats commenceront à tomber. 📺</div>';
   }
+
+  // Pendant l'élection, plus personne ne voit ses points : l'huissier
+  // dépouille en silence pendant que la Régie saisit les Miss dans
+  // l'ordre des annonces.
+  if (ph === "cloture") {
+    return '<h2>Mon résultat</h2>'
+      + '<div class="card center"><div style="font-size:2.4rem;line-height:1">🗳️</div>'
+      + '<h3 style="margin:0.4rem 0 0.2rem">Dépouillement en cours…</h3>'
+      + '<p class="small muted" style="margin:0">Les Miss sont annoncées une à une et l\'huissier compte les points à huis clos. '
+      + 'Aucun score, aucun classement ne sortira d\'ici avant le grand dévoilement — de la dernière place à la première. Croise les doigts. 🤞</p></div>';
+  }
+
+  // Phase « Résultats officiels » : mon détail s'ouvre le jour où MA
+  // place est annoncée par l'organisateur.
+  var ri = revealInfo();
+  var moi = null;
+  if (S.res && S.res.length) {
+    moi = S.res.filter(function (r) { return r.pseudo === S.profil.pseudo; })[0] || null;
+  }
+  if (!moi || !placeRevelee(moi.place)) {
+    return '<h2>Mon résultat</h2>'
+      + '<div class="card center"><div style="font-size:2.4rem;line-height:1">🥁</div>'
+      + '<h3 style="margin:0.4rem 0 0.2rem">Ta place n\'est pas encore annoncée</h3>'
+      + '<p class="small muted" style="margin:0 0 0.4rem">L\'organisateur remonte le classement, de la dernière place à la première. '
+      + 'Ton score complet s\'affichera ici dès que ton nom sera appelé.</p>'
+      + '<p class="small"><span class="cnt">' + ri.n + ' / ' + ri.nb + '</span> places déjà dévoilées — suis le dévoilement dans <b>Benchmark</b>.</p></div>';
+  }
+
   var cfg = S.config;
   var byId = {};
   S.candidates.forEach(function (x) { byId[x.id] = x; });
@@ -1271,7 +1338,10 @@ function viewResultat() {
   var total = pts15 + pts5 + ptsOrd + ptsE1 + ptsE2 + qcm;
 
   var h = '<h2>Mon résultat</h2>';
-  if (ph === "cloture") h += '<p class="small muted">🔴 En direct : les points se mettent à jour au fil des annonces (la page se rafraîchit toute seule).</p>';
+  h += '<div class="card center"><span class="eyebrow">Ma place au classement</span>'
+    + '<div class="row" style="justify-content:center;gap:0.7rem;margin-top:0.4rem">'
+    + '<span class="rank r' + moi.place + '">' + moi.place + '</span>'
+    + '<b style="font-size:1.15rem">' + (moi.place === 1 ? "Vainqueur du Grand Pronostic ! 👑" : moi.place + "<sup>e</sup> sur " + ri.nb) + '</b></div></div>';
   h += '<div class="card center"><span class="eyebrow">Total général</span><h1 style="font-size:2.6rem;margin:0.1rem">' + total + ' pts</h1>'
     + '<p class="small muted">15 Miss : <b>' + pts15 + '</b> · 5 Miss : <b>' + pts5 + '</b> · Bon ordre : <b>' + ptsOrd + '</b> · Essais : <b>' + (ptsE1 + ptsE2) + '</b> · QCM : <b>' + qcm + '</b></p></div>';
 
@@ -1288,13 +1358,55 @@ function viewBenchmark() {
   var h = '<h2>Benchmark</h2>';
   if (S.res === null) return h + '<div class="card center muted">Dépouillement en cours… 🗳️</div>';
   if (S.res.err) return h + '<div class="card center muted">' + esc(S.res.err) + '</div>';
-  if (!S.res.length) return h + '<div class="card center muted">Aucun joueur.</div>';
+
+  var ri = revealInfo();
+  if (!ri.nb) return h + '<div class="card center muted">Aucun joueur.</div>';
 
   var rows = S.res.map(function (j) {
     var total = Number(j.pts_qcm) + j.pts_15 + j.pts_5 + j.pts_ordre + j.pts_essai1 + j.pts_essai2;
     return Object.assign({}, j, { total: total });
   });
   rows.sort(function (a, b) { return b.total - a.total; });
+  // Ne jamais afficher les places encore secrètes (l'organisateur, lui,
+  // reçoit toutes les lignes : on les masque quand même à l'écran).
+  var vus = rows.filter(function (r) { return placeRevelee(r.place); });
+
+  h += '<div class="card center"><span class="eyebrow">Dévoilement du classement</span>'
+    + '<h3 style="margin:0.3rem 0 0.2rem"><span class="cnt">' + ri.n + ' / ' + ri.nb + '</span> places annoncées</h3>'
+    + '<p class="small muted" style="margin:0">'
+    + (ri.complet
+      ? 'Tout est dit — le Grand Pronostic a son vainqueur. 👑'
+      : 'L\'organisateur remonte le classement, de la dernière place à la première. Reste sur la page : elle se met à jour toute seule. 🥁')
+    + '</p></div>';
+
+  h += '<h2>Le podium des jurés</h2>';
+  var parPlace = {};
+  rows.forEach(function (r) { parPlace[r.place] = r; });
+  for (var pl = 1; pl <= ri.nb; pl++) {
+    var r = parPlace[pl];
+    if (r && placeRevelee(pl)) {
+      var me = S.profil && r.pseudo === S.profil.pseudo;
+      h += '<div class="card"' + (me ? ' style="border-color:var(--gold)"' : "") + '><div class="row">'
+        + '<span class="rank r' + pl + '">' + pl + '</span>' + avatarHtml(r.nom_affiche, r.photo_url, false)
+        + '<div style="flex:1"><b style="font-size:1.05rem">' + esc(r.nom_affiche) + '</b>'
+        + '<div class="small muted">QCM ' + r.pts_qcm + ' · 15 Miss ' + r.pts_15 + ' · 5 Miss ' + r.pts_5 + ' · Ordre ' + r.pts_ordre + ' · Essais ' + (r.pts_essai1 + r.pts_essai2) + '</div></div>'
+        + '<div class="cnt" style="font-size:1.4rem">' + r.total + ' pts</div></div></div>';
+    } else {
+      h += '<div class="card"><div class="row">'
+        + '<span class="rank">' + pl + '</span>'
+        + '<div style="flex:1"><b style="font-size:1.05rem;color:var(--muted)">— place à dévoiler —</b>'
+        + '<div class="small muted">' + (pl === 1 ? 'Le nom du vainqueur, tout en bas du suspense…' : 'Chut. 🤫')
+        + (r ? ' <span class="badge dark">régie : ' + esc(r.nom_affiche) + '</span>' : "") + '</div></div>'
+        + '<div class="cnt" style="font-size:1.4rem;color:var(--muted)">???</div></div></div>';
+    }
+  }
+
+  // Les graphiques comparatifs n'apparaissent qu'une fois tout le monde
+  // annoncé : ils révéleraient sinon les scores encore secrets.
+  if (!ri.complet) {
+    return h + '<div class="card center muted">Les graphiques comparatifs s\'afficheront quand les ' + ri.nb + ' places auront été annoncées.</div>';
+  }
+  rows = vus;
 
   function chart(title, key) {
     var max = 0;
@@ -1318,15 +1430,6 @@ function viewBenchmark() {
   h += chart("Les 5 dans l'ordre", "pts_ordre");
   h += chart("Essai Miss France Nº1", "pts_essai1");
   h += chart("Essai Miss France Nº2", "pts_essai2");
-
-  h += '<h2>Le podium des jurés</h2>';
-  rows.forEach(function (r, i) {
-    var rank = '<span class="rank r' + (i + 1) + '">' + (i + 1) + '</span>';
-    h += '<div class="card"><div class="row">' + rank + avatarHtml(r.nom_affiche, r.photo_url, false)
-      + '<div style="flex:1"><b style="font-size:1.05rem">' + esc(r.nom_affiche) + '</b>'
-      + '<div class="small muted">QCM ' + r.pts_qcm + ' · 15 Miss ' + r.pts_15 + ' · 5 Miss ' + r.pts_5 + ' · Ordre ' + r.pts_ordre + ' · Essais ' + (r.pts_essai1 + r.pts_essai2) + '</div></div>'
-      + '<div class="cnt" style="font-size:1.4rem">' + r.total + ' pts</div></div></div>';
-  });
   return h;
 }
 
@@ -1342,6 +1445,8 @@ function viewAdmin() {
     h += '<option value="' + k + '"' + (cfg.phase === k ? " selected" : "") + '>' + PHASES[k].label + '</option>';
   });
   h += '</select></div>';
+
+  h += viewAdminReveal();
 
   var nbEdits = Object.keys(S.admEdits || {}).length;
   var saveBtn = btn("App.aResultatsAll()", "Enregistrer toute la liste" + (nbEdits ? " (" + nbEdits + " modif.)" : ""), (nbEdits ? "gold" : "") + " adm-save");
@@ -1408,6 +1513,55 @@ function viewAdmin() {
   return h;
 }
 
+// ----- Régie : dévoilement du classement, place par place -----
+function viewAdminReveal() {
+  var h = '<div class="card"><h3>🎤 Dévoilement du classement</h3>'
+    + '<p class="small muted">Tant qu\'une place n\'est pas annoncée, le joueur concerné ne voit ni son score ni son rang. '
+    + 'On remonte le classement : <b>la dernière place d\'abord</b>, le vainqueur en dernier.</p>';
+
+  if (S.config.phase !== "resultats") {
+    h += '<p class="small">⚠️ Passe d\'abord la phase en <b>« Résultats officiels »</b> : c\'est elle qui ouvre le dévoilement côté joueurs. '
+      + 'Changer de phase remet le compteur à zéro.</p>';
+  }
+  if (!S.res || S.res.err || !S.res.length) {
+    return h + '<p class="muted small">Chargement du classement…</p></div>';
+  }
+
+  var ri = revealInfo();
+  var rows = S.res.map(function (j) {
+    return Object.assign({}, j, {
+      total: Number(j.pts_qcm) + j.pts_15 + j.pts_5 + j.pts_ordre + j.pts_essai1 + j.pts_essai2
+    });
+  }).sort(function (a, b) { return a.place - b.place; });
+
+  var suivante = rows.filter(function (r) { return !placeRevelee(r.place); }).pop() || null;
+
+  h += '<p class="center small" style="margin:0.2rem 0 0.6rem">Places annoncées : <span class="cnt">' + ri.n + ' / ' + ri.nb + '</span></p>'
+    + '<div class="center" style="display:flex;flex-wrap:wrap;gap:0.4rem;justify-content:center">'
+    + (suivante
+      ? btn("App.aReveal(" + (ri.n + 1) + ")", "Dévoiler la " + (suivante.place === 1 ? "1<sup>re</sup> place 👑" : suivante.place + "<sup>e</sup> place") + " — " + esc(suivante.nom_affiche), "gold")
+      : '<span class="badge gold">Classement entièrement dévoilé</span>')
+    + (ri.n > 0 ? " " + btn("App.aReveal(" + (ri.n - 1) + ")", "Annuler la dernière", "ghost mini") : "")
+    + (ri.n < ri.nb ? " " + btn("App.aReveal(" + ri.nb + ")", "Tout dévoiler", "ghost mini") : "")
+    + (ri.n > 0 ? " " + btn("App.aReveal(0)", "Tout remasquer", "dark mini") : "")
+    + '</div>';
+
+  h += '<div style="overflow-x:auto;margin-top:0.7rem"><table class="adm"><thead><tr><th>Place</th><th>Joueur</th><th>Total</th><th>État</th></tr></thead><tbody>';
+  rows.forEach(function (r) {
+    var vu = placeRevelee(r.place);
+    h += '<tr' + (suivante && r.place === suivante.place ? ' style="background:var(--pink-soft)"' : "") + '>'
+      + '<td><b>' + r.place + (r.place === 1 ? " 👑" : "") + '</b></td>'
+      + '<td style="white-space:nowrap">' + esc(r.nom_affiche) + '</td>'
+      + '<td>' + r.total + ' pts</td>'
+      + '<td>' + (vu ? '<span class="badge ok">annoncée</span>'
+        : suivante && r.place === suivante.place ? '<span class="badge gold">à annoncer</span>'
+        : '<span class="badge dark">secrète</span>') + '</td></tr>';
+  });
+  h += '</tbody></table></div>'
+    + '<p class="small muted">Les graphiques comparatifs du Benchmark n\'apparaissent qu\'une fois les ' + ri.nb + ' places annoncées.</p>';
+  return h + '</div>';
+}
+
 // ----- Fiche candidate (modale) -----
 function viewFiche() {
   if (S.fiche == null) return "";
@@ -1440,7 +1594,12 @@ setInterval(function () {
   if (focused || S.fiche != null) return;
   if (ph === "cloture" || ph === "resultats") {
     Promise.all([loadConfig(), loadCandidates(), loadProfil()]).then(function () {
-      if (S.tab === "benchmark") loadBenchmark(); else render();
+      // Le dévoilement doit tomber chez tout le monde presque en même
+      // temps : on recharge le classement dès qu'un onglet en dépend.
+      var suitLeReveal = S.tab === "benchmark" || S.tab === "admin"
+        || (S.tab === "resultat" && S.config.phase === "resultats");
+      if (suitLeReveal) loadBenchmark(); else render();
+      maybeSacre();
     }).catch(function () {});
   } else {
     var avant = S.config.phase + "|" + (S.profil && S.profil.fige);
@@ -1449,7 +1608,7 @@ setInterval(function () {
       if (apres !== avant) render();
     }).catch(function () {});
   }
-}, 45000);
+}, 12000);
 
 boot();
 </script>

@@ -24,7 +24,15 @@ Dernière mise à jour : 29/07/2026
      ces 15 + essai Nº2 (galerie filtrée : les éliminées disparaissent)
   3. `ordre` : les 5 finalistes officielles cochées → chacun les classe
      de 1 (sa Miss France) à 5 (galerie réduite aux 5)
-  puis `cloture` (points en direct) et `resultats` (Benchmark public)
+  puis `cloture` (résultats des Miss saisis dans l'ordre des annonces,
+  **aucun point visible par les joueurs**) et `resultats` (dévoilement du
+  classement place par place, piloté par la Régie)
+- Dévoilement final : `mf_config.reveal_n` = nombre de places déjà
+  annoncées, en partant de la **dernière**. La Régie clique « Dévoiler la
+  Nº X » ; le serveur ne renvoie que les places annoncées (les autres ne
+  sortent pas de la base). Un joueur voit son détail quand sa place est
+  appelée ; les graphiques du Benchmark n'apparaissent qu'une fois les
+  N places annoncées (paillettes de sacre à ce moment-là)
 - Huissier de justice : à chaque phase, sélection complète exigée pour
   sceller son dossier (verrouillage serveur, récupérable tant que la
   phase est ouverte) ; badge « scellé » visible des autres
