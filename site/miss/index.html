@@ -633,19 +633,20 @@ function tiltAskGyro() {
   }
 }
 
+// Souris : la carte suit la position globale du pointeur sur toute la
+// page (pas seulement au survol de la photo).
+function tiltMouse(e) {
+  if (REDUCED || S.fiche == null) return;
+  if (e.pointerType === "touch") return;
+  var dx = e.clientX / window.innerWidth - 0.5;
+  var dy = e.clientY / window.innerHeight - 0.5;
+  tiltTarget(-dy * 44, dx * 44);
+}
+document.addEventListener("pointermove", tiltMouse);
+
 function initFicheTilt() {
   if (REDUCED) return;
-  var card = document.getElementById("tilt-card");
-  if (!card) return;
   tiltBase = null; // la position actuelle du téléphone devient le neutre
-  card.addEventListener("pointermove", function (e) {
-    if (e.pointerType === "touch") return;
-    var r = card.getBoundingClientRect();
-    var dx = (e.clientX - r.left) / r.width - 0.5;
-    var dy = (e.clientY - r.top) / r.height - 0.5;
-    tiltTarget(-dy * 36, dx * 36);
-  });
-  card.addEventListener("pointerleave", function () { tiltTarget(0, 0); });
 }
 
 // Lever de rideau après la saisie du PIN : deux pans de velours rouge
