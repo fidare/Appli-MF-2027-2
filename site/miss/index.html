@@ -183,6 +183,32 @@
       linear-gradient(160deg, #ff5fa5, #f0cf7d) border-box;
     box-shadow: 0 0 24px rgba(255, 79, 154, 0.35), var(--shadow);
   }
+  /* Échelle de préciosité : plus une Miss va loin dans la soirée, plus
+     son écrin devient précieux — liseré rose pour le top 15, platine
+     pour les finalistes, or vivant pour la Miss France. Déclarées après
+     .selected (même spécificité) pour la supplanter : le palmarès
+     officiel prime sur les pronostics du joueur. */
+  .miss.qualifiee {
+    background:
+      linear-gradient(var(--card), var(--card)) padding-box,
+      linear-gradient(160deg, #ff5fa5, #f0cf7d) border-box;
+    box-shadow: 0 0 24px rgba(255, 79, 154, 0.35), var(--shadow);
+  }
+  .miss.finaliste {
+    border-width: 2px;
+    background:
+      linear-gradient(var(--card), var(--card)) padding-box,
+      linear-gradient(150deg, #ffffff 0%, #d7dbec 20%, #949cbe 42%, #fdfdff 58%, #aeb5d0 78%, #e6e9f7 100%) border-box;
+    box-shadow: 0 0 12px rgba(226, 232, 255, 0.38), 0 0 34px rgba(170, 186, 255, 0.28), var(--shadow);
+  }
+  .miss.mf {
+    border-width: 2px;
+    background:
+      linear-gradient(var(--card), var(--card)) padding-box,
+      linear-gradient(140deg, var(--gold-deep) 0%, #fff3c4 22%, #fbedb4 38%, var(--gold-deep) 58%, #fff3c4 82%, var(--gold-deep) 100%) border-box;
+    box-shadow: 0 0 16px rgba(240, 207, 125, 0.6), 0 0 46px rgba(240, 207, 125, 0.42), var(--shadow);
+  }
+  .miss.mf .ph .num { color: var(--gold); text-shadow: 0 2px 12px rgba(0, 0, 0, 0.75); }
   .miss .ph {
     position: relative; aspect-ratio: 3 / 4;
     background: linear-gradient(160deg, #322347, #1d1430);
@@ -350,6 +376,17 @@
     .card { animation: rise 0.35s ease-out both; }
     .miss { animation: rise 0.45s ease-out both; }
     @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+    /* Les écrins précieux respirent : la lumière glisse le long du
+       liseré, lentement pour le platine, plus franchement pour l'or. */
+    .miss.finaliste, .miss.mf {
+      background-size: auto, 240% 100%;
+      animation: rise 0.45s ease-out both, ecrin 6s linear infinite;
+    }
+    .miss.mf { animation: rise 0.45s ease-out both, ecrin 3.6s linear infinite; }
+    @keyframes ecrin {
+      from { background-position: 0 0, 130% 0; }
+      to { background-position: 0 0, -130% 0; }
+    }
     .brand em {
       background-image: linear-gradient(110deg, var(--gold-deep) 0%, #fbedb4 30%, #fff3c4 38%, var(--gold-deep) 55%, var(--gold-deep) 100%);
       background-size: 220% 100%;
@@ -1181,6 +1218,15 @@ function viewAccueil() {
   return h;
 }
 
+// Écrin de la fiche selon le palmarès officiel : chaque étape franchie
+// rend la bordure plus précieuse (rose → platine → or).
+function ecrin(c) {
+  if (c.rang_final === 1) return " mf";
+  if (c.est_finaliste) return " finaliste";
+  if (c.dans_top15) return " qualifiee";
+  return "";
+}
+
 // Grille de fiches Miss ; `depart` décale la numérotation pour que la
 // seconde grille (les éliminées) continue la première.
 function grilleMiss(list, depart) {
@@ -1188,7 +1234,8 @@ function grilleMiss(list, depart) {
   list.forEach(function (x, i) {
     var p = S.mine[x.id];
     var n = depart + i + 1;
-    h += '<article class="miss' + (p && (p.statut === "top15" || p.top5) ? " selected" : "") + '" style="animation-delay:' + Math.min(i * 45, 700) + 'ms">'
+    h += '<article class="miss' + (p && (p.statut === "top15" || p.top5) ? " selected" : "") + ecrin(x)
+      + '" style="animation-delay:' + Math.min(i * 45, 700) + 'ms">'
       + '<div class="ph" onclick="App.fiche(' + x.id + ')">' + missPhoto(x)
       + '<div class="num">' + (n < 10 ? "0" : "") + n + '</div>'
       + '<div class="cap"><div class="nom">' + esc(x.nom) + '</div>'
