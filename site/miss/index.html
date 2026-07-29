@@ -311,8 +311,8 @@
 
   footer { text-align: center; color: var(--muted); font-size: 0.78rem; margin-top: 2.4rem; }
 
-  table.adm { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-  table.adm th, table.adm td { text-align: left; padding: 0.5rem 0.5rem; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  table.adm { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+  table.adm th, table.adm td { text-align: left; padding: 0.3rem 0.45rem; border-bottom: 1px solid var(--line); vertical-align: middle; }
   table.adm th { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); }
   table.adm input[type="checkbox"] { width: 1.15rem; height: 1.15rem; accent-color: var(--pink); }
 
@@ -1261,7 +1261,7 @@ function viewAdmin() {
       var t15 = ed ? ed.t15 : x.dans_top15;
       var fin = ed ? ed.fin : x.est_finaliste;
       var rang = ed ? ed.rang : x.rang_final;
-      h += '<tr' + (ed ? ' style="background:var(--pink-soft)"' : "") + '><td><b>' + esc(x.nom) + '</b><br><span class="small muted">Miss ' + esc(x.region) + '</span></td>'
+      h += '<tr' + (ed ? ' style="background:var(--pink-soft)"' : "") + '><td style="white-space:nowrap"><b>' + esc(x.nom) + '</b> <span class="small muted">· ' + esc(x.region) + '</span></td>'
         + '<td><input type="checkbox" id="adm-t15-' + x.id + '"' + (t15 ? " checked" : "") + ' onchange="App.admEdit(' + x.id + ')"></td>'
         + '<td><input type="checkbox" id="adm-fin-' + x.id + '"' + (fin ? " checked" : "") + ' onchange="App.admEdit(' + x.id + ')"></td>'
         + '<td><select class="inp" id="adm-rang-' + x.id + '" onchange="App.admEdit(' + x.id + ')"><option value="">—</option>';
@@ -1279,7 +1279,7 @@ function viewAdmin() {
   } else {
     h += '<div style="overflow-x:auto"><table class="adm"><thead><tr><th>Joueur</th><th>PIN</th><th>Points QCM</th><th></th></tr></thead><tbody>';
     S.admJoueurs.forEach(function (j) {
-      h += '<tr><td><b>' + esc(j.nom_affiche) + '</b>' + (j.est_admin ? ' <span class="badge gold">régie</span>' : "") + '<br><span class="small muted">' + esc(j.pseudo) + '</span></td>'
+      h += '<tr><td style="white-space:nowrap"><b>' + esc(j.nom_affiche) + '</b>' + (j.est_admin ? ' <span class="badge gold">régie</span>' : "") + '</td>'
         + '<td><span class="badge dark">' + esc(j.pin) + '</span></td>'
         + '<td><input class="inp" style="width:5rem" type="number" step="0.1" id="adm-qcm-' + j.id + '" value="' + esc(j.points_qcm) + '"></td>'
         + '<td>' + btn("App.aQcm(" + j.id + ")", "💾", "mini") + '</td></tr>';
