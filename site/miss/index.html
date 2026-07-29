@@ -438,6 +438,7 @@ var S = {
   tab: "accueil",
   q: "",
   loginSel: null,
+  showElim: false,   // galerie : rouvrir le rideau sur les éliminées
   fiche: null,
   ficheSurprise: false,
   avancement: null,
@@ -741,6 +742,7 @@ window.App = {
   },
 
   search: function (inp) { S.q = inp.value; renderKeepFocus(inp, "search-input"); },
+  toggleElim: function () { S.showElim = !S.showElim; render(); },
   admSearch: function (inp) { S.admQ = inp.value; renderKeepFocus(inp, "adm-search"); },
   fiche: function (cid) { S.fiche = cid; S.ficheSurprise = false; tiltAskGyro(); render(); },
   closeFiche: function () { S.fiche = null; render(); },
@@ -885,10 +887,24 @@ function statutBadge(p) {
 }
 
 function finalisteBadge(c) {
-  if (c.est_finaliste) return '<span class="badge gold">' + icon("crown") + ' Finaliste officielle</span>';
   var ph = S.config.phase;
+  var phFinale = (ph === "ordre" || ph === "cloture" || ph === "resultats");
+  if (c.est_finaliste) {
+    return '<span class="badge gold">' + icon("crown")
+      + (c.rang_final === 1 ? " Miss France 2027 !"
+        : c.rang_final ? " Nº" + c.rang_final + " du classement"
+        : " Finaliste officielle") + '</span>';
+  }
+  var finConnues = S.candidates.some(function (x) { return x.est_finaliste; });
   var top15Connu = S.candidates.some(function (x) { return x.dans_top15; });
-  if (top15Connu && (ph === "top5" || ph === "ordre" || ph === "cloture" || ph === "resultats")) {
+  // Une fois les 5 finalistes connues, « encore en lice » n'a plus de
+  // sens : les 10 autres du top 15 sont sorties, mais avec les honneurs.
+  if (finConnues && phFinale) {
+    return c.dans_top15
+      ? '<span class="badge pink">Était dans le top 15</span>'
+      : '<span class="badge dark">Éliminée</span>';
+  }
+  if (top15Connu && (ph === "top5" || phFinale)) {
     return c.dans_top15
       ? '<span class="badge pink">Encore en lice</span>'
       : '<span class="badge dark">Éliminée</span>';
@@ -944,7 +960,8 @@ function render() {
   // Les animations d'apparition ne jouent que lors d'un vrai changement
   // d'écran — jamais sur une simple mise à jour du même écran (vote,
   // rafraîchissement auto, frappe dans la recherche…).
-  var sig = !S.config ? "boot" : (!S.session || !S.profil) ? "login" : S.tab + "|" + S.config.phase;
+  var sig = !S.config ? "boot" : (!S.session || !S.profil) ? "login"
+    : S.tab + "|" + S.config.phase + (S.showElim ? "|elim" : "");
   app.classList.toggle("noanim", sig === S.lastSig);
   S.lastSig = sig;
   if (!S.config) { app.innerHTML = '<div class="card center">Base non initialisée : exécute <code>miss-france.sql</code> dans Supabase.</div>'; return; }
@@ -1111,39 +1128,69 @@ function viewAccueil() {
     + huissierCard()
     + '<input id="search-input" class="search" placeholder="Chercher un prénom, une région…" value="' + esc(S.q) + '" oninput="App.search(this)">';
 
-  // Filtrage automatique selon les résultats réels saisis en Régie :
-  // dès que le top 15 officiel est connu, les éliminées disparaissent ;
-  // en phase d'ordre final, seules les 5 finalistes restent.
+  // Filtrage automatique selon les résultats réels saisis en Régie : dès
+  // que le top 15 officiel est connu, les éliminées disparaissent ; dès
+  // que les 5 finalistes sont connues (ordre final, élection en direct,
+  // résultats officiels), seules ces 5 restent en scène.
   var ph = S.config.phase;
   var base = S.candidates;
   var finConnues = S.candidates.some(function (x) { return x.est_finaliste; });
   var top15Connu = S.candidates.some(function (x) { return x.dans_top15; });
+  var phFinale = (ph === "ordre" || ph === "cloture" || ph === "resultats");
   var note = "";
-  if (ph === "ordre" && finConnues) {
+  if (phFinale && finConnues) {
     base = base.filter(function (x) { return x.est_finaliste; });
     note = "Les 5 finalistes officielles — les autres ont quitté la scène.";
-  } else if ((ph === "top5" || ph === "ordre" || ph === "cloture" || ph === "resultats") && top15Connu) {
+  } else if ((ph === "top5" || phFinale) && top15Connu) {
     base = base.filter(function (x) { return x.dans_top15; });
     note = "Les " + base.length + " Miss encore en course — les éliminées ont quitté la scène.";
   }
   if (note) h += '<p class="small muted center" style="margin:0 0 0.6rem">' + note + '</p>';
 
   var q = S.q.trim().toLowerCase();
-  var list = base.filter(function (x) {
-    return !q || (x.nom + " " + x.region).toLowerCase().indexOf(q) >= 0;
-  });
+  function cherche(l) {
+    return l.filter(function (x) {
+      return !q || (x.nom + " " + x.region).toLowerCase().indexOf(q) >= 0;
+    });
+  }
+  var list = cherche(base);
 
   if (!S.candidates.length) {
     return h + '<div class="card center muted">Le casting n\'est pas encore arrivé… L\'organisateur prépare les fiches des candidates. 💅</div>';
   }
-  if (!list.length) return h + '<div class="card center muted">Personne ne correspond à cette recherche.</div>';
+  h += list.length ? grilleMiss(list, 0)
+    : '<div class="card center muted">Personne ne correspond à cette recherche.</div>';
 
-  h += '<div class="grid">';
+  // Une fois les résultats publiés, on peut rouvrir le rideau sur toutes
+  // celles qui ont quitté la scène (elles restent affichées en dessous,
+  // les finalistes gardent la vedette en haut).
+  var sorties = S.candidates.filter(function (x) {
+    return base.indexOf(x) < 0;
+  });
+  if (ph === "resultats" && sorties.length) {
+    h += '<div class="card center" style="margin-top:1rem">'
+      + btn("App.toggleElim()", (S.showElim ? "Masquer" : "Revoir") + " les " + sorties.length + " Miss éliminées", S.showElim ? "ghost" : "")
+      + '<p class="small muted" style="margin:0.4rem 0 0">Tout le casting 2027, du premier tableau au sacre.</p></div>';
+    if (S.showElim) {
+      var listOut = cherche(sorties);
+      h += '<h2 style="margin-top:1.2rem">Les Miss éliminées</h2>';
+      h += listOut.length ? grilleMiss(listOut, list.length)
+        : '<div class="card center muted">Aucune éliminée ne correspond à cette recherche.</div>';
+    }
+  }
+  return h;
+}
+
+// Grille de fiches Miss ; `depart` décale la numérotation pour que la
+// seconde grille (les éliminées) continue la première.
+function grilleMiss(list, depart) {
+  var h = '<div class="grid">';
   list.forEach(function (x, i) {
     var p = S.mine[x.id];
+    var n = depart + i + 1;
     h += '<article class="miss' + (p && (p.statut === "top15" || p.top5) ? " selected" : "") + '" style="animation-delay:' + Math.min(i * 45, 700) + 'ms">'
       + '<div class="ph" onclick="App.fiche(' + x.id + ')">' + missPhoto(x)
-      + '<div class="num">' + (i + 1 < 10 ? "0" : "") + (i + 1) + '</div>'
+      + '<div class="num">' + (n < 10 ? "0" : "") + n + '</div>'
       + '<div class="cap"><div class="nom">' + esc(x.nom) + '</div>'
       + '<div class="reg">Miss ' + esc(x.region) + (x.age ? " · " + esc(x.age) + " ans" : "") + '</div></div></div>'
       + '<div class="body">'
@@ -1152,7 +1199,7 @@ function viewAccueil() {
       + '<div class="actions">' + missActions(x) + '</div>'
       + '</div></article>';
   });
-  return h + "</div>";
+  return h + '</div>';
 }
 
 // ----- Ma sélection -----

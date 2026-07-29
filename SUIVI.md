@@ -24,6 +24,10 @@ Dernière mise à jour : 29/07/2026
      ces 15 + essai Nº2 (galerie filtrée : les éliminées disparaissent)
   3. `ordre` : les 5 finalistes officielles cochées → chacun les classe
      de 1 (sa Miss France) à 5 (galerie réduite aux 5)
+- Galerie « Jeunettes » : réduite aux 5 finalistes dès qu'elles sont
+  connues et jusqu'à la fin (`ordre`, `cloture`, `resultats`) ; en
+  `resultats`, un bouton rouvre le rideau sur les éliminées, affichées
+  en dessous des finalistes
   puis `cloture` (résultats des Miss saisis dans l'ordre des annonces,
   **aucun point visible par les joueurs**) et `resultats` (dévoilement du
   classement place par place, piloté par la Régie)
