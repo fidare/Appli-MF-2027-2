@@ -731,6 +731,19 @@ window.App = {
       })
       .catch(function (e) { toast(e.message, true); });
   },
+  aReset: function () {
+    if (!confirm("Réinitialiser le jeu ? Tous les pronostics de TOUS les joueurs seront effacés, ainsi que les résultats réels et les points QCM.")) return;
+    var mot = prompt("Pour confirmer, écris : RESET");
+    if (mot === null) return;
+    if (mot.trim().toUpperCase() !== "RESET") { toast("Réinitialisation annulée.", true); return; }
+    rpc("mf_admin_reset", { p_jeton: S.session.jeton })
+      .then(function () {
+        S.admEdits = {};
+        toast("Le jeu est réinitialisé — nouvelle partie !");
+        return refresh(true).then(loadAdmin);
+      })
+      .catch(function (e) { toast(e.message, true); });
+  },
   aQcm: function (jid) {
     var v = parseFloat(document.getElementById("adm-qcm-" + jid).value || "0");
     rpc("mf_admin_qcm", { p_jeton: S.session.jeton, p_joueur: jid, p_points: isNaN(v) ? 0 : v })
@@ -1274,6 +1287,10 @@ function viewAdmin() {
     h += '</tbody></table></div><p class="small muted">Pour changer un PIN ou une photo : Supabase → Table Editor → mf_joueurs.</p>';
   }
   h += '</div>';
+
+  h += '<div class="card"><h3>' + icon("trash") + ' Zone dangereuse</h3>'
+    + '<p class="small muted">Repartir de zéro pour une nouvelle partie : efface tous les pronostics et dossiers scellés de tous les joueurs, remet à zéro les résultats réels et les points QCM, et repasse le jeu en « Préparation du casting ». Les joueurs (PIN, photos) et les fiches des candidates sont conservés.</p>'
+    + '<div class="center">' + btn("App.aReset()", "Réinitialiser le jeu", "dark") + '</div></div>';
   return h;
 }
 

@@ -536,6 +536,25 @@ begin
 end;
 $$;
 
+-- Réinitialiser le jeu pour une nouvelle partie : efface tous les
+-- pronostics et dossiers scellés, remet à zéro les résultats réels et
+-- les points QCM, repasse en phase « préparation ». Conserve les
+-- joueurs (PIN, photos) et les fiches des candidates.
+create or replace function public.mf_admin_reset(p_jeton uuid)
+returns void
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  perform mf_admin_id(p_jeton);
+  delete from mf_pronostics;
+  delete from mf_validations;
+  update mf_candidates set dans_top15 = false, est_finaliste = false, rang_final = null;
+  update mf_joueurs set points_qcm = 0;
+  update mf_config set phase = 'preparation' where id = 1;
+end;
+$$;
+
 -- Liste des joueurs avec PIN et points QCM (page admin).
 create or replace function public.mf_admin_joueurs(p_jeton uuid)
 returns table (id bigint, pseudo text, nom_affiche text, pin text, points_qcm numeric, est_admin boolean)
