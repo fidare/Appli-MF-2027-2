@@ -547,10 +547,10 @@ security definer set search_path = public
 as $$
 begin
   perform mf_admin_id(p_jeton);
-  delete from mf_pronostics;
-  delete from mf_validations;
-  update mf_candidates set dans_top15 = false, est_finaliste = false, rang_final = null;
-  update mf_joueurs set points_qcm = 0;
+  delete from mf_pronostics where true;
+  delete from mf_validations where true;
+  update mf_candidates set dans_top15 = false, est_finaliste = false, rang_final = null where true;
+  update mf_joueurs set points_qcm = 0 where true;
   update mf_config set phase = 'preparation' where id = 1;
 end;
 $$;
