@@ -316,6 +316,12 @@
   table.adm th { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); }
   table.adm input[type="checkbox"] { width: 1.15rem; height: 1.15rem; accent-color: var(--pink); }
 
+  #glitter { position: fixed; inset: 0; z-index: 150; overflow: hidden; pointer-events: none; }
+  #glitter .gl {
+    position: absolute; display: block; border-radius: 1px;
+    box-shadow: 0 0 6px rgba(255, 224, 150, 0.85);
+  }
+
   .entr { position: fixed; inset: 0; z-index: 200; overflow: hidden; pointer-events: none; }
   .entr .pan {
     position: absolute; top: 0; bottom: 0; width: 51%;
@@ -511,6 +517,69 @@ function boot() {
     });
 }
 
+// ------------------------------------------------------------------
+// Paillettes ✨ — gerbes sur les votes, pluies pour les grands moments.
+// ------------------------------------------------------------------
+var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+var GL_COLORS = ["#f6dc94", "#f0cf7d", "#ffd98a", "#ff9ac6", "#ffffff", "#ffcf5e"];
+
+document.addEventListener("pointerdown", function (e) {
+  S.tap = { x: e.clientX, y: e.clientY };
+}, true);
+
+function glitterLayer() {
+  var l = document.getElementById("glitter");
+  if (!l) { l = document.createElement("div"); l.id = "glitter"; document.body.appendChild(l); }
+  return l;
+}
+
+function glSpawn(x, y, dx, dy, dur, rot) {
+  var l = glitterLayer();
+  var s = document.createElement("span");
+  s.className = "gl";
+  var size = 4 + Math.random() * 5;
+  s.style.width = size + "px";
+  s.style.height = size + "px";
+  s.style.background = GL_COLORS[Math.floor(Math.random() * GL_COLORS.length)];
+  s.style.left = x + "px";
+  s.style.top = y + "px";
+  l.appendChild(s);
+  s.animate([
+    { transform: "translate(-50%,-50%) rotate(0deg) scale(1)", opacity: 1 },
+    { transform: "translate(" + dx + "px," + dy + "px) rotate(" + rot + "deg) scale(0.25)", opacity: 0 }
+  ], { duration: dur, easing: "cubic-bezier(0.2, 0.6, 0.3, 1)" });
+  setTimeout(function () { s.remove(); }, dur);
+}
+
+// Gerbe au point du dernier clic (ou au centre).
+function burstAt(x, y, n) {
+  if (REDUCED) return;
+  for (var i = 0; i < (n || 16); i++) {
+    var ang = Math.random() * Math.PI * 2;
+    var dist = 45 + Math.random() * 75;
+    glSpawn(x, y, Math.cos(ang) * dist, Math.sin(ang) * dist + 45,
+      700 + Math.random() * 500, Math.random() * 420 - 210);
+  }
+}
+function burst(n) {
+  burstAt(S.tap ? S.tap.x : window.innerWidth / 2,
+    S.tap ? S.tap.y : window.innerHeight / 3, n);
+}
+
+// Pluie de paillettes depuis le haut de l'écran.
+function glitterRain(duration) {
+  if (REDUCED) return;
+  var end = Date.now() + (duration || 3000);
+  var timer = setInterval(function () {
+    if (Date.now() > end) { clearInterval(timer); return; }
+    for (var i = 0; i < 5; i++) {
+      glSpawn(Math.random() * window.innerWidth, -12,
+        (Math.random() - 0.5) * 140, window.innerHeight + 60,
+        2200 + Math.random() * 1800, 360 + Math.random() * 360);
+    }
+  }, 130);
+}
+
 // Lever de rideau après la saisie du PIN : deux pans de velours rouge
 // à liseré d'or s'ouvrent sur le jeu.
 function playEntrance(nom) {
@@ -522,6 +591,7 @@ function playEntrance(nom) {
     + '<div class="brand">Que le show <em>commence&nbsp;!</em></div>'
     + '<div class="who" style="font-family:var(--serif);font-style:italic;color:var(--ink);font-size:1.1rem">' + esc(nom) + '</div></div>';
   document.body.appendChild(d);
+  setTimeout(function () { glitterRain(1500); }, 1150);
   setTimeout(function () { d.remove(); }, 2600);
 }
 
@@ -547,6 +617,10 @@ window.App = {
     if (t === "benchmark") loadBenchmark();
     if (t === "selection") loadAvancement();
     if (t === "admin") loadAdmin();
+    if (S.config && S.config.phase === "resultats" && (t === "resultat" || t === "benchmark") && !S.sacreShown) {
+      S.sacreShown = true;
+      glitterRain(4000);
+    }
   },
   pickJoueur: function (id) {
     S.loginSel = S.joueurs.find(function (j) { return j.id === id; }) || null;
@@ -576,7 +650,10 @@ window.App = {
 
   statut: function (cid, st) {
     rpc("mf_definir_statut", { p_jeton: S.session.jeton, p_candidate: cid, p_statut: st })
-      .then(function () { return refresh(); })
+      .then(function () {
+        if (st === "top15" || st === "top5") burst();
+        return refresh();
+      })
       .catch(function (e) { toast(e.message, true); });
   },
   rang: function (cid, sel) {
@@ -587,7 +664,10 @@ window.App = {
   },
   essai: function (essai, cid) {
     rpc("mf_definir_essai", { p_jeton: S.session.jeton, p_essai: essai, p_candidate: cid })
-      .then(function () { return refresh(); })
+      .then(function () {
+        if (cid) burst(20);
+        return refresh();
+      })
       .catch(function (e) { toast(e.message, true); });
   },
 
@@ -600,7 +680,9 @@ window.App = {
   figer: function () {
     rpc("mf_figer", { p_jeton: S.session.jeton })
       .then(function () {
-        toast("Dossier scellé chez l'huissier de justice ! ⚖️");
+        toast("Dossier scellé chez l'huissier de justice !");
+        burstAt(window.innerWidth / 2, window.innerHeight / 2.6, 34);
+        glitterRain(1400);
         return Promise.all([loadProfil(), loadMine()]).then(render);
       })
       .catch(function (e) { toast(e.message, true); });
