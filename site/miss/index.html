@@ -245,35 +245,35 @@
     transform: translateX(-60%); opacity: 0;
   }
   .miss.mf .ph .num, .miss.mf .ph .cap { z-index: 2; }
-  /* Paillettes permanentes : deux nappes d'étoiles posées sur la carte,
-     qui scintillent en décalé. Elles restent à l'intérieur du liseré
-     (la carte rogne ce qui dépasse) et ne captent aucun clic. */
+  /* Pluie de paillettes sur la carte de la Miss France : deux rideaux
+     d'étoiles qui tombent en boucle. Chaque dégradé est une tuile
+     répétée contenant une paillette ; la tuile descend exactement de sa
+     propre hauteur, si bien que la boucle est invisible. Les hauteurs
+     de tuile sont identiques dans un même rideau (le décalage vertical
+     du départ suffit à casser l'alignement), et les deux rideaux vont
+     à des vitesses différentes pour donner de la profondeur. */
   .miss.mf::before, .miss.mf::after {
     content: ""; position: absolute; inset: 0; z-index: 3;
     pointer-events: none; border-radius: 13px;
-    /* Chaque dégradé est une pastille de 6 px : sans cette taille, les
-       six nappes se superposeraient au centre de la carte. */
-    background-repeat: no-repeat; background-size: 6px 6px; opacity: 0.55;
+    background-repeat: repeat; opacity: 0.75;
   }
   .miss.mf::before {
     background-image:
       radial-gradient(circle, #fff8dc 0 1.3px, transparent 2.2px),
       radial-gradient(circle, var(--gold) 0 1px, transparent 1.8px),
       radial-gradient(circle, #ffffff 0 1.5px, transparent 2.4px),
-      radial-gradient(circle, var(--gold) 0 1.1px, transparent 1.9px),
-      radial-gradient(circle, #fff8dc 0 1px, transparent 1.7px),
-      radial-gradient(circle, var(--gold) 0 1.2px, transparent 2px);
-    background-position: 11% 7%, 88% 15%, 24% 47%, 79% 63%, 46% 26%, 63% 88%;
+      radial-gradient(circle, var(--gold) 0 1.1px, transparent 1.9px);
+    background-size: 124px 110px, 152px 110px, 98px 110px, 176px 110px;
+    background-position: 6px 0, 41px 34px, 23px 71px, 67px 18px;
   }
   .miss.mf::after {
     background-image:
       radial-gradient(circle, #ffffff 0 1.2px, transparent 2px),
       radial-gradient(circle, var(--gold) 0 1.4px, transparent 2.3px),
       radial-gradient(circle, #fff8dc 0 1px, transparent 1.8px),
-      radial-gradient(circle, var(--gold) 0 1px, transparent 1.7px),
-      radial-gradient(circle, #ffffff 0 1.3px, transparent 2.1px),
-      radial-gradient(circle, #fff8dc 0 1.1px, transparent 1.9px);
-    background-position: 7% 34%, 93% 42%, 35% 12%, 68% 6%, 17% 81%, 91% 90%;
+      radial-gradient(circle, var(--gold) 0 1px, transparent 1.7px);
+    background-size: 142px 150px, 110px 150px, 168px 150px, 128px 150px;
+    background-position: 29px 12px, 12px 96px, 55px 51px, 71px 128px;
   }
   .miss .ph {
     position: relative; aspect-ratio: 3 / 4;
@@ -459,11 +459,25 @@
                     0 0 90px rgba(240, 207, 125, 0.6), var(--shadow);
       }
     }
-    .miss.mf::before { animation: scintille 2.6s ease-in-out infinite; }
-    .miss.mf::after { animation: scintille 3.4s ease-in-out infinite 1.1s; }
+    /* La pluie : chaque tuile descend d'exactement sa hauteur, en
+       boucle sans raccord. Le scintillement se superpose à la chute. */
+    .miss.mf::before {
+      animation: pluie1 3.2s linear infinite, scintille 2.6s ease-in-out infinite;
+    }
+    .miss.mf::after {
+      animation: pluie2 5.4s linear infinite, scintille 3.4s ease-in-out infinite 1.1s;
+    }
+    @keyframes pluie1 {
+      from { background-position: 6px 0, 41px 34px, 23px 71px, 67px 18px; }
+      to { background-position: 6px 110px, 41px 144px, 23px 181px, 67px 128px; }
+    }
+    @keyframes pluie2 {
+      from { background-position: 29px 12px, 12px 96px, 55px 51px, 71px 128px; }
+      to { background-position: 29px 162px, 12px 246px, 55px 201px, 71px 278px; }
+    }
     @keyframes scintille {
-      0%, 100% { opacity: 0.2; transform: scale(0.97); }
-      50% { opacity: 1; transform: scale(1); }
+      0%, 100% { opacity: 0.45; }
+      50% { opacity: 1; }
     }
     .miss.mf .ph::after { animation: balaie 5s ease-in-out infinite; }
     @keyframes balaie {
