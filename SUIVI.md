@@ -13,6 +13,9 @@ Dernière mise à jour : 29/07/2026
   Playfair Display + Outfit (Google Fonts), icônes SVG maison, dock de
   navigation flottant, lever de rideau après le PIN, paillettes (votes,
   huissier, sacre), animations respectant prefers-reduced-motion
+- Écrins des fiches Miss selon le palmarès officiel : liseré rose pour
+  le top 15, platine tournant pour les finalistes, or tournant + halo
+  battant + couronne + reflet balayant le portrait pour la Miss France
 
 ## Fonctionnement
 
