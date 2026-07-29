@@ -292,20 +292,18 @@
     background: rgba(255, 255, 255, 0.12); color: var(--ink);
     border-radius: 50%; width: 2.1rem; height: 2.1rem; cursor: pointer; font-weight: 700; z-index: 2;
   }
-  .modal .tiltwrap { perspective: 900px; margin-bottom: 0.7rem; }
+  .modal .tiltwrap { perspective: 800px; margin-bottom: 0.7rem; }
   .modal .bigph {
     position: relative; border-radius: 14px; overflow: hidden; aspect-ratio: 3 / 4;
     background: linear-gradient(160deg, #322347, #1d1430);
     display: flex; align-items: center; justify-content: center;
     color: #64517f;
     transform-style: preserve-3d;
-    transition: transform 0.12s ease-out;
     will-change: transform;
     box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
   }
   .modal .bigph > .ic { width: 3.5rem; height: 3.5rem; }
   .modal .bigph img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-  .modal .bigph .sheen { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
 
   #toast {
     position: fixed; bottom: calc(5.8rem + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
@@ -593,25 +591,31 @@ function glitterRain(duration) {
 // téléphone (ou la souris sur ordinateur), avec un reflet qui glisse.
 // ------------------------------------------------------------------
 var tiltBase = null;
+var tilt = { rx: 0, ry: 0, tx: 0, ty: 0, raf: null };
 
-function tiltApply(rx, ry) {
-  var el = document.getElementById("tilt-card");
-  if (!el) return;
-  rx = Math.max(-14, Math.min(14, rx));
-  ry = Math.max(-14, Math.min(14, ry));
-  el.style.transform = "rotateX(" + rx.toFixed(2) + "deg) rotateY(" + ry.toFixed(2) + "deg)";
-  var sh = el.querySelector(".sheen");
-  if (sh) {
-    sh.style.background = "radial-gradient(65% 50% at " + (50 + ry * 2.8).toFixed(1) + "% "
-      + (50 - rx * 2.8).toFixed(1) + "%, rgba(255,255,255,0.26), rgba(255,255,255,0.05) 45%, transparent 70%)";
-  }
+// La carte suit une cible avec lissage dans une boucle d'animation :
+// les mesures brutes du gyroscope (irrégulières) ne pilotent jamais
+// directement le rendu — fini les saccades.
+function tiltTarget(rx, ry) {
+  tilt.tx = Math.max(-22, Math.min(22, rx));
+  tilt.ty = Math.max(-22, Math.min(22, ry));
+  if (tilt.raf) return;
+  var step = function () {
+    var el = document.getElementById("tilt-card");
+    if (!el) { tilt.raf = null; tilt.rx = tilt.ry = tilt.tx = tilt.ty = 0; return; }
+    tilt.rx += (tilt.tx - tilt.rx) * 0.16;
+    tilt.ry += (tilt.ty - tilt.ry) * 0.16;
+    el.style.transform = "rotateX(" + tilt.rx.toFixed(2) + "deg) rotateY(" + tilt.ry.toFixed(2) + "deg)";
+    tilt.raf = requestAnimationFrame(step);
+  };
+  tilt.raf = requestAnimationFrame(step);
 }
 
 function tiltOrientation(e) {
   if (REDUCED || S.fiche == null) return;
   if (e.beta == null || e.gamma == null) return;
   if (!tiltBase) tiltBase = { b: e.beta, g: e.gamma };
-  tiltApply((tiltBase.b - e.beta) * 0.7, (e.gamma - tiltBase.g) * 0.7);
+  tiltTarget((tiltBase.b - e.beta) * 1.2, (e.gamma - tiltBase.g) * 1.2);
 }
 
 // iOS demande une permission explicite pour le gyroscope, à déclencher
@@ -639,9 +643,9 @@ function initFicheTilt() {
     var r = card.getBoundingClientRect();
     var dx = (e.clientX - r.left) / r.width - 0.5;
     var dy = (e.clientY - r.top) / r.height - 0.5;
-    tiltApply(-dy * 24, dx * 24);
+    tiltTarget(-dy * 36, dx * 36);
   });
-  card.addEventListener("pointerleave", function () { tiltApply(0, 0); });
+  card.addEventListener("pointerleave", function () { tiltTarget(0, 0); });
 }
 
 // Lever de rideau après la saisie du PIN : deux pans de velours rouge
@@ -1411,7 +1415,7 @@ function viewFiche() {
   var p = S.mine[x.id];
   var h = '<div class="modal-bg" onclick="if(event.target===this)App.closeFiche()"><div class="modal">'
     + '<button class="close" onclick="App.closeFiche()" aria-label="Fermer">✕</button>'
-    + '<div class="tiltwrap"><div class="bigph" id="tilt-card">' + missPhoto(x, S.ficheSurprise) + '<div class="sheen"></div></div></div>';
+    + '<div class="tiltwrap"><div class="bigph" id="tilt-card">' + missPhoto(x, S.ficheSurprise) + '</div></div>';
   if (x.photo_surprise_url) h += '<p class="center" style="margin:0 0 0.5rem">' + btn("App.surprise()", S.ficheSurprise ? "Remettre la vraie photo" : icon("spark") + " Surprise", "mini") + '</p>';
   h += '<h2 class="center" style="margin:0.2rem 0 0">' + esc(x.nom) + '</h2>'
     + '<p class="center" style="color:var(--pink);font-weight:700;margin:0.1rem 0 0.6rem">Miss ' + esc(x.region) + '</p>'
