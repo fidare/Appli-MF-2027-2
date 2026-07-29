@@ -1,24 +1,39 @@
 # Suivi du projet — Pronostics Miss France 2027
 
-Dernière mise à jour : 28/07/2026
+Dernière mise à jour : 29/07/2026
 
-## État : ✅ appli en ligne et fonctionnelle (en phase de test)
+## État : ✅ appli complète, designée et fonctionnelle (données de test)
 
 - Appli : https://fidare.github.io/Appli-MF-2027-2/miss/ (`site/miss/index.html`)
 - Base : projet Supabase `vqzvwihmyzjnoqnqrtsv`, schéma créé via `miss-france.sql`
 - Déploiement : automatique sur push de `site/**` vers `main` (`.github/workflows/pages.yml`)
-- Connexion testée et validée par Romain (Mister Gamboy color, rôle Régie)
-- Données de test : 15 candidates de l'édition précédente (`candidates-test.sql`)
+- Données de test : casting complet 2026, 30 candidates avec photos
+  voici.fr (`candidates-test.sql`)
+- Design mobile-first « soirée de gala » : nuit étoilée or/rose,
+  Playfair Display + Outfit (Google Fonts), icônes SVG maison, dock de
+  navigation flottant, lever de rideau après le PIN, paillettes (votes,
+  huissier, sacre), animations respectant prefers-reduced-motion
 
 ## Fonctionnement
 
 - Identification : photo d'enfance + PIN 4 chiffres (PIN visibles dans
   l'onglet Régie de l'appli et dans Table Editor → `mf_joueurs`)
-- Phases pilotées depuis la Régie : préparation → sélection des 15 →
-  choix des 5 → ordre final → essais MF → clôture (saisie des résultats
-  réels en direct) → résultats (ouverture du Benchmark)
-- Scores calculés en cascade côté Supabase dès que la Régie coche les
-  résultats réels ; QCM saisi à la main dans la Régie
+- 3 phases de jeu pilotées depuis la Régie :
+  1. `selection15` : son équipe de 15 (parmi les 30) + essai MF Nº1
+  2. `top5` : le vrai top 15 est coché en Régie → choix de ses 5 parmi
+     ces 15 + essai Nº2 (galerie filtrée : les éliminées disparaissent)
+  3. `ordre` : les 5 finalistes officielles cochées → chacun les classe
+     de 1 (sa Miss France) à 5 (galerie réduite aux 5)
+  puis `cloture` (points en direct) et `resultats` (Benchmark public)
+- Huissier de justice : à chaque phase, sélection complète exigée pour
+  sceller son dossier (verrouillage serveur, récupérable tant que la
+  phase est ouverte) ; badge « scellé » visible des autres
+- Régie : tableau complet compact avec recherche, compteurs Top 15 x/15
+  et Finalistes x/5, enregistrement groupé en un clic, saisie QCM,
+  bouton « Réinitialiser le jeu » (double confirmation, conserve
+  joueurs et candidates)
+- Scores calculés en cascade côté Supabase dès que la Régie enregistre
+  les résultats réels ; QCM saisi à la main dans la Régie
 - Barème : 5 pts/Miss du top 15, 10 pts/top 5, 10 pts/bon rang,
   50 pts essai 1, 25 pts essai 2 (modifiable dans `mf_config`)
 
