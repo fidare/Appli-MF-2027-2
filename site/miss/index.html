@@ -422,6 +422,34 @@
   #app.noanim .card, #app.noanim .miss { animation: none !important; }
 
   #glitter { position: fixed; inset: 0; z-index: 150; overflow: hidden; pointer-events: none; }
+  /* Effets de super-héros (voir burstAt et eclair). */
+  #glitter .fx-ring {
+    position: absolute; width: 70px; height: 70px; border-radius: 50%;
+    border: 5px solid; box-shadow: 0 0 18px currentColor, inset 0 0 12px currentColor;
+  }
+  #glitter .fx-rays {
+    position: absolute; width: 180px; height: 180px; border-radius: 50%;
+    background: repeating-conic-gradient(var(--c) 0 3deg, transparent 3deg 15deg);
+    -webkit-mask: radial-gradient(circle, transparent 22%, #000 30%, #000 45%, transparent 70%);
+    mask: radial-gradient(circle, transparent 22%, #000 30%, #000 45%, transparent 70%);
+  }
+  #glitter .fx-pow {
+    position: absolute; isolation: isolate; padding: 1.3rem 1.6rem; white-space: nowrap;
+    font-family: var(--serif); font-size: 2.4rem; line-height: 1; letter-spacing: 0.03em;
+    -webkit-text-stroke: 2px #0b0b0b; paint-order: stroke fill;
+    text-shadow: 3px 3px 0 #0b0b0b;
+  }
+  /* Bulle en étoile d'explosion, contour noir façon case de BD. */
+  #glitter .fx-pow::before, #glitter .fx-pow::after {
+    content: ""; position: absolute; z-index: -1;
+    clip-path: polygon(50% 0%, 59% 22%, 79% 6%, 74% 30%, 98% 24%, 82% 44%, 100% 58%, 78% 64%, 90% 88%, 66% 76%, 58% 100%, 47% 80%, 30% 98%, 31% 74%, 6% 84%, 20% 60%, 0% 46%, 22% 38%, 8% 14%, 33% 22%);
+  }
+  #glitter .fx-pow::before { inset: -12px -20px; background: #0b0b0b; }
+  #glitter .fx-pow::after { inset: -4px -10px; background: var(--bg); }
+  #glitter .fx-bolt { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  #glitter .fx-bolt path { fill: none; stroke: #f4f8ff; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 6px #7fb2ff) drop-shadow(0 0 16px #3d8bff); }
+  #glitter .fx-bolt path.g { stroke: rgba(120, 175, 255, 0.55); }
+  #glitter .fx-flash { position: absolute; inset: 0; background: radial-gradient(circle at 50% 20%, rgba(190, 215, 255, 0.35), rgba(60, 120, 255, 0.12) 60%, transparent); }
   #glitter .gl {
     position: absolute; display: block; border-radius: 1px;
     box-shadow: 0 0 8px currentColor, 0 0 4px rgba(255, 255, 255, 0.7);
@@ -673,7 +701,8 @@ function boot() {
 }
 
 // ------------------------------------------------------------------
-// Paillettes ✨ — gerbes sur les votes, pluies pour les grands moments.
+// Effets de super-héros : impacts comics sur les votes, éclairs de
+// Thor pour les grands moments. Étincelles aux couleurs des Pierres.
 // ------------------------------------------------------------------
 var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 // Couleurs des six Pierres d'Infinité (Espace, Esprit, Réalité, Pouvoir, Temps, Âme).
@@ -696,7 +725,7 @@ function glSpawn(x, y, dx, dy, dur, rot) {
   var size = 4 + Math.random() * 5;
   s.style.width = size + "px";
   s.style.height = size + "px";
-  s.style.background = GL_COLORS[Math.floor(Math.random() * GL_COLORS.length)];
+  s.style.background = s.style.color = GL_COLORS[Math.floor(Math.random() * GL_COLORS.length)];
   s.style.left = x + "px";
   s.style.top = y + "px";
   l.appendChild(s);
@@ -707,33 +736,131 @@ function glSpawn(x, y, dx, dy, dur, rot) {
   setTimeout(function () { s.remove(); }, dur);
 }
 
-// Gerbe au point du dernier clic (ou au centre).
-function burstAt(x, y, n) {
+// Impact comics au point du dernier clic (ou au centre) : onde de
+// choc, lignes de vitesse, bulle d'onomatopée et quelques étincelles.
+var FX_WORDS = ["BAM!", "POW!", "WHAM!", "BOOM!", "ZAP!", "KRAK!", "SMASH!", "THWIP!", "BLAM!", "ZOK!"];
+var FX_PAIRS = [["#ffd23f", "#e62429"], ["#e62429", "#ffd23f"], ["#2f6fd6", "#ffd23f"], ["#ffd23f", "#2f6fd6"], ["#9b4dff", "#ffd23f"]];
+function fxEl(cls, x, y) {
+  var e = document.createElement("div");
+  e.className = cls;
+  e.style.left = x + "px";
+  e.style.top = y + "px";
+  glitterLayer().appendChild(e);
+  return e;
+}
+function burstAt(x, y, n, word) {
   if (REDUCED) return;
-  for (var i = 0; i < (n || 16); i++) {
+  var big = (n || 16) > 25;
+  var pair = FX_PAIRS[Math.floor(Math.random() * FX_PAIRS.length)];
+  // Garde la bulle dans l'écran.
+  var bx = x;
+  var by = Math.min(Math.max(y - 30, 70), window.innerHeight - 70);
+
+  var ring = fxEl("fx-ring", x, y);
+  ring.style.borderColor = pair[0];
+  ring.style.color = pair[0];
+  ring.animate([
+    { transform: "translate(-50%,-50%) scale(0.1)", opacity: 1 },
+    { transform: "translate(-50%,-50%) scale(" + (big ? 4.5 : 3) + ")", opacity: 0 }
+  ], { duration: 550, easing: "cubic-bezier(0.1, 0.7, 0.3, 1)" });
+
+  var rays = fxEl("fx-rays", x, y);
+  rays.style.setProperty("--c", pair[0]);
+  rays.animate([
+    { transform: "translate(-50%,-50%) scale(0.3) rotate(0deg)", opacity: 0.95 },
+    { transform: "translate(-50%,-50%) scale(" + (big ? 2.6 : 1.8) + ") rotate(25deg)", opacity: 0 }
+  ], { duration: 520, easing: "ease-out" });
+
+  var pow = fxEl("fx-pow", bx, by);
+  pow.style.setProperty("--bg", pair[0]);
+  pow.style.color = pair[1];
+  pow.textContent = word || FX_WORDS[Math.floor(Math.random() * FX_WORDS.length)];
+  if (big) pow.style.fontSize = "3.4rem";
+  // Recentre si la bulle (contour compris) sortirait de l'écran.
+  var half = pow.offsetWidth / 2 + 24;
+  pow.style.left = Math.min(Math.max(bx, half), window.innerWidth - half) + "px";
+  var rot = Math.random() * 24 - 12;
+  pow.animate([
+    { transform: "translate(-50%,-50%) rotate(" + rot + "deg) scale(0)", opacity: 1 },
+    { transform: "translate(-50%,-50%) rotate(" + rot + "deg) scale(1.25)", opacity: 1, offset: 0.18 },
+    { transform: "translate(-50%,-50%) rotate(" + rot + "deg) scale(1)", opacity: 1, offset: 0.3 },
+    { transform: "translate(-50%,-50%) rotate(" + rot + "deg) scale(1)", opacity: 1, offset: 0.8 },
+    { transform: "translate(-50%,-50%) rotate(" + (rot * 1.5) + "deg) scale(0.6)", opacity: 0 }
+  ], { duration: big ? 1300 : 950, easing: "ease-out", fill: "forwards" });
+
+  if (big) shake();
+  setTimeout(function () { ring.remove(); rays.remove(); pow.remove(); }, big ? 1300 : 950);
+
+  for (var i = 0; i < Math.round((n || 16) / 2); i++) {
     var ang = Math.random() * Math.PI * 2;
-    var dist = 45 + Math.random() * 75;
-    glSpawn(x, y, Math.cos(ang) * dist, Math.sin(ang) * dist + 45,
-      700 + Math.random() * 500, Math.random() * 420 - 210);
+    var dist = 60 + Math.random() * 90;
+    glSpawn(x, y, Math.cos(ang) * dist, Math.sin(ang) * dist,
+      450 + Math.random() * 350, Math.random() * 420 - 210);
   }
 }
-function burst(n) {
+function burst(n, word) {
   burstAt(S.tap ? S.tap.x : window.innerWidth / 2,
-    S.tap ? S.tap.y : window.innerHeight / 3, n);
+    S.tap ? S.tap.y : window.innerHeight / 3, n, word);
 }
 
-// Pluie de paillettes depuis le haut de l'écran.
+// Secousse d'écran façon atterrissage de super-héros.
+function shake() {
+  var w = document.querySelector(".wrap");
+  if (!w || REDUCED) return;
+  w.animate([
+    { transform: "translate(0,0)" }, { transform: "translate(-6px,4px)" },
+    { transform: "translate(5px,-5px)" }, { transform: "translate(-4px,-2px)" },
+    { transform: "translate(3px,3px)" }, { transform: "translate(0,0)" }
+  ], { duration: 380, easing: "ease-out" });
+}
+
+// Orage de Thor : un éclair zèbre l'écran avec un flash, et des
+// étincelles jaillissent au point d'impact.
+function eclair() {
+  var W = window.innerWidth, H = window.innerHeight;
+  var x = W * (0.1 + Math.random() * 0.8), y = 0;
+  var endY = H * (0.45 + Math.random() * 0.5);
+  var pts = [[x, y]];
+  while (y < endY) {
+    y = Math.min(y + 25 + Math.random() * 45, endY);
+    x += (Math.random() - 0.5) * 70;
+    pts.push([x, y]);
+  }
+  // Une branche secondaire partant du milieu.
+  var b = pts[Math.floor(pts.length / 2)], bx = b[0], by = b[1], br = [[bx, by]];
+  for (var k = 0; k < 4; k++) {
+    bx += (Math.random() < 0.5 ? -1 : 1) * (15 + Math.random() * 30);
+    by += 20 + Math.random() * 30;
+    br.push([bx, by]);
+  }
+  function d(a) { return "M" + a.map(function (q) { return q[0].toFixed(1) + " " + q[1].toFixed(1); }).join(" L"); }
+  var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("class", "fx-bolt");
+  svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+  svg.innerHTML = '<path class="g" d="' + d(pts) + '" stroke-width="8"/><path d="' + d(pts) + '" stroke-width="2.6"/>'
+    + '<path d="' + d(br) + '" stroke-width="1.6"/>';
+  glitterLayer().appendChild(svg);
+  svg.animate([
+    { opacity: 0 }, { opacity: 1, offset: 0.05 }, { opacity: 0.3, offset: 0.25 },
+    { opacity: 1, offset: 0.35 }, { opacity: 0 }
+  ], { duration: 520, easing: "linear", fill: "forwards" });
+  var fl = fxEl("fx-flash", 0, 0);
+  fl.animate([{ opacity: 0 }, { opacity: 1, offset: 0.08 }, { opacity: 0 }], { duration: 380, fill: "forwards" });
+  var last = pts[pts.length - 1];
+  for (var i = 0; i < 6; i++) {
+    var ang = -Math.PI * Math.random();
+    glSpawn(last[0], last[1], Math.cos(ang) * 60, Math.sin(ang) * 60 + 30, 500 + Math.random() * 300, 200);
+  }
+  setTimeout(function () { svg.remove(); fl.remove(); }, 520);
+}
 function glitterRain(duration) {
   if (REDUCED) return;
   var end = Date.now() + (duration || 3000);
+  eclair();
   var timer = setInterval(function () {
     if (Date.now() > end) { clearInterval(timer); return; }
-    for (var i = 0; i < 5; i++) {
-      glSpawn(Math.random() * window.innerWidth, -12,
-        (Math.random() - 0.5) * 140, window.innerHeight + 60,
-        2200 + Math.random() * 1800, 360 + Math.random() * 360);
-    }
-  }, 130);
+    eclair();
+  }, 420);
 }
 
 // ------------------------------------------------------------------
@@ -884,7 +1011,7 @@ window.App = {
   essai: function (essai, cid) {
     rpc("mf_definir_essai", { p_jeton: S.session.jeton, p_essai: essai, p_candidate: cid })
       .then(function () {
-        if (cid) burst(20);
+        if (cid) burst(20, "ASSEMBLE!");
         return refresh();
       })
       .catch(function (e) { toast(e.message, true); });
@@ -901,7 +1028,7 @@ window.App = {
     rpc("mf_figer", { p_jeton: S.session.jeton })
       .then(function () {
         toast("Dossier scellé chez l'huissier de justice !");
-        burstAt(window.innerWidth / 2, window.innerHeight / 2.6, 34);
+        burstAt(window.innerWidth / 2, window.innerHeight / 2.6, 34, "KABOOM!");
         glitterRain(1400);
         return Promise.all([loadProfil(), loadMine()]).then(render);
       })
@@ -1214,7 +1341,7 @@ function revealInfo() {
 }
 function placeRevelee(place) { return place > revealInfo().seuil; }
 
-// Paillettes du sacre : une seule fois, quand la dernière place (la 1re)
+// Orage du sacre : une seule fois, quand la dernière place (la 1re)
 // vient d'être annoncée.
 function maybeSacre() {
   if (S.sacreShown || !S.config || S.config.phase !== "resultats") return;

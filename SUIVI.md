@@ -13,8 +13,11 @@ Dernière mise à jour : 29/07/2026
   Captain America/or Iron Man, trame comics, Bebas Neue + Barlow
   (Google Fonts), bouclier en emblème, icônes SVG maison, dock de
   navigation flottant, portes blindées qui s'ouvrent après le PIN
-  (« Avengers, rassemblement ! »), paillettes aux couleurs des Pierres
-  d'Infinité, animations respectant prefers-reduced-motion
+  (« Avengers, rassemblement ! »), impacts comics sur les votes (bulles
+  POW!/BAM!, onde de choc, lignes de vitesse, « ASSEMBLE! » sur un essai,
+  « KABOOM! » + secousse au scellé), orages de Thor pour les grands
+  moments (ouverture, scellé, sacre), étincelles aux couleurs des
+  Pierres d'Infinité, animations respectant prefers-reduced-motion
 - Écrins des fiches Miss selon le palmarès officiel : liseré rose pour
   le top 15, vibranium tournant pour les finalistes, rouge et or Iron Man tournant + halo
   battant + couronne + reflet balayant le portrait pour la Miss France
