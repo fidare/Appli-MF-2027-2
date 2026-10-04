@@ -6,7 +6,7 @@
 <title>Miss France 2027 — Les Pronostics</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   /* Angle animable du liseré tournant (sans @property, la lumière reste
      simplement fixe : la carte garde son or). */
@@ -17,17 +17,19 @@
   }
 
   :root {
-    --bg: #0b0714;
-    --card: #171021;
-    --card2: #1f1630;
-    --ink: #f7f1f7;
-    --text: #d8cee0;
-    --muted: #988cab;
+    --bg: #06080f;
+    --card: #0f1420;
+    --card2: #172033;
+    --ink: #f4f6fb;
+    --text: #cdd4e2;
+    --muted: #8592ab;
     --line: rgba(255, 255, 255, 0.09);
     --goldline: rgba(240, 207, 125, 0.38);
-    --pink: #ff4f9a;
-    --pink-deep: #d63384;
-    --pink-soft: rgba(255, 79, 154, 0.15);
+    --pink: #e62429;
+    --pink-deep: #a8141b;
+    --pink-soft: rgba(230, 36, 41, 0.16);
+    --blue: #2f6fd6;
+    --blue-soft: rgba(47, 111, 214, 0.18);
     --gold: #f0cf7d;
     --gold-deep: #d3a43a;
     --gold-soft: rgba(240, 207, 125, 0.14);
@@ -36,8 +38,8 @@
     --bad: #ff6d61;
     --bad-soft: rgba(255, 109, 97, 0.15);
     --shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
-    --serif: "Playfair Display", "Didot", "Bodoni 72", Georgia, serif;
-    --sans: "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --serif: "Bebas Neue", Impact, "Arial Narrow", sans-serif;
+    --sans: "Barlow", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
   * { box-sizing: border-box; }
   html { color-scheme: dark; }
@@ -50,9 +52,12 @@
       radial-gradient(1.5px 1.5px at 60% 32%, rgba(255,236,170,0.55), transparent 100%),
       radial-gradient(1px 1px at 30% 60%, rgba(255,255,255,0.35), transparent 100%),
       radial-gradient(1px 1px at 90% 70%, rgba(255,236,170,0.3), transparent 100%),
-      linear-gradient(115deg, rgba(255,236,170,0.10) 0%, transparent 42%),
-      linear-gradient(245deg, rgba(255,236,170,0.08) 0%, transparent 42%),
-      radial-gradient(85% 55% at 50% -10%, rgba(214,51,132,0.34), transparent 65%);
+      linear-gradient(115deg, rgba(230,36,41,0.10) 0%, transparent 42%),
+      linear-gradient(245deg, rgba(47,111,214,0.10) 0%, transparent 42%),
+      radial-gradient(70% 50% at 0% -5%, rgba(230,36,41,0.38), transparent 65%),
+      radial-gradient(70% 50% at 100% 105%, rgba(47,111,214,0.30), transparent 65%),
+      radial-gradient(rgba(255,255,255,0.045) 1px, transparent 1.4px);
+    background-size: auto, auto, auto, auto, auto, auto, auto, auto, auto, 6px 6px;
     background-attachment: fixed;
     color: var(--text);
     font-family: var(--sans);
@@ -61,12 +66,12 @@
   }
   .wrap { max-width: 640px; margin: 0 auto; padding: 1.1rem 0.9rem calc(7rem + env(safe-area-inset-bottom)); }
 
-  h1, h2, h3 { font-family: var(--serif); color: var(--ink); line-height: 1.12; font-weight: 600; }
-  h1 { font-size: 1.7rem; margin: 0.35rem 0; text-wrap: balance; }
-  h2 { display: flex; align-items: center; gap: 0.8rem; font-size: 1.32rem; margin: 1.8rem 0 0.6rem; font-style: italic; }
-  h2::before { content: ""; height: 1px; flex: 0 0 1.2rem; background: var(--goldline); }
+  h1, h2, h3 { font-family: var(--serif); color: var(--ink); line-height: 1.05; font-weight: 400; letter-spacing: 0.04em; }
+  h1 { font-size: 2rem; margin: 0.35rem 0; text-wrap: balance; }
+  h2 { display: flex; align-items: center; gap: 0.8rem; font-size: 1.6rem; margin: 1.8rem 0 0.6rem; }
+  h2::before { content: ""; height: 3px; flex: 0 0 1.2rem; background: var(--pink); transform: skewX(-30deg); }
   h2::after { content: ""; height: 1px; flex: 1; background: linear-gradient(90deg, var(--goldline), transparent); }
-  h3 { font-size: 1.04rem; margin: 0.9rem 0 0.4rem; }
+  h3 { font-size: 1.25rem; margin: 0.9rem 0 0.4rem; }
   .eyebrow { text-transform: uppercase; letter-spacing: 0.32em; font-size: 0.64rem; font-weight: 600; color: var(--gold); }
   .muted { color: var(--muted); }
   .small { font-size: 0.85rem; }
@@ -76,25 +81,27 @@
   .ic { width: 1.1em; height: 1.1em; vertical-align: -0.18em; }
 
   .masthead { text-align: center; margin: 0.4rem 0 0.6rem; }
-  .brand { font-family: var(--serif); font-weight: 700; color: var(--ink); font-size: 2.15rem; line-height: 1.02; margin-top: 0.15rem; }
+  .brand { font-family: var(--serif); font-weight: 400; color: var(--ink); font-size: 2.6rem; line-height: 0.95; letter-spacing: 0.05em; text-shadow: 0 0 22px rgba(230, 36, 41, 0.45); margin-top: 0.15rem; }
   .brand em {
-    font-style: italic; font-weight: 600;
-    background: linear-gradient(180deg, #fbedb4, var(--gold-deep) 80%);
+    font-style: normal; font-weight: 400; text-shadow: none;
+    background: linear-gradient(180deg, #ff6b6e, var(--pink) 55%, var(--pink-deep));
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
-  .brand.big { font-size: 3.1rem; }
-  .brand-crown { color: var(--gold); filter: drop-shadow(0 3px 14px rgba(240, 207, 125, 0.6)); }
+  .brand.big { font-size: 4rem; }
+  .brand-crown { color: var(--gold); filter: drop-shadow(0 3px 14px rgba(230, 36, 41, 0.7)); }
+  .shield { display: inline-block; width: 3.4rem; height: 3.4rem; vertical-align: middle; }
   .brand-crown .ic { width: 2.3rem; height: 2.3rem; }
+  .brand.big .shield { width: 4.2rem; height: 4.2rem; }
 
   .greet { display: flex; align-items: center; justify-content: center; gap: 0.7rem; margin: 0.9rem 0 0.2rem; text-align: left; }
-  .greet .who { font-family: var(--serif); font-style: italic; font-size: 1.15rem; color: var(--ink); line-height: 1.15; }
+  .greet .who { font-family: var(--serif); letter-spacing: 0.05em; font-size: 1.45rem; color: var(--ink); line-height: 1.15; }
 
   .card {
     border: 1px solid transparent;
     background:
       linear-gradient(160deg, var(--card2), var(--card)) padding-box,
-      linear-gradient(140deg, rgba(240,207,125,0.55), rgba(240,207,125,0.07) 45%, rgba(255,79,154,0.35)) border-box;
-    border-radius: 18px;
+      linear-gradient(140deg, rgba(230,36,41,0.75), rgba(240,207,125,0.10) 45%, rgba(47,111,214,0.55)) border-box;
+    border-radius: 10px;
     box-shadow: var(--shadow);
     padding: 1.05rem 1.1rem;
     margin-bottom: 0.9rem;
@@ -102,11 +109,11 @@
 
   button, select, input { font: inherit; }
   .btn {
-    display: inline-block; border: none; border-radius: 999px;
+    display: inline-block; border: none; border-radius: 6px;
     padding: 0.58rem 1.1rem; cursor: pointer; font-weight: 600; font-size: 0.85rem;
-    letter-spacing: 0.02em;
-    background: linear-gradient(135deg, #ff5fa5, var(--pink-deep)); color: #fff;
-    box-shadow: 0 6px 20px rgba(214, 51, 132, 0.45);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    background: linear-gradient(135deg, #ff3b3f, var(--pink-deep)); color: #fff;
+    box-shadow: 0 6px 20px rgba(168, 20, 27, 0.45);
     margin: 0.15rem 0.2rem 0.15rem 0; transition: filter 0.15s, transform 0.1s;
   }
   .btn:hover { filter: brightness(1.08); }
@@ -123,7 +130,7 @@
     font-size: 0.72rem; font-weight: 600; margin: 0.12rem 0.25rem 0.12rem 0;
     border: 1px solid transparent; letter-spacing: 0.02em;
   }
-  .badge.pink { background: var(--pink-soft); color: #ff9ac6; border-color: rgba(255, 79, 154, 0.35); }
+  .badge.pink { background: var(--pink-soft); color: #ff8a8d; border-color: rgba(230, 36, 41, 0.35); }
   .badge.dark { background: rgba(255, 255, 255, 0.07); color: var(--muted); border-color: var(--line); }
   .badge.gold { background: var(--gold-soft); color: var(--gold); border-color: var(--goldline); }
   .badge.ok { background: var(--ok-soft); color: #7fe0b6; }
@@ -135,10 +142,10 @@
     width: min(94vw, 600px);
     display: flex; justify-content: space-around; align-items: stretch;
     padding: 0.4rem 0.45rem;
-    background: rgba(15, 10, 24, 0.88);
+    background: rgba(8, 11, 20, 0.88);
     backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
     border: 1px solid var(--goldline); border-radius: 999px;
-    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.55), 0 0 26px rgba(240, 207, 125, 0.12);
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.55), 0 0 26px rgba(230, 36, 41, 0.22);
   }
   nav.tabs button {
     flex: 1; background: none; border: none; color: var(--muted); cursor: pointer;
@@ -162,7 +169,7 @@
   .step .dot {
     position: relative; z-index: 1; display: inline-flex; width: 1.7rem; height: 1.7rem;
     border-radius: 50%; align-items: center; justify-content: center;
-    font-size: 0.78rem; font-weight: 700; font-family: var(--serif); font-style: italic;
+    font-size: 1rem; font-weight: 400; font-family: var(--serif);
     background: var(--card2); border: 1px solid var(--line); color: var(--muted);
   }
   .step.done .dot { border-color: var(--goldline); color: var(--gold); }
@@ -181,15 +188,15 @@
     border: 1px solid transparent;
     background:
       linear-gradient(var(--card), var(--card)) padding-box,
-      linear-gradient(160deg, rgba(240,207,125,0.6), rgba(122,90,28,0.16) 55%, rgba(240,207,125,0.35)) border-box;
-    border-radius: 16px;
+      linear-gradient(160deg, rgba(230,36,41,0.6), rgba(20,30,50,0.4) 55%, rgba(47,111,214,0.55)) border-box;
+    border-radius: 10px;
     overflow: hidden; box-shadow: var(--shadow); display: flex; flex-direction: column;
   }
   .miss.selected {
     background:
       linear-gradient(var(--card), var(--card)) padding-box,
-      linear-gradient(160deg, #ff5fa5, #f0cf7d) border-box;
-    box-shadow: 0 0 24px rgba(255, 79, 154, 0.35), var(--shadow);
+      linear-gradient(160deg, #ff3b3f, #f0cf7d) border-box;
+    box-shadow: 0 0 24px rgba(230, 36, 41, 0.35), var(--shadow);
   }
   /* Échelle de préciosité : plus une Miss va loin dans la soirée, plus
      son écrin devient précieux — liseré rose pour le top 15, platine
@@ -199,8 +206,8 @@
   .miss.qualifiee {
     background:
       linear-gradient(var(--card), var(--card)) padding-box,
-      linear-gradient(160deg, #ff5fa5, #f0cf7d) border-box;
-    box-shadow: 0 0 24px rgba(255, 79, 154, 0.35), var(--shadow);
+      linear-gradient(160deg, #ff3b3f, #f0cf7d) border-box;
+    box-shadow: 0 0 24px rgba(230, 36, 41, 0.35), var(--shadow);
   }
   .miss.finaliste {
     --ang: 0deg;
@@ -208,9 +215,9 @@
     background:
       linear-gradient(var(--card), var(--card)) padding-box,
       conic-gradient(from var(--ang),
-        #8c94b6, #ffffff 10%, #d7dbec 20%, #7d86ab 34%, #fdfdff 50%,
-        #aeb5d0 66%, #6f789e 80%, #ffffff 92%, #8c94b6 100%) border-box;
-    box-shadow: 0 0 12px rgba(226, 232, 255, 0.4), 0 0 34px rgba(170, 186, 255, 0.3), var(--shadow);
+        #5b4bb7, #e8e4ff 10%, #9d8cff 20%, #3b2f8a 34%, #f4f2ff 50%,
+        #7f6be0 66%, #2f6fd6 80%, #ffffff 92%, #5b4bb7 100%) border-box;
+    box-shadow: 0 0 12px rgba(190, 175, 255, 0.45), 0 0 34px rgba(110, 90, 230, 0.35), var(--shadow);
   }
   /* La Miss France : liseré d'or dont la lumière tourne, halo qui bat,
      couronne et reflet qui traverse le portrait. On ne se retient pas. */
@@ -220,15 +227,15 @@
     background:
       linear-gradient(var(--card), var(--card)) padding-box,
       conic-gradient(from var(--ang),
-        #8a6420, #fff8dc 8%, #fbedb4 16%, var(--gold-deep) 30%, #7d5a1c 42%,
-        #fff8dc 56%, var(--gold) 68%, var(--gold-deep) 82%, #fff8dc 94%, #8a6420 100%) border-box;
+        #a8141b, #fff8dc 8%, var(--gold) 16%, var(--gold-deep) 26%, #e62429 40%,
+        #fff8dc 56%, var(--gold) 68%, #a8141b 82%, #fff8dc 94%, #a8141b 100%) border-box;
     box-shadow:
       0 0 0 1px rgba(240, 207, 125, 0.35),
       0 0 22px rgba(240, 207, 125, 0.65),
       0 0 60px rgba(240, 207, 125, 0.45),
       var(--shadow);
   }
-  .miss.mf .ph { background: linear-gradient(160deg, #4a3413, #1d1430); }
+  .miss.mf .ph { background: linear-gradient(160deg, #6b0f13, #0d1322); }
   .miss.mf .ph .num { color: var(--gold); text-shadow: 0 2px 12px rgba(0, 0, 0, 0.75); }
   .miss.mf .ph .cap .nom { color: #fff8dc; text-shadow: 0 1px 10px rgba(240, 207, 125, 0.55), 0 1px 6px rgba(0, 0, 0, 0.8); }
   /* Couronne posée sur le coin du portrait. */
@@ -254,7 +261,7 @@
      à des vitesses différentes pour donner de la profondeur. */
   .miss.mf::before, .miss.mf::after {
     content: ""; position: absolute; inset: 0; z-index: 3;
-    pointer-events: none; border-radius: 13px;
+    pointer-events: none; border-radius: 7px;
     background-repeat: repeat; opacity: 0.75;
   }
   .miss.mf::before {
@@ -277,23 +284,23 @@
   }
   .miss .ph {
     position: relative; aspect-ratio: 3 / 4;
-    background: linear-gradient(160deg, #322347, #1d1430);
+    background: linear-gradient(160deg, #1f2b44, #0d1322);
     display: flex; align-items: center; justify-content: center; cursor: pointer;
-    color: #64517f; overflow: hidden;
+    color: #4a5a7a; overflow: hidden;
   }
   .miss .ph > .ic { width: 2.4rem; height: 2.4rem; }
   .miss .ph img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .miss .ph .num {
     position: absolute; top: 0.15rem; left: 0.5rem; z-index: 1;
-    font-family: var(--serif); font-style: italic; font-weight: 600; font-size: 1.7rem;
+    font-family: var(--serif); font-weight: 400; font-size: 2rem;
     color: rgba(255, 255, 255, 0.85); text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
   }
   .miss .ph .cap {
     position: absolute; left: 0; right: 0; bottom: 0;
     padding: 1.9rem 0.6rem 0.5rem;
-    background: linear-gradient(180deg, transparent, rgba(7, 4, 14, 0.94));
+    background: linear-gradient(180deg, transparent, rgba(4, 6, 12, 0.94));
   }
-  .miss .ph .cap .nom { font-family: var(--serif); font-style: italic; color: #fff; font-size: 1.05rem; line-height: 1.15; text-shadow: 0 1px 6px rgba(0,0,0,0.6); }
+  .miss .ph .cap .nom { font-family: var(--serif); letter-spacing: 0.04em; color: #fff; font-size: 1.3rem; line-height: 1.15; text-shadow: 0 1px 6px rgba(0,0,0,0.6); }
   .miss .ph .cap .reg { color: var(--gold); font-size: 0.62rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.16em; margin-top: 0.18rem; }
   .miss .body { padding: 0.55rem 0.6rem 0.7rem; display: flex; flex-direction: column; gap: 0.25rem; flex: 1; }
   .miss .meta { font-size: 0.75rem; color: var(--muted); }
@@ -302,7 +309,7 @@
 
   .avatar {
     width: 3.2rem; height: 3.2rem; border-radius: 50%; object-fit: cover;
-    background: var(--pink-soft); color: #ff9ac6; display: inline-flex;
+    background: var(--pink-soft); color: #ff8a8d; display: inline-flex;
     align-items: center; justify-content: center; font-weight: 700; overflow: hidden; flex: none;
     font-family: var(--serif);
   }
@@ -339,14 +346,14 @@
   .bar .lbl { color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .bar .val { font-weight: 700; color: var(--ink); }
   .bar .track { display: block; background: rgba(255, 255, 255, 0.08); border-radius: 999px; height: 0.6rem; overflow: hidden; }
-  .bar .fill { display: block; height: 100%; background: linear-gradient(90deg, var(--pink-deep), #ff5fa5); border-radius: 999px; min-width: 3px; transition: width 0.4s; box-shadow: 0 0 10px rgba(255, 79, 154, 0.45); }
+  .bar .fill { display: block; height: 100%; background: linear-gradient(90deg, var(--pink-deep), #ff3b3f); border-radius: 999px; min-width: 3px; transition: width 0.4s; box-shadow: 0 0 10px rgba(230, 36, 41, 0.45); }
   .bar.me .lbl { color: var(--gold); font-weight: 700; }
   .bar.me .fill { background: linear-gradient(90deg, #cf9a2c, #f3cf7a); box-shadow: 0 0 10px rgba(240, 207, 125, 0.5); }
 
   .rank {
     width: 2.4rem; height: 2.4rem; border-radius: 50%; flex: none;
     display: inline-flex; align-items: center; justify-content: center;
-    font-family: var(--serif); font-style: italic; font-weight: 700; font-size: 1.05rem;
+    font-family: var(--serif); font-weight: 400; font-size: 1.3rem;
     border: 1px solid var(--line); color: var(--muted);
   }
   .rank.r1 { background: linear-gradient(135deg, #f6dc94, #cf9a2c); color: #241a06; border: none; box-shadow: 0 0 16px rgba(240, 207, 125, 0.45); }
@@ -366,7 +373,7 @@
   }
 
   .modal-bg {
-    position: fixed; inset: 0; background: rgba(6, 3, 12, 0.75);
+    position: fixed; inset: 0; background: rgba(3, 5, 10, 0.75);
     backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
     z-index: 50; display: flex; align-items: flex-end; justify-content: center;
   }
@@ -387,9 +394,9 @@
   .modal .tiltwrap { perspective: 800px; margin-bottom: 0.7rem; }
   .modal .bigph {
     position: relative; border-radius: 14px; overflow: hidden; aspect-ratio: 3 / 4;
-    background: linear-gradient(160deg, #322347, #1d1430);
+    background: linear-gradient(160deg, #1f2b44, #0d1322);
     display: flex; align-items: center; justify-content: center;
-    color: #64517f;
+    color: #4a5a7a;
     transform-style: preserve-3d;
     will-change: transform;
     box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
@@ -399,7 +406,7 @@
 
   #toast {
     position: fixed; bottom: calc(5.8rem + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
-    background: #f6efff; color: #241a38; border-radius: 999px; padding: 0.65rem 1.25rem;
+    background: #f4f6fb; color: #0d1322; border-radius: 999px; padding: 0.65rem 1.25rem;
     font-size: 0.9rem; font-weight: 600; z-index: 100; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
     max-width: 92vw; text-align: center; display: none;
   }
@@ -417,7 +424,7 @@
   #glitter { position: fixed; inset: 0; z-index: 150; overflow: hidden; pointer-events: none; }
   #glitter .gl {
     position: absolute; display: block; border-radius: 1px;
-    box-shadow: 0 0 6px rgba(255, 224, 150, 0.85);
+    box-shadow: 0 0 8px currentColor, 0 0 4px rgba(255, 255, 255, 0.7);
   }
 
   .entr { position: fixed; inset: 0; z-index: 200; overflow: hidden; pointer-events: none; }
@@ -426,11 +433,12 @@
     background:
       linear-gradient(180deg, rgba(0, 0, 0, 0.30), transparent 35%),
       linear-gradient(0deg, rgba(0, 0, 0, 0.35), transparent 30%),
-      repeating-linear-gradient(90deg, #6e0d20 0 14px, #93152d 14px 30px, #7a1026 30px 44px);
+      repeating-linear-gradient(0deg, transparent 0 46px, rgba(0, 0, 0, 0.45) 46px 48px),
+      linear-gradient(90deg, #2a3346, #4b566d 45%, #1c2333);
     box-shadow: inset 0 0 70px rgba(0, 0, 0, 0.55);
   }
-  .entr .pan.l { left: 0; border-right: 4px solid var(--gold); }
-  .entr .pan.r { right: 0; border-left: 4px solid var(--gold); }
+  .entr .pan.l { left: 0; border-right: 6px solid var(--pink); box-shadow: inset 0 0 70px rgba(0, 0, 0, 0.55), 6px 0 24px rgba(230, 36, 41, 0.6); }
+  .entr .pan.r { right: 0; border-left: 6px solid var(--pink); box-shadow: inset 0 0 70px rgba(0, 0, 0, 0.55), -6px 0 24px rgba(230, 36, 41, 0.6); }
   .entr .mid {
     position: absolute; inset: 0; display: flex; flex-direction: column;
     align-items: center; justify-content: center; gap: 0.4rem; text-align: center;
@@ -486,7 +494,7 @@
       100% { transform: translateX(60%); opacity: 0; }
     }
     .brand em {
-      background-image: linear-gradient(110deg, var(--gold-deep) 0%, #fbedb4 30%, #fff3c4 38%, var(--gold-deep) 55%, var(--gold-deep) 100%);
+      background-image: linear-gradient(110deg, var(--pink) 0%, #ff8a8d 30%, #fff3c4 38%, var(--pink) 55%, var(--pink) 100%);
       background-size: 220% 100%;
       animation: shine 4.5s linear infinite;
     }
@@ -517,7 +525,7 @@
 </style>
 </head>
 <body>
-<div class="wrap"><div id="app" class="center muted" style="padding-top:4rem">Chargement du tapis rouge…</div></div>
+<div class="wrap"><div id="app" class="center muted" style="padding-top:4rem">Assemblage des Avengers…</div></div>
 <div id="toast"></div>
 
 <script>
@@ -550,6 +558,11 @@ var ICONS = {
   spark: '<path d="M12 4l1.7 4.8L18.5 10l-4.8 1.7L12 16.5l-1.7-4.8L5.5 10l4.8-1.7z"/><path d="M18.6 15.6l.65 1.85 1.85.65-1.85.65-.65 1.85-.65-1.85-1.85-.65 1.85-.65z"/>',
   check: '<path d="M4.5 12.5 10 18 19.5 6.5"/>'
 };
+// Emblème : bouclier à anneaux rouges et blancs, étoile sur fond bleu.
+var SHIELD = '<svg class="shield" viewBox="0 0 40 40" aria-hidden="true">'
+  + '<circle cx="20" cy="20" r="19" fill="#e62429"/><circle cx="20" cy="20" r="15" fill="#f4f6fb"/>'
+  + '<circle cx="20" cy="20" r="11" fill="#e62429"/><circle cx="20" cy="20" r="7.5" fill="#2f6fd6"/>'
+  + '<path d="M20 13.2l1.6 4.6h4.8l-3.9 2.9 1.5 4.6-4-2.9-4 2.9 1.5-4.6-3.9-2.9h4.8z" fill="#f4f6fb"/></svg>';
 function icon(n) {
   return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICONS[n] + '</svg>';
 }
@@ -663,7 +676,8 @@ function boot() {
 // Paillettes ✨ — gerbes sur les votes, pluies pour les grands moments.
 // ------------------------------------------------------------------
 var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-var GL_COLORS = ["#f6dc94", "#f0cf7d", "#ffd98a", "#ff9ac6", "#ffffff", "#ffcf5e"];
+// Couleurs des six Pierres d'Infinité (Espace, Esprit, Réalité, Pouvoir, Temps, Âme).
+var GL_COLORS = ["#3d8bff", "#ffd23f", "#e62429", "#9b4dff", "#2ee66b", "#ff8c1a"];
 
 document.addEventListener("pointerdown", function (e) {
   S.tap = { x: e.clientX, y: e.clientY };
@@ -785,16 +799,16 @@ function initFicheTilt() {
   tiltBase = null; // la position actuelle du téléphone devient le neutre
 }
 
-// Lever de rideau après la saisie du PIN : deux pans de velours rouge
-// à liseré d'or s'ouvrent sur le jeu.
+// Ouverture après la saisie du PIN : deux portes blindées à liseré
+// rouge coulissent sur le jeu.
 function playEntrance(nom) {
   var d = document.createElement("div");
   d.className = "entr";
   d.innerHTML = '<div class="pan l"></div><div class="pan r"></div>'
-    + '<div class="mid"><div class="brand-crown">' + icon("crown") + '</div>'
+    + '<div class="mid"><div class="brand-crown">' + SHIELD + '</div>'
     + '<span class="eyebrow">Miss France 2027</span>'
-    + '<div class="brand">Que le show <em>commence&nbsp;!</em></div>'
-    + '<div class="who" style="font-family:var(--serif);font-style:italic;color:var(--ink);font-size:1.1rem">' + esc(nom) + '</div></div>';
+    + '<div class="brand">Avengers, <em>rassemblement&nbsp;!</em></div>'
+    + '<div class="who" style="font-family:var(--serif);letter-spacing:0.05em;color:var(--ink);font-size:1.4rem">' + esc(nom) + '</div></div>';
   document.body.appendChild(d);
   setTimeout(function () { glitterRain(1500); }, 1150);
   setTimeout(function () { d.remove(); }, 2600);
@@ -1108,7 +1122,7 @@ function render() {
   else if (S.tab === "resultat") html += viewResultat();
   else if (S.tab === "benchmark") html += viewBenchmark();
   else if (S.tab === "admin") html += viewAdmin();
-  html += '<footer>Concours privé entre ami·e·s · Aucune Miss n\'a été blessée pendant ces pronostics 👠</footer>';
+  html += '<footer>Concours privé entre ami·e·s · Aucune Miss n\'a été blessée pendant ces pronostics 🛡️</footer>';
   html += viewFiche();
   app.innerHTML = html;
   if (S.fiche != null) initFicheTilt();
@@ -1117,7 +1131,7 @@ function render() {
 // ----- Login -----
 function viewLogin() {
   var h = '<header class="center" style="margin:1.6rem 0 1.4rem">'
-    + '<div class="brand-crown">' + icon("crown") + '</div>'
+    + '<div class="brand-crown">' + SHIELD + '</div>'
     + '<div class="masthead"><span class="eyebrow">Miss France 2027</span>'
     + '<div class="brand big">Le Grand<br><em>Pronostic</em></div></div>'
     + '<p class="muted small" style="margin-top:0.9rem">Qui es-tu, cher membre du jury ?<br>Clique sur ta (superbe) photo d\'enfance, puis tape ton code PIN.</p></header>';

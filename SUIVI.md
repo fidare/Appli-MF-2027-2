@@ -9,12 +9,14 @@ Dernière mise à jour : 29/07/2026
 - Déploiement : automatique sur push de `site/**` vers `main` (`.github/workflows/pages.yml`)
 - Données de test : casting complet 2026, 30 candidates avec photos
   voici.fr (`candidates-test.sql`)
-- Design mobile-first « soirée de gala » : nuit étoilée or/rose,
-  Playfair Display + Outfit (Google Fonts), icônes SVG maison, dock de
-  navigation flottant, lever de rideau après le PIN, paillettes (votes,
-  huissier, sacre), animations respectant prefers-reduced-motion
+- Design mobile-first « Avengers » : nuit spatiale rouge Marvel/bleu
+  Captain America/or Iron Man, trame comics, Bebas Neue + Barlow
+  (Google Fonts), bouclier en emblème, icônes SVG maison, dock de
+  navigation flottant, portes blindées qui s'ouvrent après le PIN
+  (« Avengers, rassemblement ! »), paillettes aux couleurs des Pierres
+  d'Infinité, animations respectant prefers-reduced-motion
 - Écrins des fiches Miss selon le palmarès officiel : liseré rose pour
-  le top 15, platine tournant pour les finalistes, or tournant + halo
+  le top 15, vibranium tournant pour les finalistes, rouge et or Iron Man tournant + halo
   battant + couronne + reflet balayant le portrait pour la Miss France
 
 ## Fonctionnement
