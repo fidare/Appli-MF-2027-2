@@ -421,39 +421,7 @@
 
   #app.noanim .card, #app.noanim .miss { animation: none !important; }
 
-  #glitter { position: fixed; inset: 0; z-index: 150; overflow: hidden; pointer-events: none; }
-  /* Effets de super-héros (voir burstAt et eclair). */
-  #glitter .fx-ring {
-    position: absolute; width: 70px; height: 70px; border-radius: 50%;
-    border: 5px solid; box-shadow: 0 0 18px currentColor, inset 0 0 12px currentColor;
-  }
-  #glitter .fx-rays {
-    position: absolute; width: 180px; height: 180px; border-radius: 50%;
-    background: repeating-conic-gradient(var(--c) 0 3deg, transparent 3deg 15deg);
-    -webkit-mask: radial-gradient(circle, transparent 22%, #000 30%, #000 45%, transparent 70%);
-    mask: radial-gradient(circle, transparent 22%, #000 30%, #000 45%, transparent 70%);
-  }
-  #glitter .fx-pow {
-    position: absolute; isolation: isolate; padding: 1.3rem 1.6rem; white-space: nowrap;
-    font-family: var(--serif); font-size: 2.4rem; line-height: 1; letter-spacing: 0.03em;
-    -webkit-text-stroke: 2px #0b0b0b; paint-order: stroke fill;
-    text-shadow: 3px 3px 0 #0b0b0b;
-  }
-  /* Bulle en étoile d'explosion, contour noir façon case de BD. */
-  #glitter .fx-pow::before, #glitter .fx-pow::after {
-    content: ""; position: absolute; z-index: -1;
-    clip-path: polygon(50% 0%, 59% 22%, 79% 6%, 74% 30%, 98% 24%, 82% 44%, 100% 58%, 78% 64%, 90% 88%, 66% 76%, 58% 100%, 47% 80%, 30% 98%, 31% 74%, 6% 84%, 20% 60%, 0% 46%, 22% 38%, 8% 14%, 33% 22%);
-  }
-  #glitter .fx-pow::before { inset: -12px -20px; background: #0b0b0b; }
-  #glitter .fx-pow::after { inset: -4px -10px; background: var(--bg); }
-  #glitter .fx-bolt { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-  #glitter .fx-bolt path { fill: none; stroke: #f4f8ff; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 6px #7fb2ff) drop-shadow(0 0 16px #3d8bff); }
-  #glitter .fx-bolt path.g { stroke: rgba(120, 175, 255, 0.55); }
-  #glitter .fx-flash { position: absolute; inset: 0; background: radial-gradient(circle at 50% 20%, rgba(190, 215, 255, 0.35), rgba(60, 120, 255, 0.12) 60%, transparent); }
-  #glitter .gl {
-    position: absolute; display: block; border-radius: 1px;
-    box-shadow: 0 0 8px currentColor, 0 0 4px rgba(255, 255, 255, 0.7);
-  }
+  #fx { position: fixed; inset: 0; z-index: 150; width: 100%; height: 100%; pointer-events: none; }
 
   .entr { position: fixed; inset: 0; z-index: 200; overflow: hidden; pointer-events: none; }
   .entr .pan {
@@ -701,166 +669,294 @@ function boot() {
 }
 
 // ------------------------------------------------------------------
-// Effets de super-héros : impacts comics sur les votes, éclairs de
-// Thor pour les grands moments. Étincelles aux couleurs des Pierres.
+// Effets de super-héros, rendus sur canvas : répulseur d'Iron Man sur
+// les votes, portail de Doctor Strange sur un essai, onde de choc au
+// scellé, orage de Thor pour les grands moments.
 // ------------------------------------------------------------------
 var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-// Couleurs des six Pierres d'Infinité (Espace, Esprit, Réalité, Pouvoir, Temps, Âme).
-var GL_COLORS = ["#3d8bff", "#ffd23f", "#e62429", "#9b4dff", "#2ee66b", "#ff8c1a"];
-
 document.addEventListener("pointerdown", function (e) {
   S.tap = { x: e.clientX, y: e.clientY };
 }, true);
 
-function glitterLayer() {
-  var l = document.getElementById("glitter");
-  if (!l) { l = document.createElement("div"); l.id = "glitter"; document.body.appendChild(l); }
-  return l;
-}
+// Moteur d'effets : une seule toile plein écran, rendue en lumière
+// additive ("lighter") pour que les éclats se renforcent comme de la
+// vraie lumière. La boucle ne tourne que tant qu'un effet est en vie.
+var FX = { cv: null, ctx: null, items: [], raf: 0, last: 0, dpr: 1 };
 
-function glSpawn(x, y, dx, dy, dur, rot) {
-  var l = glitterLayer();
-  var s = document.createElement("span");
-  s.className = "gl";
-  var size = 4 + Math.random() * 5;
-  s.style.width = size + "px";
-  s.style.height = size + "px";
-  s.style.background = s.style.color = GL_COLORS[Math.floor(Math.random() * GL_COLORS.length)];
-  s.style.left = x + "px";
-  s.style.top = y + "px";
-  l.appendChild(s);
-  s.animate([
-    { transform: "translate(-50%,-50%) rotate(0deg) scale(1)", opacity: 1 },
-    { transform: "translate(" + dx + "px," + dy + "px) rotate(" + rot + "deg) scale(0.25)", opacity: 0 }
-  ], { duration: dur, easing: "cubic-bezier(0.2, 0.6, 0.3, 1)" });
-  setTimeout(function () { s.remove(); }, dur);
+function fxCanvas() {
+  if (FX.cv) return FX.ctx;
+  FX.cv = document.createElement("canvas");
+  FX.cv.id = "fx";
+  FX.cv.setAttribute("aria-hidden", "true");
+  document.body.appendChild(FX.cv);
+  FX.ctx = FX.cv.getContext("2d");
+  fxResize();
+  window.addEventListener("resize", fxResize);
+  return FX.ctx;
 }
-
-// Impact comics au point du dernier clic (ou au centre) : onde de
-// choc, lignes de vitesse, bulle d'onomatopée et quelques étincelles.
-var FX_WORDS = ["BAM!", "POW!", "WHAM!", "BOOM!", "ZAP!", "KRAK!", "SMASH!", "THWIP!", "BLAM!", "ZOK!"];
-var FX_PAIRS = [["#ffd23f", "#e62429"], ["#e62429", "#ffd23f"], ["#2f6fd6", "#ffd23f"], ["#ffd23f", "#2f6fd6"], ["#9b4dff", "#ffd23f"]];
-function fxEl(cls, x, y) {
-  var e = document.createElement("div");
-  e.className = cls;
-  e.style.left = x + "px";
-  e.style.top = y + "px";
-  glitterLayer().appendChild(e);
-  return e;
+function fxResize() {
+  FX.dpr = Math.min(window.devicePixelRatio || 1, 2);
+  FX.cv.width = Math.round(window.innerWidth * FX.dpr);
+  FX.cv.height = Math.round(window.innerHeight * FX.dpr);
 }
-function burstAt(x, y, n, word) {
+function fxAdd(it) {
   if (REDUCED) return;
-  var big = (n || 16) > 25;
-  var pair = FX_PAIRS[Math.floor(Math.random() * FX_PAIRS.length)];
-  // Garde la bulle dans l'écran.
-  var bx = x;
-  var by = Math.min(Math.max(y - 30, 70), window.innerHeight - 70);
+  fxCanvas();
+  it.t = 0;
+  FX.items.push(it);
+  if (FX.items.length > 900) FX.items.splice(0, FX.items.length - 900);
+  if (!FX.raf) { FX.last = performance.now(); FX.raf = requestAnimationFrame(fxLoop); }
+}
+function fxLoop(now) {
+  // Le premier horodatage rAF peut précéder performance.now().
+  var dt = Math.max(0, Math.min((now - FX.last) / 1000, 0.05));
+  FX.last = now;
+  var c = FX.ctx;
+  c.setTransform(1, 0, 0, 1, 0, 0);
+  c.clearRect(0, 0, FX.cv.width, FX.cv.height);
+  c.setTransform(FX.dpr, 0, 0, FX.dpr, 0, 0);
+  c.globalCompositeOperation = "lighter";
+  var keep = [];
+  for (var i = 0; i < FX.items.length; i++) {
+    var it = FX.items[i];
+    it.t += dt;
+    if (it.delay && it.t < it.delay) { keep.push(it); continue; }
+    if (it.step(it, dt, c) !== false) keep.push(it);
+  }
+  FX.items = keep;
+  FX.raf = keep.length ? requestAnimationFrame(fxLoop) : 0;
+}
+function rnd(a, b) { return a + Math.random() * (b - a); }
+function easeOut(k) { return 1 - Math.pow(1 - k, 3); }
 
-  var ring = fxEl("fx-ring", x, y);
-  ring.style.borderColor = pair[0];
-  ring.style.color = pair[0];
-  ring.animate([
-    { transform: "translate(-50%,-50%) scale(0.1)", opacity: 1 },
-    { transform: "translate(-50%,-50%) scale(" + (big ? 4.5 : 3) + ")", opacity: 0 }
-  ], { duration: 550, easing: "cubic-bezier(0.1, 0.7, 0.3, 1)" });
+// Halo lumineux : dégradé radial qui éclot puis s'éteint.
+function fxGlow(x, y, r, color, life, delay) {
+  fxAdd({ delay: delay || 0, step: function (it, dt, c) {
+    var k = (it.t - it.delay) / life;
+    if (k >= 1) return false;
+    var a = Math.pow(1 - k, 2);
+    var rr = r * (0.6 + 0.4 * easeOut(Math.min(k * 3, 1)));
+    var g = c.createRadialGradient(x, y, 0, x, y, rr);
+    g.addColorStop(0, "rgba(255,255,255," + a + ")");
+    g.addColorStop(0.18, color.replace("A", a * 0.85));
+    g.addColorStop(1, color.replace("A", 0));
+    c.fillStyle = g;
+    c.beginPath(); c.arc(x, y, rr, 0, 6.2832); c.fill();
+  } });
+}
 
-  var rays = fxEl("fx-rays", x, y);
-  rays.style.setProperty("--c", pair[0]);
-  rays.animate([
-    { transform: "translate(-50%,-50%) scale(0.3) rotate(0deg)", opacity: 0.95 },
-    { transform: "translate(-50%,-50%) scale(" + (big ? 2.6 : 1.8) + ") rotate(25deg)", opacity: 0 }
-  ], { duration: 520, easing: "ease-out" });
+// Onde d'énergie : anneau fin qui s'élargit, doublé d'un liseré flou.
+function fxRing(x, y, r, color, life, width, delay) {
+  fxAdd({ delay: delay || 0, step: function (it, dt, c) {
+    var k = (it.t - it.delay) / life;
+    if (k >= 1) return false;
+    var rr = r * easeOut(k), a = 1 - k;
+    c.strokeStyle = color.replace("A", a * 0.35);
+    c.lineWidth = width * 3.5 * (1 - k) + 1;
+    c.beginPath(); c.arc(x, y, rr, 0, 6.2832); c.stroke();
+    c.strokeStyle = "rgba(255,255,255," + a * 0.9 + ")";
+    c.lineWidth = width * (1 - k) + 0.5;
+    c.beginPath(); c.arc(x, y, rr, 0, 6.2832); c.stroke();
+  } });
+}
 
-  var pow = fxEl("fx-pow", bx, by);
-  pow.style.setProperty("--bg", pair[0]);
-  pow.style.color = pair[1];
-  pow.textContent = word || FX_WORDS[Math.floor(Math.random() * FX_WORDS.length)];
-  if (big) pow.style.fontSize = "3.4rem";
-  // Recentre si la bulle (contour compris) sortirait de l'écran.
-  var half = pow.offsetWidth / 2 + 24;
-  pow.style.left = Math.min(Math.max(bx, half), window.innerWidth - half) + "px";
-  var rot = Math.random() * 24 - 12;
-  pow.animate([
-    { transform: "translate(-50%,-50%) rotate(" + rot + "deg) scale(0)", opacity: 1 },
-    { transform: "translate(-50%,-50%) rotate(" + rot + "deg) scale(1.25)", opacity: 1, offset: 0.18 },
-    { transform: "translate(-50%,-50%) rotate(" + rot + "deg) scale(1)", opacity: 1, offset: 0.3 },
-    { transform: "translate(-50%,-50%) rotate(" + rot + "deg) scale(1)", opacity: 1, offset: 0.8 },
-    { transform: "translate(-50%,-50%) rotate(" + (rot * 1.5) + "deg) scale(0.6)", opacity: 0 }
-  ], { duration: big ? 1300 : 950, easing: "ease-out", fill: "forwards" });
+// Étincelle : trait étiré dans le sens de la vitesse (flou de
+// mouvement), cœur blanc chauffé à blanc sur une gaine colorée.
+function fxSpark(x, y, vx, vy, color, life, opts) {
+  opts = opts || {};
+  var drag = opts.drag || 3.2, grav = opts.grav == null ? 380 : opts.grav, w = opts.w || 1.6;
+  fxAdd({ x: x, y: y, vx: vx, vy: vy, delay: opts.delay || 0, step: function (it, dt, c) {
+    var k = (it.t - it.delay) / life;
+    if (k >= 1) return false;
+    var f = Math.exp(-drag * dt);
+    it.vx *= f; it.vy = it.vy * f + grav * dt;
+    it.x += it.vx * dt; it.y += it.vy * dt;
+    var tail = 0.07, a = 1 - k * k;
+    var tx = it.x - it.vx * tail, ty = it.y - it.vy * tail;
+    c.lineCap = "round";
+    c.strokeStyle = color.replace("A", a * 0.45);
+    c.lineWidth = w * 2.2;
+    c.beginPath(); c.moveTo(tx, ty); c.lineTo(it.x, it.y); c.stroke();
+    c.strokeStyle = "rgba(255,255,255," + a + ")";
+    c.lineWidth = w * (1 - k * 0.6);
+    c.beginPath(); c.moveTo((tx + it.x) / 2, (ty + it.y) / 2); c.lineTo(it.x, it.y); c.stroke();
+  } });
+}
 
-  if (big) shake();
-  setTimeout(function () { ring.remove(); rays.remove(); pow.remove(); }, big ? 1300 : 950);
+// Reflet anamorphique : longue traînée horizontale façon objectif de
+// cinéma, qui s'étire puis s'efface.
+function fxFlare(x, y, len, color, life) {
+  fxAdd({ step: function (it, dt, c) {
+    var k = it.t / life;
+    if (k >= 1) return false;
+    var a = Math.pow(1 - k, 1.6), L = len * (0.4 + 0.6 * easeOut(k));
+    var g = c.createLinearGradient(x - L, y, x + L, y);
+    g.addColorStop(0, color.replace("A", 0));
+    g.addColorStop(0.5, color.replace("A", a * 0.9));
+    g.addColorStop(1, color.replace("A", 0));
+    c.fillStyle = g;
+    c.fillRect(x - L, y - 1.5, L * 2, 3);
+    c.globalAlpha = 0.35;
+    c.fillRect(x - L * 0.6, y - 5, L * 1.2, 10);
+    c.globalAlpha = 1;
+  } });
+}
 
-  for (var i = 0; i < Math.round((n || 16) / 2); i++) {
-    var ang = Math.random() * Math.PI * 2;
-    var dist = 60 + Math.random() * 90;
-    glSpawn(x, y, Math.cos(ang) * dist, Math.sin(ang) * dist,
-      450 + Math.random() * 350, Math.random() * 420 - 210);
+// Répulseur d'Iron Man : cœur blanc, onde cyan, gerbe d'étincelles.
+var C_CYAN = "rgba(120,220,255,A)", C_GOLD = "rgba(255,190,80,A)", C_ORANGE = "rgba(255,140,40,A)", C_BLUE = "rgba(90,150,255,A)";
+function fxRepulseur(x, y) {
+  fxGlow(x, y, 120, C_CYAN, 0.45);
+  fxGlow(x, y, 40, "rgba(255,255,255,A)", 0.18);
+  fxFlare(x, y, 260, C_CYAN, 0.5);
+  fxRing(x, y, 95, C_CYAN, 0.55, 2.2);
+  fxRing(x, y, 55, C_CYAN, 0.5, 1.2, 0.08);
+  for (var i = 0; i < 34; i++) {
+    var ang = rnd(0, 6.2832), sp = rnd(180, 620);
+    fxSpark(x, y, Math.cos(ang) * sp, Math.sin(ang) * sp,
+      Math.random() < 0.7 ? C_CYAN : C_GOLD, rnd(0.35, 0.8), { w: rnd(0.8, 1.8) });
   }
 }
-function burst(n, word) {
-  burstAt(S.tap ? S.tap.x : window.innerWidth / 2,
-    S.tap ? S.tap.y : window.innerHeight / 3, n, word);
+
+// Portail de Doctor Strange : anneaux runiques qui tournent en sens
+// contraires, carrés entrelacés, étincelles projetées tangentiellement.
+function fxPortail(x, y) {
+  var R = Math.min(window.innerWidth, window.innerHeight) * 0.22, life = 1.9;
+  fxGlow(x, y, R * 1.6, C_ORANGE, 0.9);
+  fxAdd({ step: function (it, dt, c) {
+    var k = it.t / life;
+    if (k >= 1) return false;
+    var open = k < 0.25 ? easeOut(k / 0.25) : k > 0.8 ? 1 - easeOut((k - 0.8) / 0.2) : 1;
+    var r = R * open, a = Math.min(1, open * 1.2), rot = it.t * 1.6;
+    c.save(); c.translate(x, y);
+    function ring(rad, w, alpha) {
+      c.strokeStyle = C_ORANGE.replace("A", alpha * 0.35); c.lineWidth = w * 4;
+      c.beginPath(); c.arc(0, 0, rad, 0, 6.2832); c.stroke();
+      c.strokeStyle = "rgba(255,225,170," + alpha + ")"; c.lineWidth = w;
+      c.beginPath(); c.arc(0, 0, rad, 0, 6.2832); c.stroke();
+    }
+    ring(r, 2.2, a);
+    ring(r * 0.86, 1, a * 0.8);
+    ring(r * 0.52, 1.2, a * 0.7);
+    // Graduations runiques sur la couronne extérieure.
+    c.save(); c.rotate(rot);
+    c.strokeStyle = "rgba(255,210,140," + a * 0.9 + ")"; c.lineWidth = 1.4;
+    for (var i = 0; i < 48; i++) {
+      var t = i / 48 * 6.2832, l = i % 4 ? 0.04 : 0.1;
+      c.beginPath();
+      c.moveTo(Math.cos(t) * r * 0.87, Math.sin(t) * r * 0.87);
+      c.lineTo(Math.cos(t) * r * (0.87 + l), Math.sin(t) * r * (0.87 + l));
+      c.stroke();
+    }
+    c.restore();
+    // Deux carrés entrelacés qui tournent à contre-sens.
+    c.strokeStyle = "rgba(255,200,120," + a * 0.8 + ")"; c.lineWidth = 1.2;
+    [rot * -0.7, rot * -0.7 + 0.7854].forEach(function (q) {
+      c.save(); c.rotate(q);
+      var h = r * 0.6;
+      c.strokeRect(-h, -h, h * 2, h * 2);
+      c.restore();
+    });
+    c.restore();
+    // Étincelles arrachées au bord, lancées dans le sens de rotation.
+    if (open > 0.6 && k < 0.85) {
+      for (var j = 0; j < 4; j++) {
+        var t2 = rnd(0, 6.2832), sx = x + Math.cos(t2) * r, sy = y + Math.sin(t2) * r;
+        var sp = rnd(160, 340);
+        fxSpark(sx, sy, -Math.sin(t2) * sp + Math.cos(t2) * 40, Math.cos(t2) * sp + Math.sin(t2) * 40,
+          Math.random() < 0.8 ? C_ORANGE : C_GOLD, rnd(0.3, 0.6), { w: rnd(0.8, 1.6), grav: 220 });
+      }
+    }
+  } });
 }
 
-// Secousse d'écran façon atterrissage de super-héros.
+// Onde de choc dorée : éclat, double anneau et gerbe lourde.
+function fxImpact(x, y) {
+  fxGlow(x, y, 260, C_GOLD, 0.8);
+  fxGlow(x, y, 70, "rgba(255,255,255,A)", 0.25);
+  fxFlare(x, y, window.innerWidth, C_GOLD, 0.8);
+  fxRing(x, y, Math.max(window.innerWidth, window.innerHeight) * 0.7, C_GOLD, 0.9, 3);
+  fxRing(x, y, 180, C_ORANGE, 0.7, 1.6, 0.1);
+  for (var i = 0; i < 70; i++) {
+    var ang = rnd(0, 6.2832), sp = rnd(250, 900);
+    fxSpark(x, y, Math.cos(ang) * sp, Math.sin(ang) * sp,
+      Math.random() < 0.6 ? C_GOLD : C_ORANGE, rnd(0.5, 1.2), { w: rnd(1, 2.4), drag: 2.4 });
+  }
+  shake();
+}
+
+// Secousse d'écran discrète, comme un atterrissage au loin.
 function shake() {
   var w = document.querySelector(".wrap");
   if (!w || REDUCED) return;
   w.animate([
-    { transform: "translate(0,0)" }, { transform: "translate(-6px,4px)" },
-    { transform: "translate(5px,-5px)" }, { transform: "translate(-4px,-2px)" },
-    { transform: "translate(3px,3px)" }, { transform: "translate(0,0)" }
-  ], { duration: 380, easing: "ease-out" });
+    { transform: "translate(0,0)" }, { transform: "translate(-4px,3px)" },
+    { transform: "translate(3px,-3px)" }, { transform: "translate(-2px,-1px)" },
+    { transform: "translate(0,0)" }
+  ], { duration: 360, easing: "ease-out" });
 }
 
-// Orage de Thor : un éclair zèbre l'écran avec un flash, et des
-// étincelles jaillissent au point d'impact.
-function eclair() {
-  var W = window.innerWidth, H = window.innerHeight;
-  var x = W * (0.1 + Math.random() * 0.8), y = 0;
-  var endY = H * (0.45 + Math.random() * 0.5);
-  var pts = [[x, y]];
-  while (y < endY) {
-    y = Math.min(y + 25 + Math.random() * 45, endY);
-    x += (Math.random() - 0.5) * 70;
-    pts.push([x, y]);
+// Éclair de Thor : tracé fractal (déplacement du point médian) avec
+// ramifications, rendu en trois passes de lumière et qui scintille.
+function boltPath(x1, y1, x2, y2, disp, out, depth) {
+  if (disp < 3) { out.push([x1, y1, x2, y2, depth]); return; }
+  var mx = (x1 + x2) / 2 + rnd(-disp, disp), my = (y1 + y2) / 2 + rnd(-disp, disp) * 0.3;
+  boltPath(x1, y1, mx, my, disp / 2, out, depth);
+  boltPath(mx, my, x2, y2, disp / 2, out, depth);
+  if (depth < 2 && Math.random() < 0.18) {
+    var ang = Math.atan2(y2 - y1, x2 - x1) + rnd(-0.9, 0.9), len = Math.hypot(x2 - x1, y2 - y1) * rnd(0.5, 1.1);
+    boltPath(mx, my, mx + Math.cos(ang) * len, my + Math.abs(Math.sin(ang)) * len, disp / 2, out, depth + 1);
   }
-  // Une branche secondaire partant du milieu.
-  var b = pts[Math.floor(pts.length / 2)], bx = b[0], by = b[1], br = [[bx, by]];
-  for (var k = 0; k < 4; k++) {
-    bx += (Math.random() < 0.5 ? -1 : 1) * (15 + Math.random() * 30);
-    by += 20 + Math.random() * 30;
-    br.push([bx, by]);
-  }
-  function d(a) { return "M" + a.map(function (q) { return q[0].toFixed(1) + " " + q[1].toFixed(1); }).join(" L"); }
-  var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("class", "fx-bolt");
-  svg.setAttribute("viewBox", "0 0 " + W + " " + H);
-  svg.innerHTML = '<path class="g" d="' + d(pts) + '" stroke-width="8"/><path d="' + d(pts) + '" stroke-width="2.6"/>'
-    + '<path d="' + d(br) + '" stroke-width="1.6"/>';
-  glitterLayer().appendChild(svg);
-  svg.animate([
-    { opacity: 0 }, { opacity: 1, offset: 0.05 }, { opacity: 0.3, offset: 0.25 },
-    { opacity: 1, offset: 0.35 }, { opacity: 0 }
-  ], { duration: 520, easing: "linear", fill: "forwards" });
-  var fl = fxEl("fx-flash", 0, 0);
-  fl.animate([{ opacity: 0 }, { opacity: 1, offset: 0.08 }, { opacity: 0 }], { duration: 380, fill: "forwards" });
-  var last = pts[pts.length - 1];
-  for (var i = 0; i < 6; i++) {
-    var ang = -Math.PI * Math.random();
-    glSpawn(last[0], last[1], Math.cos(ang) * 60, Math.sin(ang) * 60 + 30, 500 + Math.random() * 300, 200);
-  }
-  setTimeout(function () { svg.remove(); fl.remove(); }, 520);
 }
-function glitterRain(duration) {
+function fxEclair() {
+  var W = window.innerWidth, H = window.innerHeight;
+  var x1 = rnd(W * 0.15, W * 0.85), x2 = x1 + rnd(-W * 0.3, W * 0.3), y2 = rnd(H * 0.45, H * 0.85);
+  var segs = [];
+  boltPath(x1, -10, x2, y2, W * 0.25, segs, 0);
+  var life = 0.55;
+  function stroke(c, w, col) {
+    c.lineWidth = w; c.strokeStyle = col; c.beginPath();
+    for (var i = 0; i < segs.length; i++) {
+      var g = segs[i];
+      c.moveTo(g[0], g[1]); c.lineTo(g[2], g[3]);
+    }
+    c.stroke();
+  }
+  fxAdd({ step: function (it, dt, c) {
+    var k = it.t / life;
+    if (k >= 1) return false;
+    // Scintillement : deux rallumages avant l'extinction.
+    var a = (k < 0.08 ? k / 0.08 : 1 - k) * (k > 0.18 && k < 0.28 ? 0.35 : 1);
+    var fl = c.createRadialGradient(x2, y2 * 0.4, 0, x2, y2 * 0.4, Math.max(W, H));
+    fl.addColorStop(0, "rgba(140,180,255," + a * 0.18 + ")");
+    fl.addColorStop(1, "rgba(40,80,200,0)");
+    c.fillStyle = fl; c.fillRect(0, 0, W, H);
+    c.lineCap = "round"; c.lineJoin = "round";
+    stroke(c, 16, "rgba(70,120,255," + a * 0.10 + ")");
+    stroke(c, 6, "rgba(130,180,255," + a * 0.35 + ")");
+    stroke(c, 1.8, "rgba(240,248,255," + a + ")");
+  } });
+  fxGlow(x2, y2, 90, C_BLUE, 0.5);
+  for (var i = 0; i < 16; i++) {
+    var ang = rnd(-Math.PI, 0), sp = rnd(120, 420);
+    fxSpark(x2, y2, Math.cos(ang) * sp, Math.sin(ang) * sp, C_BLUE, rnd(0.3, 0.7), { w: rnd(0.8, 1.5) });
+  }
+}
+function fxOrage(duration) {
   if (REDUCED) return;
   var end = Date.now() + (duration || 3000);
-  eclair();
-  var timer = setInterval(function () {
-    if (Date.now() > end) { clearInterval(timer); return; }
-    eclair();
-  }, 420);
+  fxEclair();
+  (function next() {
+    setTimeout(function () {
+      if (Date.now() > end) return;
+      fxEclair();
+      next();
+    }, rnd(260, 620));
+  })();
+}
+
+// Au point du dernier clic (ou au centre).
+function fxTap(fn) {
+  fn(S.tap ? S.tap.x : window.innerWidth / 2, S.tap ? S.tap.y : window.innerHeight / 3);
 }
 
 // ------------------------------------------------------------------
@@ -937,7 +1033,7 @@ function playEntrance(nom) {
     + '<div class="brand">Avengers, <em>rassemblement&nbsp;!</em></div>'
     + '<div class="who" style="font-family:var(--serif);letter-spacing:0.05em;color:var(--ink);font-size:1.4rem">' + esc(nom) + '</div></div>';
   document.body.appendChild(d);
-  setTimeout(function () { glitterRain(1500); }, 1150);
+  setTimeout(function () { fxOrage(1500); }, 1150);
   setTimeout(function () { d.remove(); }, 2600);
 }
 
@@ -997,7 +1093,7 @@ window.App = {
   statut: function (cid, st) {
     rpc("mf_definir_statut", { p_jeton: S.session.jeton, p_candidate: cid, p_statut: st })
       .then(function () {
-        if (st === "top15" || st === "top5") burst();
+        if (st === "top15" || st === "top5") fxTap(fxRepulseur);
         return refresh();
       })
       .catch(function (e) { toast(e.message, true); });
@@ -1011,7 +1107,7 @@ window.App = {
   essai: function (essai, cid) {
     rpc("mf_definir_essai", { p_jeton: S.session.jeton, p_essai: essai, p_candidate: cid })
       .then(function () {
-        if (cid) burst(20, "ASSEMBLE!");
+        if (cid) fxTap(fxPortail);
         return refresh();
       })
       .catch(function (e) { toast(e.message, true); });
@@ -1028,8 +1124,8 @@ window.App = {
     rpc("mf_figer", { p_jeton: S.session.jeton })
       .then(function () {
         toast("Dossier scellé chez l'huissier de justice !");
-        burstAt(window.innerWidth / 2, window.innerHeight / 2.6, 34, "KABOOM!");
-        glitterRain(1400);
+        fxImpact(window.innerWidth / 2, window.innerHeight / 2.6);
+        fxOrage(1400);
         return Promise.all([loadProfil(), loadMine()]).then(render);
       })
       .catch(function (e) { toast(e.message, true); });
@@ -1108,7 +1204,7 @@ window.App = {
       .then(function (v) {
         var nb = Number(v) || 0;
         toast(nb === 0 ? "Classement remasqué." : "Places annoncées : " + nb);
-        if (nb) burst();
+        if (nb) fxTap(fxRepulseur);
         return loadConfig().then(function () { loadBenchmark(); });
       })
       .catch(function (e) { toast(e.message, true); });
@@ -1347,7 +1443,7 @@ function maybeSacre() {
   if (S.sacreShown || !S.config || S.config.phase !== "resultats") return;
   if (!revealInfo().complet) return;
   S.sacreShown = true;
-  glitterRain(4000);
+  fxOrage(4000);
 }
 
 function myCounts() {
