@@ -13,3 +13,7 @@ update public.mf_joueurs
 update public.mf_joueurs
   set photo_url = 'https://fidare.github.io/Appli-MF-2027-2/miss/joueurs/mel-b.jpg'
   where pseudo = 'mel-b';
+
+update public.mf_joueurs
+  set photo_url = 'https://fidare.github.io/Appli-MF-2027-2/miss/joueurs/minikeums.jpg'
+  where pseudo = 'minikeums';
