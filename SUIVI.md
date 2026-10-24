@@ -20,7 +20,7 @@ Dernière mise à jour : 29/07/2026
   les votes et dévoilements, `fxPortail` Doctor Strange sur un essai,
   `fxImpact` onde de choc dorée + secousse au scellé, `fxOrage` éclairs
   fractals de Thor à l'ouverture, au scellé et au sacre), animations respectant prefers-reduced-motion
-- Cartes, fiches, modale, boutons de connexion et boutons (`.btn`,
+- Cartes, fiches, modale, barre de navigation, boutons de connexion et boutons (`.btn`,
   fond peint par ::before pour garder le halo) à coins coupés
   (biseaux haut gauche / bas droite par clip-path, liseré redessiné
   sur les biseaux ; halos des fiches portés par l'enveloppe `.missw`)
