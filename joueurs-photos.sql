@@ -20,3 +20,7 @@ update public.mf_joueurs
 update public.mf_joueurs
   set photo_url = 'https://fidare.github.io/Appli-MF-2027-2/miss/joueurs/kmaro.jpg'
   where pseudo = 'kmaro';
+
+update public.mf_joueurs
+  set photo_url = 'https://fidare.github.io/Appli-MF-2027-2/miss/joueurs/adibou.jpg'
+  where pseudo = 'adibou';
