@@ -5,9 +5,8 @@ update public.mf_joueurs
   set photo_url = 'https://fidare.github.io/Appli-MF-2027-2/miss/joueurs/britney-spears.jpg'
   where pseudo = 'britney-spears';
 
--- Photo attribuée par erreur à Mister Gamboy color
 update public.mf_joueurs
-  set photo_url = null
+  set photo_url = 'https://fidare.github.io/Appli-MF-2027-2/miss/joueurs/gamboy-color.jpg'
   where pseudo = 'gamboy-color';
 
 update public.mf_joueurs
