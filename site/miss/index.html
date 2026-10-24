@@ -392,15 +392,39 @@
     border-radius: 50%; width: 2.1rem; height: 2.1rem; cursor: pointer; font-weight: 700; z-index: 2;
   }
   .modal .tiltwrap { perspective: 800px; margin-bottom: 0.7rem; }
+  /* La carte qui s'incline porte la photo et, flottant devant elle,
+     l'interface de visée : la 3D est conservée ici (et non sur la
+     photo, dont overflow: hidden aplatirait la profondeur). */
+  .modal .tiltcard { position: relative; transform-style: preserve-3d; will-change: transform; }
   .modal .bigph {
     position: relative; border-radius: 14px; overflow: hidden; aspect-ratio: 3 / 4;
     background: linear-gradient(160deg, #1f2b44, #0d1322);
     display: flex; align-items: center; justify-content: center;
     color: #4a5a7a;
-    transform-style: preserve-3d;
-    will-change: transform;
     box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
   }
+
+  /* Interface de visée façon casque d'Iron Man, en relief devant la
+     photo. Cyan par défaut, violet pour une finaliste, or pour la
+     Miss France. */
+  .hud {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    pointer-events: none; overflow: visible;
+    transform: translateZ(34px) scale(0.955);
+    --hud: #78dcff;
+    filter: drop-shadow(0 0 3px var(--hud));
+  }
+  .hud.fin { --hud: #b9a6ff; }
+  .hud.mf { --hud: #ffd27a; }
+  .hud .ln { fill: none; stroke: var(--hud); stroke-linecap: round; }
+  .hud .fl { fill: var(--hud); }
+  .hud text { fill: var(--hud); font-family: var(--sans); font-weight: 600; letter-spacing: 0.14em; }
+  .hud text.big { fill: #fff; font-family: var(--serif); font-weight: 400; letter-spacing: 0.06em; }
+  .hud .scan { opacity: 0; }
+
+  /* Emblème de l'ouverture : l'anneau puis le « A » se tracent, le A
+     se remplit et un éclat le traverse. */
+  .emblem { width: 7.5rem; height: 7.5rem; overflow: visible; filter: drop-shadow(0 0 14px rgba(230, 36, 41, 0.55)); }
   .modal .bigph > .ic { width: 3.5rem; height: 3.5rem; }
   .modal .bigph img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 
@@ -441,6 +465,14 @@
     padding: 1rem;
   }
   .entr .mid .brand { font-size: 2.1rem; }
+  .entr .mid .emblem { margin-bottom: 0.4rem; }
+  /* Halo sombre qui détache l'emblème et le texte de la jointure des portes. */
+  .entr .mid { isolation: isolate; }
+  .entr .mid::before {
+    content: ""; position: absolute; z-index: -1; left: 50%; top: 50%;
+    width: min(96vw, 440px); aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%;
+    background: radial-gradient(closest-side, rgba(6, 8, 15, 0.92), rgba(6, 8, 15, 0.6) 62%, transparent);
+  }
 
   @media (prefers-reduced-motion: no-preference) {
     .card { animation: rise 0.35s ease-out both; }
@@ -501,11 +533,49 @@
       50% { box-shadow: 0 0 26px rgba(240, 207, 125, 0.8); }
     }
     #toast { animation: rise 0.25s ease-out; }
-    .entr .pan.l { animation: openL 1.25s cubic-bezier(0.76, 0, 0.24, 1) 1.15s forwards; }
-    .entr .pan.r { animation: openR 1.25s cubic-bezier(0.76, 0, 0.24, 1) 1.15s forwards; }
+    .entr .pan.l { animation: openL 1.25s cubic-bezier(0.76, 0, 0.24, 1) 1.95s forwards; }
+    .entr .pan.r { animation: openR 1.25s cubic-bezier(0.76, 0, 0.24, 1) 1.95s forwards; }
     @keyframes openL { to { transform: translateX(-104%); } }
     @keyframes openR { to { transform: translateX(104%); } }
-    .entr .mid { animation: midin 0.5s ease-out both, midout 0.55s ease-in 1.1s forwards; }
+    .entr .mid { animation: midin 0.5s ease-out both, midout 0.55s ease-in 1.9s forwards; }
+    .entr .mid .eyebrow, .entr .mid .brand, .entr .mid .who { animation: txtin 0.5s ease-out 1.1s both; }
+    @keyframes txtin { from { opacity: 0; transform: translateY(8px); letter-spacing: 0.3em; } }
+    .emblem .e-ring { stroke-dasharray: 290; stroke-dashoffset: 290; animation: draw 0.75s cubic-bezier(0.6, 0, 0.2, 1) 0.15s forwards; }
+    .emblem .e-line { stroke-dasharray: 375; stroke-dashoffset: 375; animation: draw 0.8s ease-in-out 0.35s forwards, fade 0.4s ease-out 1.25s forwards; }
+    .emblem .e-a { opacity: 0; animation: show 0.35s ease-out 1s forwards; }
+    .emblem .e-sweep { transform: translateX(-50px); animation: sweep 0.65s ease-in-out 1.25s forwards; }
+    .emblem { animation: flare 0.9s ease-out 1s both; }
+    @keyframes draw { to { stroke-dashoffset: 0; } }
+    @keyframes fade { to { opacity: 0; } }
+    @keyframes show { to { opacity: 1; } }
+    @keyframes sweep { to { transform: translateX(170px); } }
+    @keyframes flare {
+      0%, 100% { filter: drop-shadow(0 0 14px rgba(230, 36, 41, 0.55)); }
+      30% { filter: drop-shadow(0 0 34px rgba(255, 110, 110, 0.95)) brightness(1.35); }
+    }
+
+    /* Interface de visée : rotations lentes en continu, balayage de
+       scan régulier, et entrée en scène à l'ouverture de la fiche. */
+    .hud .spin { transform-box: fill-box; transform-origin: center; animation: spin 9s linear infinite; }
+    .hud .spin.rev { animation-duration: 6s; animation-direction: reverse; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .hud .scan { animation: scan 5s ease-in-out infinite; }
+    @keyframes scan {
+      0% { transform: translateY(0); opacity: 0; }
+      4% { opacity: 1; }
+      36% { opacity: 0.9; }
+      40% { transform: translateY(400px); opacity: 0; }
+      100% { transform: translateY(400px); opacity: 0; }
+    }
+    .hud .blink { animation: blink 1.1s steps(2, start) infinite; }
+    @keyframes blink { to { visibility: hidden; } }
+    .hud.in .cor { stroke-dasharray: 52; stroke-dashoffset: 52; animation: draw 0.55s cubic-bezier(0.6, 0, 0.2, 1) 0.1s forwards; }
+    .hud.in .tk, .hud.in .ret { opacity: 0; animation: show 0.4s ease-out 0.45s forwards; }
+    .hud.in .rd { opacity: 0; animation: rdin 0.45s ease-out forwards; }
+    .hud.in .rd.d1 { animation-delay: 0.55s; }
+    .hud.in .rd.d2 { animation-delay: 0.75s; }
+    .hud.in .rd.d3 { animation-delay: 0.95s; }
+    @keyframes rdin { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
     @keyframes midin { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: none; } }
     @keyframes midout { to { opacity: 0; transform: scale(1.08); } }
   }
@@ -554,6 +624,20 @@ var ICONS = {
   spark: '<path d="M12 4l1.7 4.8L18.5 10l-4.8 1.7L12 16.5l-1.7-4.8L5.5 10l4.8-1.7z"/><path d="M18.6 15.6l.65 1.85 1.85.65-1.85.65-.65 1.85-.65-1.85-1.85-.65 1.85-.65z"/>',
   check: '<path d="M4.5 12.5 10 18 19.5 6.5"/>'
 };
+// Emblème de l'ouverture : un « A » qui déborde de son anneau d'or.
+// Les longueurs de tracé (290 et 375) sont celles des formes, pour
+// l'animation de dessin au trait.
+var A_PATH = "M60 12 L98 102 L80 102 L72.5 83 L47.5 83 L40 102 L22 102 Z M60 42 L68.5 71 L51.5 71 Z";
+var EMBLEM = '<svg class="emblem" viewBox="0 0 120 120" aria-hidden="true"><defs>'
+  + '<linearGradient id="emb-ring" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff3c4"/><stop offset="0.45" stop-color="#f0cf7d"/><stop offset="1" stop-color="#a97a22"/></linearGradient>'
+  + '<linearGradient id="emb-a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff5a5e"/><stop offset="0.55" stop-color="#e62429"/><stop offset="1" stop-color="#8f1016"/></linearGradient>'
+  + '<linearGradient id="emb-sw" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="0.5" stop-color="#fff" stop-opacity="0.85"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>'
+  + '<clipPath id="emb-clip"><path d="' + A_PATH + '" clip-rule="evenodd"/></clipPath></defs>'
+  + '<path class="e-ring" d="M60 14 A46 46 0 1 1 60 106 A46 46 0 1 1 60 14" fill="none" stroke="url(#emb-ring)" stroke-width="6"/>'
+  + '<path class="e-a" d="' + A_PATH + '" fill="url(#emb-a)" fill-rule="evenodd" stroke="#ffd9a0" stroke-width="1"/>'
+  + '<g clip-path="url(#emb-clip)"><rect class="e-sweep" x="-10" y="0" width="34" height="120" fill="url(#emb-sw)" transform="skewX(-18)"/></g>'
+  + '<path class="e-line" d="' + A_PATH + '" fill="none" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>';
+
 // Emblème : bouclier à anneaux rouges et blancs, étoile sur fond bleu.
 var SHIELD = '<svg class="shield" viewBox="0 0 40 40" aria-hidden="true">'
   + '<circle cx="20" cy="20" r="19" fill="#e62429"/><circle cx="20" cy="20" r="15" fill="#f4f6fb"/>'
@@ -1028,13 +1112,13 @@ function playEntrance(nom) {
   var d = document.createElement("div");
   d.className = "entr";
   d.innerHTML = '<div class="pan l"></div><div class="pan r"></div>'
-    + '<div class="mid"><div class="brand-crown">' + SHIELD + '</div>'
+    + '<div class="mid">' + EMBLEM
     + '<span class="eyebrow">Miss France 2027</span>'
     + '<div class="brand">Avengers, <em>rassemblement&nbsp;!</em></div>'
     + '<div class="who" style="font-family:var(--serif);letter-spacing:0.05em;color:var(--ink);font-size:1.4rem">' + esc(nom) + '</div></div>';
   document.body.appendChild(d);
-  setTimeout(function () { fxOrage(1500); }, 1150);
-  setTimeout(function () { d.remove(); }, 2600);
+  setTimeout(function () { fxOrage(1500); }, 1950);
+  setTimeout(function () { d.remove(); }, 3400);
 }
 
 function logout(re) {
@@ -1116,7 +1200,7 @@ window.App = {
   search: function (inp) { S.q = inp.value; renderKeepFocus(inp, "search-input"); },
   toggleElim: function () { S.showElim = !S.showElim; render(); },
   admSearch: function (inp) { S.admQ = inp.value; renderKeepFocus(inp, "adm-search"); },
-  fiche: function (cid) { S.fiche = cid; S.ficheSurprise = false; tiltAskGyro(); render(); },
+  fiche: function (cid) { S.fiche = cid; S.ficheSurprise = false; S.ficheAnim = true; tiltAskGyro(); render(); },
   closeFiche: function () { S.fiche = null; render(); },
   surprise: function () { S.ficheSurprise = !S.ficheSurprise; render(); },
 
@@ -1992,6 +2076,47 @@ function viewAdminReveal() {
 }
 
 // ----- Fiche candidate (modale) -----
+// Interface de visée posée sur la photo de la fiche (repère 300 × 400,
+// soit le format 3/4 de la photo). `anim` joue l'entrée en scène, à
+// l'ouverture de la fiche seulement, pas à chaque rafraîchissement.
+function hudFiche(x, anim) {
+  var mf = x.est_finaliste && x.rang_final === 1;
+  var etat = mf ? "MISS FRANCE 2027" : x.est_finaliste ? "FINALISTE OFFICIELLE"
+    : x.dans_top15 ? "QUALIFIÉE · TOP 15" : "CANDIDATE";
+  var region = ("Miss " + x.region).toUpperCase();
+  var fit = region.length > 22 ? ' textLength="262" lengthAdjust="spacingAndGlyphs"' : "";
+  var h = '<svg class="hud' + (mf ? " mf" : x.est_finaliste ? " fin" : "") + (anim ? " in" : "")
+    + '" viewBox="0 0 300 400" aria-hidden="true"><defs>'
+    + '<linearGradient id="hud-bot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#04060c" stop-opacity="0"/><stop offset="1" stop-color="#04060c" stop-opacity="0.85"/></linearGradient>'
+    + '<linearGradient id="hud-scan" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity="0.22"/></linearGradient></defs>'
+    + '<rect x="0" y="282" width="300" height="118" fill="url(#hud-bot)"/>'
+    // Balayage de scan : un voile qui descend, terminé par une ligne vive.
+    + '<g class="scan"><rect x="8" y="-34" width="284" height="34" fill="url(#hud-scan)"/>'
+    + '<line class="ln" x1="8" y1="0" x2="292" y2="0" stroke-width="1.2"/></g>'
+    // Équerres d'angle.
+    + '<path class="ln cor" stroke-width="2.4" d="M12 38 V12 H38"/>'
+    + '<path class="ln cor" stroke-width="2.4" d="M262 12 H288 V38"/>'
+    + '<path class="ln cor" stroke-width="2.4" d="M288 362 V388 H262"/>'
+    + '<path class="ln cor" stroke-width="2.4" d="M38 388 H12 V362"/>';
+  // Règle graduée sur le bord gauche.
+  var tk = "";
+  for (var y = 70; y <= 270; y += 10) tk += "M12 " + y + " H" + (y % 50 === 20 ? 22 : 17) + " ";
+  h += '<path class="ln tk" stroke-width="1" opacity="0.6" d="' + tk + '"/>'
+    // Réticule en haut à droite : couronne graduée et arc qui tournent.
+    + '<g class="ret"><g class="spin"><circle class="ln" cx="252" cy="58" r="22" stroke-width="1" stroke-dasharray="2 4.9"/></g>'
+    + '<g class="spin rev"><path class="ln" stroke-width="2" d="M252 41 A17 17 0 0 1 269 58"/><path class="ln" stroke-width="2" d="M252 75 A17 17 0 0 1 235 58"/></g>'
+    + '<path class="ln" stroke-width="1" d="M252 50 V54 M252 62 V66 M244 58 H248 M256 58 H260"/>'
+    + '<circle class="fl" cx="252" cy="58" r="1.6"/></g>'
+    // Lecture de l'identification, en bas à gauche.
+    + '<g class="rd d1"><circle class="fl blink" cx="22" cy="318" r="2.6"/>'
+    + '<text x="30" y="321.5" font-size="10">IDENTIFICATION CONFIRMÉE</text></g>'
+    + '<text class="big rd d2" x="18" y="348" font-size="24"' + fit + '>' + esc(region) + '</text>'
+    + '<g class="rd d3"><path class="ln" stroke-width="1" d="M18 362 H120"/>'
+    + '<text x="18" y="377" font-size="10">' + esc(etat) + '</text></g>'
+    + '</svg>';
+  return h;
+}
+
 function viewFiche() {
   if (S.fiche == null) return "";
   var x = S.candidates.find(function (c) { return c.id === S.fiche; });
@@ -1999,7 +2124,9 @@ function viewFiche() {
   var p = S.mine[x.id];
   var h = '<div class="modal-bg" onclick="if(event.target===this)App.closeFiche()"><div class="modal">'
     + '<button class="close" onclick="App.closeFiche()" aria-label="Fermer">✕</button>'
-    + '<div class="tiltwrap"><div class="bigph" id="tilt-card">' + missPhoto(x, S.ficheSurprise) + '</div></div>';
+    + '<div class="tiltwrap"><div class="tiltcard" id="tilt-card"><div class="bigph">' + missPhoto(x, S.ficheSurprise) + '</div>'
+    + hudFiche(x, S.ficheAnim) + '</div></div>';
+  S.ficheAnim = false;
   if (x.photo_surprise_url) h += '<p class="center" style="margin:0 0 0.5rem">' + btn("App.surprise()", S.ficheSurprise ? "Remettre la vraie photo" : icon("spark") + " Surprise", "mini") + '</p>';
   h += '<h2 class="center" style="margin:0.2rem 0 0">' + esc(x.nom) + '</h2>'
     + '<p class="center" style="color:var(--pink);font-weight:700;margin:0.1rem 0 0.6rem">Miss ' + esc(x.region) + '</p>'

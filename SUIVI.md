@@ -13,7 +13,10 @@ Dernière mise à jour : 29/07/2026
   Captain America/or Iron Man, trame comics, Bebas Neue + Barlow
   (Google Fonts), bouclier en emblème, icônes SVG maison, dock de
   navigation flottant, portes blindées qui s'ouvrent après le PIN
-  (« Avengers, rassemblement ! »), effets canvas en lumière additive (`fxRepulseur` sur
+  sur un emblème SVG qui se trace (anneau d'or, « A » rouge, éclat)
+  (« Avengers, rassemblement ! »), interface de visée SVG façon
+  casque d'Iron Man en relief sur la photo de la fiche (`hudFiche`,
+  cyan / violet finaliste / or Miss France), effets canvas en lumière additive (`fxRepulseur` sur
   les votes et dévoilements, `fxPortail` Doctor Strange sur un essai,
   `fxImpact` onde de choc dorée + secousse au scellé, `fxOrage` éclairs
   fractals de Thor à l'ouverture, au scellé et au sacre), animations respectant prefers-reduced-motion
