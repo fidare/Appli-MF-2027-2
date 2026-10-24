@@ -380,6 +380,12 @@
   .miss .meta { font-size: 0.75rem; color: var(--muted); }
   .miss .actions { margin-top: auto; padding-top: 0.35rem; }
   .miss .actions .btn { display: block; width: 100%; margin: 0.3rem 0 0; text-align: center; }
+  .btn .sh { display: none; }
+  @media (max-width: 699px) {
+    .miss .actions .btn { white-space: nowrap; padding-left: 0.4rem; padding-right: 0.4rem; letter-spacing: 0.05em; }
+    .miss .actions .btn .lg { display: none; }
+    .miss .actions .btn .sh { display: inline; }
+  }
 
   .avatar {
     width: 3.2rem; height: 3.2rem; border-radius: 50%; object-fit: cover;
@@ -1486,18 +1492,23 @@ function missActions(c) {
   var h = "";
   var e = p ? p.essai : null;
   if (ph === "selection15") {
-    if (st === "top15") h += btn("App.statut(" + c.id + ",'aucun')", "Retirer de mon équipe", "ghost mini");
-    else h += btn("App.statut(" + c.id + ",'top15')", "Je la veux dans mon équipe !", "mini");
-    h += e === 1 ? btn("App.essai(1,null)", "Annuler l'essai Nº1", "ghost mini") : btn("App.essai(1," + c.id + ")", icon("crown") + " Mon essai Nº1", "gold mini");
+    if (st === "top15") h += btn("App.statut(" + c.id + ",'aucun')", duo("Retirer de mon équipe", "Retirer"), "ghost mini");
+    else h += btn("App.statut(" + c.id + ",'top15')", duo("Je la veux dans mon équipe !", "Je la veux !"), "mini");
+    h += e === 1 ? btn("App.essai(1,null)", duo("Annuler l'essai Nº1", "Annuler Nº1"), "ghost mini") : btn("App.essai(1," + c.id + ")", icon("crown") + duo(" Mon essai Nº1", " Essai Nº1"), "gold mini");
   } else if (ph === "top5") {
     if (!c.dans_top15) return "";
-    if (p && p.top5) h += btn("App.statut(" + c.id + ",'aucun')", "Retirer de mes 5", "ghost mini");
+    if (p && p.top5) h += btn("App.statut(" + c.id + ",'aucun')", duo("Retirer de mes 5", "Retirer"), "ghost mini");
     else h += btn("App.statut(" + c.id + ",'top5')", icon("star") + " Dans mes 5 !", "mini");
-    h += e === 2 ? btn("App.essai(2,null)", "Annuler l'essai Nº2", "ghost mini") : btn("App.essai(2," + c.id + ")", icon("crown") + " Mon essai Nº2", "gold mini");
+    h += e === 2 ? btn("App.essai(2,null)", duo("Annuler l'essai Nº2", "Annuler Nº2"), "ghost mini") : btn("App.essai(2," + c.id + ")", icon("crown") + duo(" Mon essai Nº2", " Essai Nº2"), "gold mini");
   } else if (ph === "ordre") {
     if (c.est_finaliste) h += rangSelect(c.id, p && p.rang);
   }
   return h;
+}
+
+// Libellé long, remplacé par sa version courte sur téléphone.
+function duo(long, court) {
+  return '<span class="lg">' + long + '</span><span class="sh">' + court + '</span>';
 }
 
 function btn(onclick, label, cls) {
