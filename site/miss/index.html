@@ -405,10 +405,8 @@
 
   .pin {
     font-size: 1.6rem; letter-spacing: 0.8rem; text-align: center; width: 11rem;
-    border: 1px solid var(--goldline); border-radius: 14px; padding: 0.55rem 0 0.55rem 0.8rem;
-    background: rgba(255, 255, 255, 0.05); color: var(--ink);
+    padding: 0.55rem 0 0.55rem 0.8rem; color: var(--ink);
   }
-  .pin:focus { outline: 2px solid var(--gold); }
 
   .row { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; }
   .listline { display: flex; align-items: center; gap: 0.7rem; padding: 0.55rem 0; border-bottom: 1px solid var(--line); }
@@ -434,26 +432,28 @@
   .rank.r2 { background: linear-gradient(135deg, #e6e6ee, #a9adc2); color: #23263a; border: none; }
   .rank.r3 { background: linear-gradient(135deg, #e2aa7c, #a96a3c); color: #2e1806; border: none; }
 
-  /* Champ de recherche à coins coupés. Un contour extérieur serait
-     découpé : au focus, c'est le liseré lui-même qui passe à l'or. */
-  .search {
-    --cut: 10px; --bc: rgba(255, 255, 255, 0.18); --bw: 1px;
-    width: 100%; border: var(--bw) solid var(--bc);
+  /* Champs de saisie à coins coupés (recherche, PIN, Régie). La
+     bordure dessine les côtés droits, deux dégradés les biseaux. Un
+     contour extérieur serait découpé : au focus, c'est le liseré
+     lui-même qui passe à l'or. --bc : liseré, --fill : fond. */
+  .search, .pin, select.inp, input.inp {
+    --cut: 10px; --bc: rgba(255, 255, 255, 0.18); --bw: 1px; --fill: rgba(255, 255, 255, 0.05);
+    border: var(--bw) solid var(--bc);
     background:
       linear-gradient(135deg, transparent 50%, var(--bc) 50% calc(50% + var(--bw)), transparent calc(50% + var(--bw))) top left / var(--cut) var(--cut) no-repeat border-box,
       linear-gradient(135deg, transparent calc(50% - var(--bw)), var(--bc) calc(50% - var(--bw)) 50%, transparent 50%) bottom right / var(--cut) var(--cut) no-repeat border-box,
-      rgba(255, 255, 255, 0.05);
+      var(--fill);
     clip-path: polygon(var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%, 0 var(--cut));
-    padding: 0.62rem 1.05rem;
-    margin: 0.4rem 0 1rem; color: var(--ink);
     transition: border-color 0.15s;
   }
-  .search::placeholder { color: var(--muted); }
-  .search:focus { outline: none; --bc: var(--gold); --bw: 1.5px; box-shadow: inset 0 0 14px rgba(240, 207, 125, 0.15); }
-  select.inp, input.inp {
-    border: 1px solid var(--line); border-radius: 10px;
-    background: var(--card); padding: 0.35rem 0.5rem; color: var(--ink);
+  .search:focus, .pin:focus, select.inp:focus, input.inp:focus {
+    outline: none; --bc: var(--gold); --bw: 1.5px; box-shadow: inset 0 0 14px rgba(240, 207, 125, 0.15);
   }
+  .search { width: 100%; padding: 0.62rem 1.05rem; margin: 0.4rem 0 1rem; color: var(--ink); }
+  .search::placeholder { color: var(--muted); }
+  select.inp, input.inp { --cut: 6px; --fill: var(--card); padding: 0.35rem 0.5rem; color: var(--ink); }
+  .pin:not(:focus) { --cut: 12px; --bc: var(--goldline); }
+  .pin:focus { --cut: 12px; }
 
   .modal-bg {
     position: fixed; inset: 0; background: rgba(3, 5, 10, 0.75);
