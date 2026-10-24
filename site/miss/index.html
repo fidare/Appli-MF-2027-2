@@ -434,13 +434,22 @@
   .rank.r2 { background: linear-gradient(135deg, #e6e6ee, #a9adc2); color: #23263a; border: none; }
   .rank.r3 { background: linear-gradient(135deg, #e2aa7c, #a96a3c); color: #2e1806; border: none; }
 
+  /* Champ de recherche à coins coupés. Un contour extérieur serait
+     découpé : au focus, c'est le liseré lui-même qui passe à l'or. */
   .search {
-    width: 100%; border: 1px solid var(--line); border-radius: 999px;
-    background: rgba(255, 255, 255, 0.05); padding: 0.62rem 1.05rem;
+    --cut: 10px; --bc: rgba(255, 255, 255, 0.18); --bw: 1px;
+    width: 100%; border: var(--bw) solid var(--bc);
+    background:
+      linear-gradient(135deg, transparent 50%, var(--bc) 50% calc(50% + var(--bw)), transparent calc(50% + var(--bw))) top left / var(--cut) var(--cut) no-repeat border-box,
+      linear-gradient(135deg, transparent calc(50% - var(--bw)), var(--bc) calc(50% - var(--bw)) 50%, transparent 50%) bottom right / var(--cut) var(--cut) no-repeat border-box,
+      rgba(255, 255, 255, 0.05);
+    clip-path: polygon(var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%, 0 var(--cut));
+    padding: 0.62rem 1.05rem;
     margin: 0.4rem 0 1rem; color: var(--ink);
+    transition: border-color 0.15s;
   }
   .search::placeholder { color: var(--muted); }
-  .search:focus { outline: 2px solid var(--gold); }
+  .search:focus { outline: none; --bc: var(--gold); --bw: 1.5px; box-shadow: inset 0 0 14px rgba(240, 207, 125, 0.15); }
   select.inp, input.inp {
     border: 1px solid var(--line); border-radius: 10px;
     background: var(--card); padding: 0.35rem 0.5rem; color: var(--ink);
