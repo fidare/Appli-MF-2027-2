@@ -46,24 +46,32 @@
   html, body { margin: 0; }
   body {
     background-color: var(--bg);
-    background-image:
-      radial-gradient(1px 1px at 12% 18%, rgba(255,255,255,0.65), transparent 100%),
-      radial-gradient(1px 1px at 78% 9%, rgba(255,255,255,0.5), transparent 100%),
-      radial-gradient(1.5px 1.5px at 60% 32%, rgba(255,236,170,0.55), transparent 100%),
-      radial-gradient(1px 1px at 30% 60%, rgba(255,255,255,0.35), transparent 100%),
-      radial-gradient(1px 1px at 90% 70%, rgba(255,236,170,0.3), transparent 100%),
-      linear-gradient(115deg, rgba(230,36,41,0.10) 0%, transparent 42%),
-      linear-gradient(245deg, rgba(47,111,214,0.10) 0%, transparent 42%),
-      radial-gradient(70% 50% at 0% -5%, rgba(230,36,41,0.38), transparent 65%),
-      radial-gradient(70% 50% at 100% 105%, rgba(47,111,214,0.30), transparent 65%),
-      radial-gradient(rgba(255,255,255,0.045) 1px, transparent 1.4px);
-    background-size: auto, auto, auto, auto, auto, auto, auto, auto, auto, 6px 6px;
+    background-image: radial-gradient(rgba(255,255,255,0.045) 1px, transparent 1.4px);
+    background-size: 6px 6px;
     background-attachment: fixed;
     color: var(--text);
     font-family: var(--sans);
     line-height: 1.5;
     min-height: 100vh;
   }
+  /* Ciel animé derrière l'appli : nébuleuses rouge, bleue et violette
+     qui dérivent lentement, étoiles (dont certaines scintillent) et une
+     étoile filante de temps en temps. Uniquement des transformations
+     et de l'opacité, pour rester fluide sur téléphone. */
+  #sky { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+  #sky .neb { position: absolute; width: 95vmax; height: 95vmax; border-radius: 50%; will-change: transform; }
+  #sky .n1 { left: -50vmax; top: -55vmax; background: radial-gradient(closest-side, rgba(230,36,41,0.42), rgba(230,36,41,0.12) 55%, transparent); }
+  #sky .n2 { right: -50vmax; bottom: -55vmax; background: radial-gradient(closest-side, rgba(47,111,214,0.38), rgba(47,111,214,0.1) 55%, transparent); }
+  #sky .n3 { left: 25vw; top: 30vh; width: 70vmax; height: 70vmax; background: radial-gradient(closest-side, rgba(155,77,255,0.13), transparent); }
+  #sky svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  #sky circle { fill: #fff; }
+  #sky circle.or { fill: #ffe3a0; }
+  #sky .shoot {
+    position: absolute; left: 0; top: 0; width: 130px; height: 1.5px; opacity: 0;
+    background: linear-gradient(90deg, transparent, rgba(190, 220, 255, 0.9));
+    border-radius: 2px; transform-origin: right center;
+  }
+
   .wrap { max-width: 640px; margin: 0 auto; padding: 1.1rem 0.9rem calc(7rem + env(safe-area-inset-bottom)); }
 
   h1, h2, h3 { font-family: var(--serif); color: var(--ink); line-height: 1.05; font-weight: 400; letter-spacing: 0.04em; }
@@ -96,12 +104,31 @@
   .greet { display: flex; align-items: center; justify-content: center; gap: 0.7rem; margin: 0.9rem 0 0.2rem; text-align: left; }
   .greet .who { font-family: var(--serif); letter-spacing: 0.05em; font-size: 1.45rem; color: var(--ink); line-height: 1.15; }
 
+  /* Coins coupés façon écran de contrôle : la découpe (clip-path) taille
+     les coins haut gauche et bas droite, et deux dégradés redessinent
+     le liseré sur ces biseaux (la découpe emporte la vraie bordure).
+     --c1 / --c2 : couleur des biseaux, --cw : leur épaisseur. Les
+     ombres portées étant elles aussi découpées, les halos des fiches
+     Miss sont portés par leur enveloppe (.missw, voir plus bas). */
+  .card, .miss, .modal, .logingrid button, .modal .bigph {
+    --cut: 14px; --cw: 1px;
+    --c1: rgba(230, 36, 41, 0.8); --c2: rgba(47, 111, 214, 0.6);
+    --corners:
+      linear-gradient(135deg, transparent 50%, var(--c1) 50% calc(50% + var(--cw)), transparent calc(50% + var(--cw))) top left / var(--cut) var(--cut) no-repeat border-box,
+      linear-gradient(135deg, transparent calc(50% - var(--cw)), var(--c2) calc(50% - var(--cw)) 50%, transparent 50%) bottom right / var(--cut) var(--cut) no-repeat border-box;
+    clip-path: polygon(var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%, 0 var(--cut));
+  }
+  .miss { --cut: 18px; }
+  .modal { --cut: 22px; --c1: rgba(240, 207, 125, 0.6); --c2: rgba(240, 207, 125, 0.25); }
+  .logingrid button { --cut: 12px; --c1: rgba(240, 207, 125, 0.5); --c2: rgba(240, 207, 125, 0.15); }
+  .modal .bigph { --cut: 18px; --c1: transparent; --c2: transparent; }
+
   .card {
     border: 1px solid transparent;
     background:
+      var(--corners),
       linear-gradient(160deg, var(--card2), var(--card)) padding-box,
       linear-gradient(140deg, rgba(230,36,41,0.75), rgba(240,207,125,0.10) 45%, rgba(47,111,214,0.55)) border-box;
-    border-radius: 10px;
     box-shadow: var(--shadow);
     padding: 1.05rem 1.1rem;
     margin-bottom: 0.9rem;
@@ -187,16 +214,17 @@
     position: relative;
     border: 1px solid transparent;
     background:
+      var(--corners),
       linear-gradient(var(--card), var(--card)) padding-box,
       linear-gradient(160deg, rgba(230,36,41,0.6), rgba(20,30,50,0.4) 55%, rgba(47,111,214,0.55)) border-box;
-    border-radius: 10px;
-    overflow: hidden; box-shadow: var(--shadow); display: flex; flex-direction: column;
+    overflow: hidden; display: flex; flex-direction: column; flex: 1; min-width: 0;
   }
   .miss.selected {
     background:
+      var(--corners),
       linear-gradient(var(--card), var(--card)) padding-box,
       linear-gradient(160deg, #ff3b3f, #f0cf7d) border-box;
-    box-shadow: 0 0 24px rgba(230, 36, 41, 0.35), var(--shadow);
+    --c1: #ff3b3f; --c2: #f0cf7d;
   }
   /* Échelle de préciosité : plus une Miss va loin dans la soirée, plus
      son écrin devient précieux — liseré rose pour le top 15, platine
@@ -205,19 +233,21 @@
      officiel prime sur les pronostics du joueur. */
   .miss.qualifiee {
     background:
+      var(--corners),
       linear-gradient(var(--card), var(--card)) padding-box,
       linear-gradient(160deg, #ff3b3f, #f0cf7d) border-box;
-    box-shadow: 0 0 24px rgba(230, 36, 41, 0.35), var(--shadow);
+    --c1: #ff3b3f; --c2: #f0cf7d;
   }
   .miss.finaliste {
     --ang: 0deg;
     border-width: 2px;
     background:
+      var(--corners),
       linear-gradient(var(--card), var(--card)) padding-box,
       conic-gradient(from var(--ang),
         #5b4bb7, #e8e4ff 10%, #9d8cff 20%, #3b2f8a 34%, #f4f2ff 50%,
         #7f6be0 66%, #2f6fd6 80%, #ffffff 92%, #5b4bb7 100%) border-box;
-    box-shadow: 0 0 12px rgba(190, 175, 255, 0.45), 0 0 34px rgba(110, 90, 230, 0.35), var(--shadow);
+    --c1: #e8e4ff; --c2: #9d8cff; --cw: 2px;
   }
   /* La Miss France : liseré d'or dont la lumière tourne, halo qui bat,
      couronne et reflet qui traverse le portrait. On ne se retient pas. */
@@ -225,16 +255,19 @@
     --ang: 0deg;
     border-width: 3px;
     background:
+      var(--corners),
       linear-gradient(var(--card), var(--card)) padding-box,
       conic-gradient(from var(--ang),
         #a8141b, #fff8dc 8%, var(--gold) 16%, var(--gold-deep) 26%, #e62429 40%,
         #fff8dc 56%, var(--gold) 68%, #a8141b 82%, #fff8dc 94%, #a8141b 100%) border-box;
-    box-shadow:
-      0 0 0 1px rgba(240, 207, 125, 0.35),
-      0 0 22px rgba(240, 207, 125, 0.65),
-      0 0 60px rgba(240, 207, 125, 0.45),
-      var(--shadow);
+    --c1: #fff8dc; --c2: var(--gold); --cw: 3px;
   }
+  /* Halos des fiches, portés par l'enveloppe : un drop-shadow épouse
+     la silhouette biseautée, là où le box-shadow serait découpé. */
+  .missw { display: flex; }
+  .missw:has(> .selected), .missw:has(> .qualifiee) { filter: drop-shadow(0 0 9px rgba(230, 36, 41, 0.5)); }
+  .missw:has(> .finaliste) { filter: drop-shadow(0 0 5px rgba(190, 175, 255, 0.6)) drop-shadow(0 0 16px rgba(110, 90, 230, 0.45)); }
+  .missw:has(> .mf) { filter: drop-shadow(0 0 7px rgba(240, 207, 125, 0.8)) drop-shadow(0 0 22px rgba(240, 207, 125, 0.5)); }
   .miss.mf .ph { background: linear-gradient(160deg, #6b0f13, #0d1322); }
   .miss.mf .ph .num { color: var(--gold); text-shadow: 0 2px 12px rgba(0, 0, 0, 0.75); }
   .miss.mf .ph .cap .nom { color: #fff8dc; text-shadow: 0 1px 10px rgba(240, 207, 125, 0.55), 0 1px 6px rgba(0, 0, 0, 0.8); }
@@ -261,7 +294,7 @@
      à des vitesses différentes pour donner de la profondeur. */
   .miss.mf::before, .miss.mf::after {
     content: ""; position: absolute; inset: 0; z-index: 3;
-    pointer-events: none; border-radius: 7px;
+    pointer-events: none;
     background-repeat: repeat; opacity: 0.75;
   }
   .miss.mf::before {
@@ -320,9 +353,9 @@
   .logingrid button {
     border: 1px solid transparent;
     background:
+      var(--corners),
       linear-gradient(160deg, var(--card2), var(--card)) padding-box,
       linear-gradient(160deg, rgba(240,207,125,0.45), rgba(240,207,125,0.06)) border-box;
-    border-radius: 16px;
     padding: 0.9rem 0.4rem; cursor: pointer; display: flex; flex-direction: column;
     align-items: center; gap: 0.5rem; box-shadow: var(--shadow);
   }
@@ -380,9 +413,10 @@
   .modal {
     border: 1px solid transparent;
     background:
+      var(--corners),
       linear-gradient(160deg, var(--card2), var(--card)) padding-box,
       linear-gradient(140deg, rgba(240,207,125,0.55), rgba(240,207,125,0.08)) border-box;
-    border-radius: 22px 22px 0 0; width: 100%; max-width: 520px;
+    width: 100%; max-width: 520px;
     max-height: 92vh; overflow-y: auto; position: relative;
     padding: 1.1rem 1.1rem calc(1.3rem + env(safe-area-inset-bottom));
   }
@@ -397,7 +431,7 @@
      photo, dont overflow: hidden aplatirait la profondeur). */
   .modal .tiltcard { position: relative; transform-style: preserve-3d; will-change: transform; }
   .modal .bigph {
-    position: relative; border-radius: 14px; overflow: hidden; aspect-ratio: 3 / 4;
+    position: relative; overflow: hidden; aspect-ratio: 3 / 4;
     background: linear-gradient(160deg, #1f2b44, #0d1322);
     display: flex; align-items: center; justify-content: center;
     color: #4a5a7a;
@@ -483,17 +517,12 @@
        pour l'or — que double un halo qui bat et un reflet qui balaie
        le portrait. */
     .miss.finaliste { animation: rise 0.45s ease-out both, tourne 9s linear infinite; }
-    .miss.mf { animation: rise 0.45s ease-out both, tourne 5s linear infinite, halo 3.4s ease-in-out infinite; }
+    .miss.mf { animation: rise 0.45s ease-out both, tourne 5s linear infinite; }
+    .missw:has(> .mf) { animation: halo 3.4s ease-in-out infinite; }
     @keyframes tourne { to { --ang: 360deg; } }
     @keyframes halo {
-      0%, 100% {
-        box-shadow: 0 0 0 1px rgba(240, 207, 125, 0.35), 0 0 22px rgba(240, 207, 125, 0.65),
-                    0 0 60px rgba(240, 207, 125, 0.45), var(--shadow);
-      }
-      50% {
-        box-shadow: 0 0 0 1px rgba(240, 207, 125, 0.5), 0 0 34px rgba(240, 207, 125, 0.85),
-                    0 0 90px rgba(240, 207, 125, 0.6), var(--shadow);
-      }
+      0%, 100% { filter: drop-shadow(0 0 7px rgba(240, 207, 125, 0.8)) drop-shadow(0 0 22px rgba(240, 207, 125, 0.5)); }
+      50% { filter: drop-shadow(0 0 11px rgba(240, 207, 125, 0.95)) drop-shadow(0 0 36px rgba(240, 207, 125, 0.7)); }
     }
     /* La pluie : chaque tuile descend d'exactement sa hauteur, en
        boucle sans raccord. Le scintillement se superpose à la chute. */
@@ -580,17 +609,34 @@
     @keyframes midout { to { opacity: 0; transform: scale(1.08); } }
   }
   @media (prefers-reduced-motion: reduce) { .entr { display: none; } }
+  @media (prefers-reduced-motion: no-preference) {
+    #sky .n1 { animation: drift1 38s ease-in-out infinite alternate; }
+    #sky .n2 { animation: drift2 46s ease-in-out infinite alternate; }
+    #sky .n3 { animation: drift3 57s ease-in-out infinite alternate; }
+    @keyframes drift1 { to { transform: translate(14vw, 10vh) scale(1.12); } }
+    @keyframes drift2 { to { transform: translate(-16vw, -12vh) scale(1.18); } }
+    @keyframes drift3 { to { transform: translate(-35vw, -22vh) scale(0.8); } }
+    #sky .tw { animation: tw 3.2s ease-in-out infinite; }
+    @keyframes tw { 50% { opacity: 0.15; } }
+    #sky .shoot { animation: shoot 13s ease-in 4s infinite; }
+    @keyframes shoot {
+      0% { opacity: 0; transform: translate(12vw, 8vh) rotate(24deg) scaleX(0.3); }
+      1% { opacity: 1; }
+      6% { opacity: 0; transform: translate(70vw, 34vh) rotate(24deg) scaleX(1); }
+      100% { opacity: 0; transform: translate(70vw, 34vh) rotate(24deg); }
+    }
+  }
 
   @media (min-width: 700px) {
     .wrap { max-width: 960px; padding-left: 1rem; padding-right: 1rem; }
     .grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.9rem; }
     .logingrid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
     .modal-bg { align-items: center; padding: 1rem; }
-    .modal { border-radius: 22px; }
   }
 </style>
 </head>
 <body>
+<div id="sky" aria-hidden="true"><i class="neb n1"></i><i class="neb n2"></i><i class="neb n3"></i><i class="shoot"></i></div>
 <div class="wrap"><div id="app" class="center muted" style="padding-top:4rem">Assemblage des Avengers…</div></div>
 <div id="toast"></div>
 
@@ -607,6 +653,20 @@ var SUPABASE = {
 };
 
 var STORE_KEY = "mf2027-session";
+
+(function ciel() {
+  var seed = 2027, st = "";
+  function r() { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
+  for (var i = 0; i < 70; i++) {
+    var tw = i % 6 === 0;
+    st += '<circle cx="' + (r() * 100).toFixed(2) + '%" cy="' + (r() * 100).toFixed(2) + '%" r="'
+      + (0.4 + r() * (tw ? 1.1 : 0.7)).toFixed(2) + '" opacity="' + (0.25 + r() * 0.6).toFixed(2) + '"'
+      + ' class="' + (i % 9 === 0 ? "or" : "") + (tw ? " tw" : "") + '"'
+      + (tw ? ' style="animation-delay:' + (r() * 3).toFixed(2) + 's"' : "") + '/>';
+  }
+  var sky = document.getElementById("sky");
+  if (sky) sky.insertAdjacentHTML("afterbegin", '<svg>' + st + '</svg>');
+})();
 
 // Icônes SVG dessinées en trait fin (stroke), teintées par la couleur du texte.
 var ICONS = {
@@ -1054,14 +1114,14 @@ var tilt = { rx: 0, ry: 0, tx: 0, ty: 0, raf: null };
 // les mesures brutes du gyroscope (irrégulières) ne pilotent jamais
 // directement le rendu — fini les saccades.
 function tiltTarget(rx, ry) {
-  tilt.tx = Math.max(-22, Math.min(22, rx));
-  tilt.ty = Math.max(-22, Math.min(22, ry));
+  tilt.tx = Math.max(-7, Math.min(7, rx));
+  tilt.ty = Math.max(-7, Math.min(7, ry));
   if (tilt.raf) return;
   var step = function () {
     var el = document.getElementById("tilt-card");
     if (!el) { tilt.raf = null; tilt.rx = tilt.ry = tilt.tx = tilt.ty = 0; return; }
-    tilt.rx += (tilt.tx - tilt.rx) * 0.16;
-    tilt.ry += (tilt.ty - tilt.ry) * 0.16;
+    tilt.rx += (tilt.tx - tilt.rx) * 0.08;
+    tilt.ry += (tilt.ty - tilt.ry) * 0.08;
     el.style.transform = "rotateX(" + tilt.rx.toFixed(2) + "deg) rotateY(" + tilt.ry.toFixed(2) + "deg)";
     tilt.raf = requestAnimationFrame(step);
   };
@@ -1072,7 +1132,7 @@ function tiltOrientation(e) {
   if (REDUCED || S.fiche == null) return;
   if (e.beta == null || e.gamma == null) return;
   if (!tiltBase) tiltBase = { b: e.beta, g: e.gamma };
-  tiltTarget((tiltBase.b - e.beta) * 1.2, (e.gamma - tiltBase.g) * 1.2);
+  tiltTarget((tiltBase.b - e.beta) * 0.35, (e.gamma - tiltBase.g) * 0.35);
 }
 
 // iOS demande une permission explicite pour le gyroscope, à déclencher
@@ -1097,7 +1157,7 @@ function tiltMouse(e) {
   if (e.pointerType === "touch") return;
   var dx = e.clientX / window.innerWidth - 0.5;
   var dy = e.clientY / window.innerHeight - 0.5;
-  tiltTarget(-dy * 44, dx * 44);
+  tiltTarget(-dy * 14, dx * 14);
 }
 document.addEventListener("pointermove", tiltMouse);
 
@@ -1653,7 +1713,7 @@ function grilleMiss(list, depart) {
   list.forEach(function (x, i) {
     var p = S.mine[x.id];
     var n = depart + i + 1;
-    h += '<article class="miss' + (p && (p.statut === "top15" || p.top5) ? " selected" : "") + ecrin(x)
+    h += '<div class="missw"><article class="miss' + (p && (p.statut === "top15" || p.top5) ? " selected" : "") + ecrin(x)
       + '" style="animation-delay:' + Math.min(i * 45, 700) + 'ms">'
       + '<div class="ph" onclick="App.fiche(' + x.id + ')">' + missPhoto(x)
       + '<div class="num">' + (n < 10 ? "0" : "") + n + '</div>'
@@ -1663,7 +1723,7 @@ function grilleMiss(list, depart) {
       + (x.profession ? '<span class="meta">' + esc(x.profession) + '</span>' : "")
       + '<div>' + finalisteBadge(x) + statutBadge(p) + '</div>'
       + '<div class="actions">' + missActions(x) + '</div>'
-      + '</div></article>';
+      + '</div></article></div>';
   });
   return h + '</div>';
 }

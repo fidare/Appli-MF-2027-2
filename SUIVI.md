@@ -20,6 +20,12 @@ Dernière mise à jour : 29/07/2026
   les votes et dévoilements, `fxPortail` Doctor Strange sur un essai,
   `fxImpact` onde de choc dorée + secousse au scellé, `fxOrage` éclairs
   fractals de Thor à l'ouverture, au scellé et au sacre), animations respectant prefers-reduced-motion
+- Cartes, fiches, modale et boutons de connexion à coins coupés
+  (biseaux haut gauche / bas droite par clip-path, liseré redessiné
+  sur les biseaux ; halos des fiches portés par l'enveloppe `.missw`)
+- Ciel animé en fond (`#sky`) : nébuleuses rouge / bleue / violette qui
+  dérivent, 70 étoiles SVG dont certaines scintillent, étoile filante
+- Inclinaison 3D de la fiche volontairement discrète (±7°, lissée)
 - Écrins des fiches Miss selon le palmarès officiel : liseré rose pour
   le top 15, vibranium tournant pour les finalistes, rouge et or Iron Man tournant + halo
   battant + couronne + reflet balayant le portrait pour la Miss France
