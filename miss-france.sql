@@ -51,7 +51,8 @@ alter table public.mf_candidates
   add column if not exists tiktok text,
   add column if not exists facebook text,
   add column if not exists youtube text,
-  add column if not exists x text;
+  add column if not exists x text,
+  add column if not exists followers int;
 
 create table if not exists public.mf_pronostics (
   id bigint generated always as identity primary key,

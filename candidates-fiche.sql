@@ -8,7 +8,8 @@ alter table public.mf_candidates
   add column if not exists tiktok text,
   add column if not exists facebook text,
   add column if not exists youtube text,
-  add column if not exists x text;
+  add column if not exists x text,
+  add column if not exists followers int;
 
 -- Exemple de remplissage (une ligne par Miss, adapter la région) :
 -- update public.mf_candidates set

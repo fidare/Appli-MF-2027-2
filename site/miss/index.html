@@ -378,6 +378,8 @@
   .miss .ph .cap .reg { color: var(--gold); font-size: 0.62rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.16em; margin-top: 0.18rem; }
   .miss .body { padding: 0.55rem 0.6rem 0.7rem; display: flex; flex-direction: column; gap: 0.25rem; flex: 1; }
   .miss .meta { font-size: 0.75rem; color: var(--muted); }
+  .fans { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.72rem; font-weight: 600; color: #78dcff; }
+  .fans .ic { width: 0.95rem; height: 0.95rem; }
   .miss .actions { margin-top: auto; padding-top: 0.35rem; }
   .miss .actions .btn { display: block; width: 100%; margin: 0.3rem 0 0; text-align: center; }
   .btn .sh { display: none; }
@@ -1819,6 +1821,7 @@ function grilleMiss(list, depart) {
       + '<div class="reg">Miss ' + esc(x.region) + (x.age ? " · " + esc(x.age) + " ans" : "") + '</div></div></div>'
       + '<div class="body">'
       + (x.profession ? '<span class="meta">' + esc(x.profession) + '</span>' : "")
+      + fansHtml(x)
       + '<div>' + finalisteBadge(x) + statutBadge(p) + '</div>'
       + '<div class="actions">' + missActions(x) + '</div>'
       + '</div></article></div>';
@@ -2275,6 +2278,16 @@ function hudFiche(x, anim) {
   return h;
 }
 
+// Abonnés Instagram (colonne followers, relevé ponctuel) : « 12,4 k abonnés ».
+function fansHtml(x) {
+  var n = Number(x.followers);
+  if (!n) return "";
+  var t = n < 1000 ? String(n)
+    : n < 1e6 ? (n / 1000).toFixed(n < 1e4 ? 1 : 0).replace(".0", "").replace(".", ",") + " k"
+    : (n / 1e6).toFixed(1).replace(".0", "").replace(".", ",") + " M";
+  return '<span class="fans">' + icon("instagram") + t + ' abonné' + (n > 1 ? "s" : "") + '</span>';
+}
+
 // Photos de la fiche : la principale puis celles de la colonne photos.
 function missPhotos(x) {
   return [x.photo_url].concat(Array.isArray(x.photos) ? x.photos : []).filter(Boolean);
@@ -2304,7 +2317,7 @@ function viewFiche() {
   var photos = missPhotos(x), idx = Math.min(S.ficheIdx, Math.max(photos.length - 1, 0));
   var ficheImg = S.ficheSurprise || !photos.length ? missPhoto(x, S.ficheSurprise)
     : '<img src="' + esc(photos[idx]) + '" alt="' + esc(x.nom) + '">';
-  var stats = [["Âge", x.age ? x.age + " ans" : ""], ["Taille", x.taille], ["Poids", x.poids], ["Mensurations", x.mensurations], ["Métier", x.profession]]
+  var stats = [["Âge", x.age ? x.age + " ans" : ""], ["Taille", x.taille], ["Poids", x.poids], ["Mensurations", x.mensurations], ["Métier", x.profession], ["Abonnés Instagram", x.followers ? Number(x.followers).toLocaleString("fr-FR") : ""]]
     .filter(function (s) { return s[1]; });
   var liens = RESEAUX.map(function (r) {
     var u = x[r[0]] ? reseauUrl(x[r[0]], r[2]) : null;
