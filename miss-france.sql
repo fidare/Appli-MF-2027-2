@@ -683,7 +683,7 @@ insert into public.mf_joueurs (pseudo, nom_affiche, pin, est_admin) values
   ('minikeums',         'Spider-Man',        '5140', false),
   ('nokia-3310',        'La Torche humaine', '3706', false),
   ('pussycat-dolls',    'Captain America',   '6589', false),
-  ('tokio-hotel',       'Natasha Romanoff',  '1428', false)
+  ('tokio-hotel',       'Black Widow',       '1428', false)
 on conflict (pseudo) do nothing;
 
 -- ------------------------------------------------------------

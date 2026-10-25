@@ -73,7 +73,7 @@ Dernière mise à jour : 29/07/2026
    lisibles par tout le monde (dont les copains). Le script ne les
    écrasera pas (`on conflict do nothing`).
 2. ~~Photos des joueurs~~ : fait (miniatures dans `site/miss/joueurs/`, noms de héros via `joueurs-noms.sql`)
-3. ~~Pseudo « Tokio Hotel »~~ : renommé Natasha Romanoff
+3. ~~Pseudo « Tokio Hotel »~~ : renommé Black Widow
 
 ## À faire quand le casting 2027 sera connu
 

@@ -13,6 +13,6 @@ update public.mf_joueurs j
     ('minikeums', 'Spider-Man'),
     ('nokia-3310', 'La Torche humaine'),
     ('pussycat-dolls', 'Captain America'),
-    ('tokio-hotel', 'Natasha Romanoff')
+    ('tokio-hotel', 'Black Widow')
   ) as v(pseudo, nom)
   where j.pseudo = v.pseudo;
