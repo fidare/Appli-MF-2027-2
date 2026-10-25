@@ -79,14 +79,13 @@ Dernière mise à jour : 29/07/2026
 2. ~~Photos des joueurs~~ : fait (miniatures dans `site/miss/joueurs/`, noms de héros via `joueurs-noms.sql`)
 3. ~~Pseudo « Tokio Hotel »~~ : renommé Black Widow
 
-## À faire quand le casting 2027 sera connu
+## Casting 2027
 
-1. `delete from public.mf_candidates;` (purge le test, garde les joueurs)
-2. Insérer les vraies candidates (modèle en fin de `miss-france.sql`)
-3. Photos des Miss : liens de presse acceptés dans `photo_url` /
-   `photo_surprise_url` (attention aux liens qui meurent et aux sites
-   anti-hotlink) — sinon bucket public `photos` dans Supabase Storage
-4. Régie → phase « Sélection des 15 » et distribuer l'URL + les PIN
+- `candidates-2027.sql` : les 31 Miss régionales officielles (âge,
+  taille, métier, Instagram, 1 à 6 photos chacune hébergées dans
+  `site/miss/candidates/`). Remplace le casting de test et efface les
+  pronostics existants. Poids et mensurations non publiés.
+- Ensuite : Régie → phase « Sélection des 15 » et distribuer l'URL + les PIN
 
 ## Notes techniques
 
@@ -94,7 +93,7 @@ Dernière mise à jour : 29/07/2026
   en-tête `Authorization: Bearer` (ce n'est pas un JWT) — `apikey` seul
 - Tables verrouillées par RLS : toutes les écritures et lectures
   sensibles passent par les fonctions `mf_*` qui vérifient le jeton
-- Les sessions Claude Code n'ont pas d'accès réseau vers Supabase ni les
-  sites de presse : les scripts SQL sont à exécuter par Romain dans le
-  SQL Editor
+- Les sessions Claude Code n'ont pas d'accès à Supabase : les scripts
+  SQL sont à exécuter par Romain dans le SQL Editor (l'accès aux sites
+  de presse dépend du réglage réseau de l'environnement)
 - Le sondage d'origine reste en ligne à la racine (`site/index.html`)
