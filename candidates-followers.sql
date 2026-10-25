@@ -1,9 +1,11 @@
 -- Nombre d'abonnés Instagram des Miss 2027 (page Recrues et fiche).
 -- Relevé du 25/10/2026 (au-delà de 10 000, Instagram arrondit à la
 -- centaine). À exécuter dans Supabase → SQL Editor, après
--- candidates-2027.sql. May Haoues (Côte d'Azur) : compte introuvable.
+-- candidates-2027.sql.
 
 alter table public.mf_candidates add column if not exists followers int;
+
+update public.mf_candidates set instagram = 'may_haoues' where region = 'Côte d''Azur';
 
 update public.mf_candidates c
   set followers = v.n
@@ -16,6 +18,7 @@ update public.mf_candidates c
     ('Centre-Val de Loire', 8455),
     ('Champagne-Ardenne', 5499),
     ('Corse', 3515),
+    ('Côte d''Azur', 6603),
     ('Franche-Comté', 6413),
     ('Guadeloupe', 8163),
     ('Guyane', 3880),

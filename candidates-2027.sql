@@ -49,7 +49,7 @@ insert into public.mf_candidates (nom, region, age, taille, profession, photo_ur
   ('May Haoues', 'Côte d''Azur', 19, '1,74 m', 'Étudiante à l''EDHEC Nice',
    'https://fidare.github.io/Appli-MF-2027-2/miss/candidates/cote-d-azur-1.jpg',
    array['https://fidare.github.io/Appli-MF-2027-2/miss/candidates/cote-d-azur-2.jpg']::text[],
-   null),
+   'may_haoues'),
   ('Emma Ninot', 'Franche-Comté', 21, '1,73 m', 'Infirmière et sauveteuse en mer',
    'https://fidare.github.io/Appli-MF-2027-2/miss/candidates/franche-comte-1.jpg',
    '{}'::text[],
