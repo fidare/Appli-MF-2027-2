@@ -1,0 +1,50 @@
+<template>
+  <style>
+
+@font-face { font-family:'Bebas Neue'; font-weight:400; src:url('assets/fonts/bebas-neue.woff2') format('woff2'); }
+@font-face { font-family:'Barlow'; font-weight:400; src:url('assets/fonts/barlow-400.woff2') format('woff2'); }
+@font-face { font-family:'Barlow'; font-weight:600; src:url('assets/fonts/barlow-600.woff2') format('woff2'); }
+@font-face { font-family:'Barlow'; font-weight:700; src:url('assets/fonts/barlow-700.woff2') format('woff2'); }
+
+
+#root { position:absolute; inset:0; font-family:'Barlow',sans-serif; color:#f4f6fb; --ink:#f4f6fb; --text:#cdd4e2; --muted:#8592ab; --red:#e62429; --red2:#ff6d61;
+  --gold:#f0cf7d; --gold2:#d3a43a; --hud:#78dcff; --card:#0f1420; }
+.bebas { font-family:'Bebas Neue',sans-serif; font-weight:400; letter-spacing:.02em; }
+.kicker { font-weight:600; letter-spacing:.42em; color:#f0cf7d; font-size:30px; text-transform:uppercase; }
+.red { background:linear-gradient(90deg,#f28a72,#e62429 45%,#ff6d61); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.shield { filter:drop-shadow(0 0 30px rgba(230,36,41,.6)); }
+
+
+#shield-p { position:absolute; left:900px; top:0; width:900px; height:1080px; display:flex; flex-direction:column; justify-content:center; }
+#shield-p .kicker { margin-bottom:22px; }
+#shield-p .title { font-size:132px; line-height:.9; margin-bottom:34px; }
+#shield-p .text { font-size:40px; line-height:1.35; color:#cdd4e2; max-width:840px; }
+#shield-p .text b { color:#f0cf7d; font-weight:700; }
+
+.stampwrap { margin-top:50px; }
+.stamp { display:inline-block; padding:18px 40px; border:6px solid #f0cf7d; color:#f0cf7d; font-size:76px; letter-spacing:.08em; opacity:0;
+  box-shadow:0 0 40px rgba(240,207,125,.35), inset 0 0 30px rgba(240,207,125,.2); }
+
+  </style>
+  <div id="root" data-composition-id="shield" data-width="1920" data-height="1080">
+    <div id="shield-p">
+      <div class="kicker" id="shield-k">Escouade complète</div>
+      <div class="bebas title" id="shield-t">CLASSE TON DOSSIER<br><span class="red">AU S.H.I.E.L.D.</span></div>
+      <div class="text" id="shield-x">Ta sélection devient <b>officielle</b>.<br>Tu peux la déclassifier tant que la phase est ouverte.</div>
+      <div class="stampwrap"><div class="stamp bebas" id="shield-stamp">✓ DOSSIER CLASSÉ</div></div>
+    </div>
+  </div>
+  <script>
+
+const tl = gsap.timeline({ paused: true });
+const ft = (t, a, b, at) => tl.fromTo(t, a, Object.assign({ immediateRender: false }, b), at);
+
+
+tl.fromTo("#shield-p", {opacity:0, x:60}, {opacity:1, x:0, duration:.7, ease:"power3.out"}, 0);
+tl.fromTo("#shield-p > *", {opacity:0, y:30}, {opacity:1, y:0, duration:.6, stagger:.12, ease:"power3.out"}, .1);
+ft("#shield-stamp", {opacity:0, scale:2.2, rotation:-16}, {opacity:1, scale:1, rotation:-6, duration:.35, ease:"power4.in"}, 3.45);ft("#shield-p .stampwrap", {x:0}, {x:8, duration:.05, yoyo:true, repeat:5}, 3.8);
+ft("#shield-p", {opacity:1, x:0}, {opacity:0, x:-40, duration:.4, ease:"power2.in"}, 9.00);
+
+    window.__timelines["shield"] = tl;
+  </script>
+</template>

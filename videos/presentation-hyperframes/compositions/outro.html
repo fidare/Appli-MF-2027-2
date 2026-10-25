@@ -1,0 +1,53 @@
+<template>
+  <style>
+
+@font-face { font-family:'Bebas Neue'; font-weight:400; src:url('assets/fonts/bebas-neue.woff2') format('woff2'); }
+@font-face { font-family:'Barlow'; font-weight:400; src:url('assets/fonts/barlow-400.woff2') format('woff2'); }
+@font-face { font-family:'Barlow'; font-weight:600; src:url('assets/fonts/barlow-600.woff2') format('woff2'); }
+@font-face { font-family:'Barlow'; font-weight:700; src:url('assets/fonts/barlow-700.woff2') format('woff2'); }
+
+
+#root { position:absolute; inset:0; font-family:'Barlow',sans-serif; color:#f4f6fb; --ink:#f4f6fb; --text:#cdd4e2; --muted:#8592ab; --red:#e62429; --red2:#ff6d61;
+  --gold:#f0cf7d; --gold2:#d3a43a; --hud:#78dcff; --card:#0f1420; }
+.bebas { font-family:'Bebas Neue',sans-serif; font-weight:400; letter-spacing:.02em; }
+.kicker { font-weight:600; letter-spacing:.42em; color:#f0cf7d; font-size:30px; text-transform:uppercase; }
+.red { background:linear-gradient(90deg,#f28a72,#e62429 45%,#ff6d61); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.shield { filter:drop-shadow(0 0 30px rgba(230,36,41,.6)); }
+
+
+#out-box { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+#out-shield { width:150px; height:150px; margin-bottom:20px; }
+#out-t { font-size:200px; line-height:.86; }
+#out-heroes { display:flex; gap:22px; margin:44px 0 40px; }
+#out-heroes img { width:118px; height:118px; border-radius:50%; border:4px solid #d3a43a; box-shadow:0 0 24px rgba(0,0,0,.6); }
+#out-cta { font-size:64px; color:#f0cf7d; letter-spacing:.06em; }
+#out-flash { position:absolute; inset:0; background:#fff; opacity:0; }
+#out-black { position:absolute; inset:0; background:#06080f; opacity:0; }
+
+  </style>
+  <div id="root" data-composition-id="outro" data-width="1920" data-height="1080">
+    <div id="out-box">
+      <svg class="shield" id="out-shield" viewBox="0 0 40 40"><circle cx="20" cy="20" r="19" fill="#e62429"/><circle cx="20" cy="20" r="15" fill="#f4f6fb"/><circle cx="20" cy="20" r="11" fill="#e62429"/><circle cx="20" cy="20" r="7.5" fill="#2f6fd6"/><path d="M20 13.2l1.6 4.6h4.8l-3.9 2.9 1.5 4.6-4-2.9-4 2.9 1.5-4.6-3.9-2.9h4.8z" fill="#f4f6fb"/></svg>
+      <div class="bebas" id="out-t">LE GRAND <span class="red">PRONOSTIC</span></div>
+      <div id="out-heroes"><img id="out-h0" src="assets/av/0.png"><img id="out-h1" src="assets/av/1.png"><img id="out-h2" src="assets/av/2.png"><img id="out-h3" src="assets/av/3.png"><img id="out-h4" src="assets/av/4.png"><img id="out-h5" src="assets/av/5.png"><img id="out-h6" src="assets/av/6.png"><img id="out-h7" src="assets/av/7.png"><img id="out-h8" src="assets/av/8.png"><img id="out-h9" src="assets/av/9.png"></div>
+      <div class="bebas" id="out-cta" data-var-text="cta">À TOI DE JOUER, AGENT DU JURY !</div>
+    </div>
+    <div id="out-flash"></div><div id="out-black"></div>
+  </div>
+  <script>
+
+const tl = gsap.timeline({ paused: true });
+const ft = (t, a, b, at) => tl.fromTo(t, a, Object.assign({ immediateRender: false }, b), at);
+
+
+tl.fromTo("#out-shield", {scale:0, rotation:200}, {scale:1, rotation:0, duration:.8, ease:"back.out(1.6)"}, 0);
+ft("#out-flash", {opacity:.4}, {opacity:0, duration:.5}, .5);
+tl.fromTo("#out-t", {opacity:0, scale:1.3}, {opacity:1, scale:1, duration:.7, ease:"power4.out"}, .5);
+tl.fromTo("#out-heroes img", {opacity:0, y:40, scale:.6}, {opacity:1, y:0, scale:1, duration:.45, stagger:.12, ease:"back.out(2)"}, 1.3);
+tl.fromTo("#out-cta", {opacity:0, y:30}, {opacity:1, y:0, duration:.7, ease:"power3.out"}, 3.3);
+ft("#out-box", {scale:1}, {scale:1.03, duration:4, ease:"none"}, 3.7);
+ft("#out-black", {opacity:0}, {opacity:1, duration:1}, 6.9);
+
+    window.__timelines["outro"] = tl;
+  </script>
+</template>

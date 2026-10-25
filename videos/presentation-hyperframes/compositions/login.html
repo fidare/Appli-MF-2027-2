@@ -1,0 +1,46 @@
+<template>
+  <style>
+
+@font-face { font-family:'Bebas Neue'; font-weight:400; src:url('assets/fonts/bebas-neue.woff2') format('woff2'); }
+@font-face { font-family:'Barlow'; font-weight:400; src:url('assets/fonts/barlow-400.woff2') format('woff2'); }
+@font-face { font-family:'Barlow'; font-weight:600; src:url('assets/fonts/barlow-600.woff2') format('woff2'); }
+@font-face { font-family:'Barlow'; font-weight:700; src:url('assets/fonts/barlow-700.woff2') format('woff2'); }
+
+
+#root { position:absolute; inset:0; font-family:'Barlow',sans-serif; color:#f4f6fb; --ink:#f4f6fb; --text:#cdd4e2; --muted:#8592ab; --red:#e62429; --red2:#ff6d61;
+  --gold:#f0cf7d; --gold2:#d3a43a; --hud:#78dcff; --card:#0f1420; }
+.bebas { font-family:'Bebas Neue',sans-serif; font-weight:400; letter-spacing:.02em; }
+.kicker { font-weight:600; letter-spacing:.42em; color:#f0cf7d; font-size:30px; text-transform:uppercase; }
+.red { background:linear-gradient(90deg,#f28a72,#e62429 45%,#ff6d61); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.shield { filter:drop-shadow(0 0 30px rgba(230,36,41,.6)); }
+
+
+#login-p { position:absolute; left:900px; top:0; width:900px; height:1080px; display:flex; flex-direction:column; justify-content:center; }
+#login-p .kicker { margin-bottom:22px; }
+#login-p .title { font-size:132px; line-height:.9; margin-bottom:34px; }
+#login-p .text { font-size:40px; line-height:1.35; color:#cdd4e2; max-width:840px; }
+#login-p .text b { color:#f0cf7d; font-weight:700; }
+
+  </style>
+  <div id="root" data-composition-id="login" data-width="1920" data-height="1080">
+    <div id="login-p">
+      <div class="kicker" id="login-k">Étape 1 · Identification</div>
+      <div class="bebas title" id="login-t">IDENTIFIE-TOI,<br><span class="red">AGENT !</span></div>
+      <div class="text" id="login-x">Touche ta photo de <b>super-héros</b>,<br>puis tape ton <b>code d'accès à 4 chiffres</b>.</div>
+      
+    </div>
+  </div>
+  <script>
+
+const tl = gsap.timeline({ paused: true });
+const ft = (t, a, b, at) => tl.fromTo(t, a, Object.assign({ immediateRender: false }, b), at);
+
+
+tl.fromTo("#login-p", {opacity:0, x:60}, {opacity:1, x:0, duration:.7, ease:"power3.out"}, 0);
+tl.fromTo("#login-p > *", {opacity:0, y:30}, {opacity:1, y:0, duration:.6, stagger:.12, ease:"power3.out"}, .1);
+
+ft("#login-p", {opacity:1, x:0}, {opacity:0, x:-40, duration:.4, ease:"power2.in"}, 8.60);
+
+    window.__timelines["login"] = tl;
+  </script>
+</template>

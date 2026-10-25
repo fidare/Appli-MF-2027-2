@@ -1,0 +1,59 @@
+<template>
+  <style>
+
+@font-face { font-family:'Bebas Neue'; font-weight:400; src:url('assets/fonts/bebas-neue.woff2') format('woff2'); }
+@font-face { font-family:'Barlow'; font-weight:400; src:url('assets/fonts/barlow-400.woff2') format('woff2'); }
+@font-face { font-family:'Barlow'; font-weight:600; src:url('assets/fonts/barlow-600.woff2') format('woff2'); }
+@font-face { font-family:'Barlow'; font-weight:700; src:url('assets/fonts/barlow-700.woff2') format('woff2'); }
+
+
+#root { position:absolute; inset:0; font-family:'Barlow',sans-serif; color:#f4f6fb; --ink:#f4f6fb; --text:#cdd4e2; --muted:#8592ab; --red:#e62429; --red2:#ff6d61;
+  --gold:#f0cf7d; --gold2:#d3a43a; --hud:#78dcff; --card:#0f1420; }
+.bebas { font-family:'Bebas Neue',sans-serif; font-weight:400; letter-spacing:.02em; }
+.kicker { font-weight:600; letter-spacing:.42em; color:#f0cf7d; font-size:30px; text-transform:uppercase; }
+.red { background:linear-gradient(90deg,#f28a72,#e62429 45%,#ff6d61); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.shield { filter:drop-shadow(0 0 30px rgba(230,36,41,.6)); }
+
+
+#recrues-p { position:absolute; left:900px; top:0; width:900px; height:1080px; display:flex; flex-direction:column; justify-content:center; }
+#recrues-p .kicker { margin-bottom:22px; }
+#recrues-p .title { font-size:132px; line-height:.9; margin-bottom:34px; }
+#recrues-p .text { font-size:40px; line-height:1.35; color:#cdd4e2; max-width:840px; }
+#recrues-p .text b { color:#f0cf7d; font-weight:700; }
+
+.counter { margin-top:46px; display:flex; gap:28px; }
+.chip { padding:22px 34px; background:rgba(15,20,32,.85); border:2px solid rgba(240,207,125,.35);
+  clip-path:polygon(0 0,100% 0,100% calc(100% - 22px),calc(100% - 22px) 100%,0 100%); }
+.chip .k { font-size:28px; letter-spacing:.2em; color:#f0cf7d; font-weight:600; }
+.chip .v { font-family:'Bebas Neue'; font-size:84px; line-height:1; margin-top:6px; }
+.goldc { background:linear-gradient(160deg,#f6dc93,#c9982f); border-color:#f6dc93; color:#1b1408; opacity:0; }
+.goldc .k { color:#3a2a08; }
+
+  </style>
+  <div id="root" data-composition-id="recrues" data-width="1920" data-height="1080">
+    <div id="recrues-p">
+      <div class="kicker" id="recrues-k">Phase 1 · Les recrues</div>
+      <div class="bebas title" id="recrues-t">RECRUTE<br><span class="red">TON ESCOUADE</span></div>
+      <div class="text" id="recrues-x"><b>31 candidates</b>, 15 places dans ton équipe.<br>Et ton <b>essai Miss France Nº1</b> : celle que tu vois couronnée.</div>
+      <div class="counter" id="recrues-c"><div class="chip" id="recrues-chip"><div class="k">MON ESCOUADE</div><div class="v"><span id="recrues-cnt">0</span> / 15</div></div><div class="chip goldc" id="recrues-essai"><div class="k">♛ ESSAI Nº1</div><div class="v">POSÉ</div></div></div>
+    </div>
+  </div>
+  <script>
+
+const tl = gsap.timeline({ paused: true });
+const ft = (t, a, b, at) => tl.fromTo(t, a, Object.assign({ immediateRender: false }, b), at);
+
+
+tl.fromTo("#recrues-p", {opacity:0, x:60}, {opacity:1, x:0, duration:.7, ease:"power3.out"}, 0);
+tl.fromTo("#recrues-p > *", {opacity:0, y:30}, {opacity:1, y:0, duration:.6, stagger:.12, ease:"power3.out"}, .1);
+
+const cnt = { v: 0 }, el = document.getElementById("recrues-cnt");
+ft(cnt, { v: 0 }, { v: 15, duration: 3.2, ease: "power1.in", onUpdate: () => { el.textContent = Math.round(cnt.v); } }, 1.7);
+ft("#recrues-chip", { boxShadow: "0 0 0px rgba(240,207,125,0)" }, { boxShadow: "0 0 40px rgba(240,207,125,.6)", duration: .3, yoyo: true, repeat: 1 }, 4.9);
+ft("#recrues-essai", { opacity: 0, scale: 1.6, rotation: 8 }, { opacity: 1, scale: 1, rotation: 0, duration: .5, ease: "back.out(2)" }, 6.4);
+
+ft("#recrues-p", {opacity:1, x:0}, {opacity:0, x:-40, duration:.4, ease:"power2.in"}, 9.20);
+
+    window.__timelines["recrues"] = tl;
+  </script>
+</template>

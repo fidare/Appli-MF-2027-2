@@ -1,0 +1,80 @@
+<template>
+  <style>
+
+@font-face { font-family:'Bebas Neue'; font-weight:400; src:url('assets/fonts/bebas-neue.woff2') format('woff2'); }
+@font-face { font-family:'Barlow'; font-weight:400; src:url('assets/fonts/barlow-400.woff2') format('woff2'); }
+@font-face { font-family:'Barlow'; font-weight:600; src:url('assets/fonts/barlow-600.woff2') format('woff2'); }
+@font-face { font-family:'Barlow'; font-weight:700; src:url('assets/fonts/barlow-700.woff2') format('woff2'); }
+
+
+#root { position:absolute; inset:0; font-family:'Barlow',sans-serif; color:#f4f6fb; --ink:#f4f6fb; --text:#cdd4e2; --muted:#8592ab; --red:#e62429; --red2:#ff6d61;
+  --gold:#f0cf7d; --gold2:#d3a43a; --hud:#78dcff; --card:#0f1420; }
+.bebas { font-family:'Bebas Neue',sans-serif; font-weight:400; letter-spacing:.02em; }
+.kicker { font-weight:600; letter-spacing:.42em; color:#f0cf7d; font-size:30px; text-transform:uppercase; }
+.red { background:linear-gradient(90deg,#f28a72,#e62429 45%,#ff6d61); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.shield { filter:drop-shadow(0 0 30px rgba(230,36,41,.6)); }
+
+
+.full { position:absolute; inset:0; padding:0 140px; display:flex; flex-direction:column; justify-content:center; }
+.full .head { font-size:118px; line-height:.95; margin-bottom:56px; }
+.cards { display:flex; gap:50px; }
+.card { flex:1; padding:44px 48px 50px; background:rgba(15,20,32,.9); border:2px solid #2c3854;
+  clip-path:polygon(0 0,calc(100% - 34px) 0,100% 34px,100% 100%,34px 100%,0 calc(100% - 34px)); }
+.card .ph { font-weight:700; letter-spacing:.3em; color:#ff6d61; font-size:30px; }
+.card .ct { font-family:'Bebas Neue'; font-size:92px; line-height:1; margin:12px 0 18px; }
+.card .cx { font-size:36px; line-height:1.35; color:#cdd4e2; }
+.card .cx b { color:#f0cf7d; }
+.row { display:flex; gap:16px; margin-top:30px; }
+.badge { width:84px; height:84px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue'; font-size:50px;
+  background:#1a2236; border:2px solid #2c3854; color:#c9d2e6; }
+.badge.pick { border:3px solid #e62429; background:rgba(230,36,41,.15); font-family:'Barlow'; font-size:40px; color:#f4f6fb; }
+.badge.first { background:linear-gradient(160deg,#f6dc93,#d3a43a); color:#1b1408; border-color:#f6dc93; box-shadow:0 0 30px rgba(240,207,125,.6); }
+
+.lock { width:110px; height:120px; }
+.countdown { display:flex; gap:22px; margin-top:30px; }
+.cd { position:relative; width:96px; height:110px; display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue'; font-size:76px;
+  background:#141b2b; border:2px solid #2c3854; color:#5d6a86; }
+.cd span { position:relative; z-index:1; }
+.cd .lit { position:absolute; inset:-2px; border:2px solid #e62429; box-shadow:0 0 26px rgba(230,36,41,.5); background:#1a2236; opacity:0; }
+.cd .lit.win { background:linear-gradient(160deg,#f6dc93,#d3a43a); border-color:#f6dc93; box-shadow:0 0 40px rgba(240,207,125,.7); }
+
+  </style>
+  <div id="root" data-composition-id="endgame" data-width="1920" data-height="1080">
+    <div class="full" id="end-box">
+      <div class="kicker" id="end-k" style="margin-bottom:18px">Phase 4 · Le sacre</div>
+      <div class="bebas head" id="end-h">ENDGAME <span class="red">EN DIRECT</span></div>
+      <div class="cards">
+        <div class="card" id="end-c4">
+          <svg class="lock" id="end-lock" viewBox="0 0 44 48"><path d="M12 22v-8a10 10 0 0 1 20 0v8" fill="none" stroke="#f0cf7d" stroke-width="5"/><rect x="4" y="21" width="36" height="25" rx="4" fill="#d3a43a"/><circle cx="22" cy="31" r="4" fill="#1b1408"/><rect x="20.5" y="32" width="3" height="8" fill="#1b1408"/></svg>
+          <div class="ct">POINTS SOUS SCELLÉS</div>
+          <div class="cx">Pendant l'élection, <b>personne ne voit son score</b>.</div>
+        </div>
+        <div class="card" id="end-c5">
+          <div class="ct">RÉSULTATS PLACE PAR PLACE</div>
+          <div class="cx">De la <b>dernière</b> à la <b>première</b> place.</div>
+          <div class="countdown"><div class="cd" id="end-cd0"><span>5</span><i class="lit"></i></div><div class="cd" id="end-cd1"><span>4</span><i class="lit"></i></div><div class="cd" id="end-cd2"><span>3</span><i class="lit"></i></div><div class="cd" id="end-cd3"><span>2</span><i class="lit"></i></div><div class="cd" id="end-cd4"><span>1</span><i class="lit win"></i></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+
+const tl = gsap.timeline({ paused: true });
+const ft = (t, a, b, at) => tl.fromTo(t, a, Object.assign({ immediateRender: false }, b), at);
+
+
+tl.fromTo("#end-k, #end-h", {opacity:0, y:30}, {opacity:1, y:0, duration:.6, stagger:.12}, 0);
+tl.fromTo("#end-c4", {opacity:0, y:80}, {opacity:1, y:0, duration:.7, ease:"power3.out"}, .6);
+tl.fromTo("#end-lock", {opacity:0, scale:2, rotation:-20}, {opacity:1, scale:1, rotation:0, duration:.5, ease:"back.out(2)"}, 1.4);
+tl.fromTo("#end-c5", {opacity:0, y:80}, {opacity:1, y:0, duration:.7, ease:"power3.out"}, 4.0);
+[0,1,2,3,4].forEach(i => {
+  const t = 5.2 + i * .6;
+  ft("#end-cd" + i + " .lit", {opacity:0}, {opacity:1, duration:.1}, t);
+  ft("#end-cd" + i, {scale:1.3}, {scale:1, duration:.3, ease:"back.out(2)"}, t);
+  ft("#end-cd" + i, {color:"#5d6a86"}, {color: i === 4 ? "#1b1408" : "#f4f6fb", duration:.1}, t);
+});
+ft("#end-box", {opacity:1}, {opacity:0, duration:.4}, 8.8);
+
+    window.__timelines["endgame"] = tl;
+  </script>
+</template>

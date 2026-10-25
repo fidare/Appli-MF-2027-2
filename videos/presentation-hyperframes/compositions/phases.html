@@ -1,0 +1,58 @@
+<template>
+  <style>
+
+@font-face { font-family:'Bebas Neue'; font-weight:400; src:url('assets/fonts/bebas-neue.woff2') format('woff2'); }
+@font-face { font-family:'Barlow'; font-weight:400; src:url('assets/fonts/barlow-400.woff2') format('woff2'); }
+@font-face { font-family:'Barlow'; font-weight:600; src:url('assets/fonts/barlow-600.woff2') format('woff2'); }
+@font-face { font-family:'Barlow'; font-weight:700; src:url('assets/fonts/barlow-700.woff2') format('woff2'); }
+
+
+#root { position:absolute; inset:0; font-family:'Barlow',sans-serif; color:#f4f6fb; --ink:#f4f6fb; --text:#cdd4e2; --muted:#8592ab; --red:#e62429; --red2:#ff6d61;
+  --gold:#f0cf7d; --gold2:#d3a43a; --hud:#78dcff; --card:#0f1420; }
+.bebas { font-family:'Bebas Neue',sans-serif; font-weight:400; letter-spacing:.02em; }
+.kicker { font-weight:600; letter-spacing:.42em; color:#f0cf7d; font-size:30px; text-transform:uppercase; }
+.red { background:linear-gradient(90deg,#f28a72,#e62429 45%,#ff6d61); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.shield { filter:drop-shadow(0 0 30px rgba(230,36,41,.6)); }
+
+
+#phases-p { position:absolute; left:900px; top:0; width:900px; height:1080px; display:flex; flex-direction:column; justify-content:center; }
+#phases-p .kicker { margin-bottom:22px; }
+#phases-p .title { font-size:132px; line-height:.9; margin-bottom:34px; }
+#phases-p .text { font-size:40px; line-height:1.35; color:#cdd4e2; max-width:840px; }
+#phases-p .text b { color:#f0cf7d; font-weight:700; }
+
+.steps { display:flex; gap:40px; margin-top:50px; }
+.step { text-align:center; width:170px; }
+.step .c { position:relative; width:96px; height:96px; margin:0 auto 16px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-family:'Bebas Neue'; font-size:58px; color:#8ea0c4; background:#1a2236; border:2px solid #2c3854; }
+.step .on { position:absolute; inset:-2px; border-radius:50%; opacity:0; background:linear-gradient(160deg,#f6dc93,#d3a43a);
+  box-shadow:0 0 34px rgba(240,207,125,.65); mix-blend-mode:normal; }
+.step .l { font-weight:700; letter-spacing:.12em; font-size:28px; color:#8592ab; }
+.step .num { position:relative; z-index:1; }
+
+  </style>
+  <div id="root" data-composition-id="phases" data-width="1920" data-height="1080">
+    <div id="phases-p">
+      <div class="kicker" id="phases-k">Ta mission</div>
+      <div class="bebas title" id="phases-t">4 PHASES,<br><span class="red">1 COURONNE</span></div>
+      
+      <div class="steps" id="phases-steps"><div class="step" id="ph3-st1"><div class="c"><span class="num">1</span><i class="on"></i></div><div class="l">LES 15</div></div><div class="step" id="ph3-st2"><div class="c"><span class="num">2</span><i class="on"></i></div><div class="l">LES 5</div></div><div class="step" id="ph3-st3"><div class="c"><span class="num">3</span><i class="on"></i></div><div class="l">L'ORDRE</div></div><div class="step" id="ph3-st4"><div class="c"><span class="num">4</span><i class="on"></i></div><div class="l">LE SACRE</div></div></div>
+    </div>
+  </div>
+  <script>
+
+const tl = gsap.timeline({ paused: true });
+const ft = (t, a, b, at) => tl.fromTo(t, a, Object.assign({ immediateRender: false }, b), at);
+
+
+tl.fromTo("#phases-p", {opacity:0, x:60}, {opacity:1, x:0, duration:.7, ease:"power3.out"}, 0);
+tl.fromTo("#phases-p > *", {opacity:0, y:30}, {opacity:1, y:0, duration:.6, stagger:.12, ease:"power3.out"}, .1);
+ft("#ph3-st1 .on", {opacity:0, scale:1.35}, {opacity:1, scale:1, duration:.4, ease:"back.out(2)"}, 1.80);ft("#ph3-st1 .c", {color:"#8ea0c4"}, {color:"#1b1408", duration:.2}, 1.80);ft("#ph3-st1 .l", {color:"#8592ab"}, {color:"#f0cf7d", duration:.2}, 1.80);
+ft("#ph3-st2 .on", {opacity:0, scale:1.35}, {opacity:1, scale:1, duration:.4, ease:"back.out(2)"}, 2.80);ft("#ph3-st2 .c", {color:"#8ea0c4"}, {color:"#1b1408", duration:.2}, 2.80);ft("#ph3-st2 .l", {color:"#8592ab"}, {color:"#f0cf7d", duration:.2}, 2.80);
+ft("#ph3-st3 .on", {opacity:0, scale:1.35}, {opacity:1, scale:1, duration:.4, ease:"back.out(2)"}, 3.80);ft("#ph3-st3 .c", {color:"#8ea0c4"}, {color:"#1b1408", duration:.2}, 3.80);ft("#ph3-st3 .l", {color:"#8592ab"}, {color:"#f0cf7d", duration:.2}, 3.80);
+ft("#ph3-st4 .on", {opacity:0, scale:1.35}, {opacity:1, scale:1, duration:.4, ease:"back.out(2)"}, 5.20);ft("#ph3-st4 .c", {color:"#8ea0c4"}, {color:"#1b1408", duration:.2}, 5.20);ft("#ph3-st4 .l", {color:"#8592ab"}, {color:"#f0cf7d", duration:.2}, 5.20);
+ft("#phases-p", {opacity:1, x:0}, {opacity:0, x:-40, duration:.4, ease:"power2.in"}, 6.90);
+
+    window.__timelines["phases"] = tl;
+  </script>
+</template>

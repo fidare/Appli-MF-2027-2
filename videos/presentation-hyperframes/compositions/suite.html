@@ -1,0 +1,69 @@
+<template>
+  <style>
+
+@font-face { font-family:'Bebas Neue'; font-weight:400; src:url('assets/fonts/bebas-neue.woff2') format('woff2'); }
+@font-face { font-family:'Barlow'; font-weight:400; src:url('assets/fonts/barlow-400.woff2') format('woff2'); }
+@font-face { font-family:'Barlow'; font-weight:600; src:url('assets/fonts/barlow-600.woff2') format('woff2'); }
+@font-face { font-family:'Barlow'; font-weight:700; src:url('assets/fonts/barlow-700.woff2') format('woff2'); }
+
+
+#root { position:absolute; inset:0; font-family:'Barlow',sans-serif; color:#f4f6fb; --ink:#f4f6fb; --text:#cdd4e2; --muted:#8592ab; --red:#e62429; --red2:#ff6d61;
+  --gold:#f0cf7d; --gold2:#d3a43a; --hud:#78dcff; --card:#0f1420; }
+.bebas { font-family:'Bebas Neue',sans-serif; font-weight:400; letter-spacing:.02em; }
+.kicker { font-weight:600; letter-spacing:.42em; color:#f0cf7d; font-size:30px; text-transform:uppercase; }
+.red { background:linear-gradient(90deg,#f28a72,#e62429 45%,#ff6d61); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.shield { filter:drop-shadow(0 0 30px rgba(230,36,41,.6)); }
+
+
+.full { position:absolute; inset:0; padding:0 140px; display:flex; flex-direction:column; justify-content:center; }
+.full .head { font-size:118px; line-height:.95; margin-bottom:56px; }
+.cards { display:flex; gap:50px; }
+.card { flex:1; padding:44px 48px 50px; background:rgba(15,20,32,.9); border:2px solid #2c3854;
+  clip-path:polygon(0 0,calc(100% - 34px) 0,100% 34px,100% 100%,34px 100%,0 calc(100% - 34px)); }
+.card .ph { font-weight:700; letter-spacing:.3em; color:#ff6d61; font-size:30px; }
+.card .ct { font-family:'Bebas Neue'; font-size:92px; line-height:1; margin:12px 0 18px; }
+.card .cx { font-size:36px; line-height:1.35; color:#cdd4e2; }
+.card .cx b { color:#f0cf7d; }
+.row { display:flex; gap:16px; margin-top:30px; }
+.badge { width:84px; height:84px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue'; font-size:50px;
+  background:#1a2236; border:2px solid #2c3854; color:#c9d2e6; }
+.badge.pick { border:3px solid #e62429; background:rgba(230,36,41,.15); font-family:'Barlow'; font-size:40px; color:#f4f6fb; }
+.badge.first { background:linear-gradient(160deg,#f6dc93,#d3a43a); color:#1b1408; border-color:#f6dc93; box-shadow:0 0 30px rgba(240,207,125,.6); }
+
+  </style>
+  <div id="root" data-composition-id="suite" data-width="1920" data-height="1080">
+    <div class="full" id="suite-box">
+      <div class="kicker" id="suite-k" style="margin-bottom:18px">La suite de la mission</div>
+      <div class="bebas head" id="suite-h">ET ENSUITE ?</div>
+      <div class="cards">
+        <div class="card" id="suite-c2">
+          <div class="ph">PHASE 2</div>
+          <div class="ct">TES 5 + ESSAI Nº2</div>
+          <div class="cx">Il reste <b>15 Miss en lice</b> : choisis tes <b>5</b> et pose ton essai Nº2.</div>
+          <div class="row" id="suite-picks"><div class="badge pick">★</div><div class="badge pick">★</div><div class="badge pick">★</div><div class="badge pick">★</div><div class="badge pick">★</div></div>
+        </div>
+        <div class="card" id="suite-c3">
+          <div class="ph">PHASE 3</div>
+          <div class="ct">L'ORDRE FINAL</div>
+          <div class="cx">Classe les <b>5 finalistes officielles</b>, de la 1<sup>re</sup> à la 5<sup>e</sup>.</div>
+          <div class="row" id="suite-ranks"><div class="badge first">1</div><div class="badge">2</div><div class="badge">3</div><div class="badge">4</div><div class="badge">5</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+
+const tl = gsap.timeline({ paused: true });
+const ft = (t, a, b, at) => tl.fromTo(t, a, Object.assign({ immediateRender: false }, b), at);
+
+
+tl.fromTo("#suite-k, #suite-h", {opacity:0, y:30}, {opacity:1, y:0, duration:.6, stagger:.12}, 0);
+tl.fromTo("#suite-c2", {opacity:0, y:80}, {opacity:1, y:0, duration:.7, ease:"power3.out"}, .6);
+tl.fromTo("#suite-picks .badge", {scale:0}, {scale:1, duration:.35, stagger:.3, ease:"back.out(2.5)"}, 2.2);
+tl.fromTo("#suite-c3", {opacity:0, y:80}, {opacity:1, y:0, duration:.7, ease:"power3.out"}, 5.0);
+tl.fromTo("#suite-ranks .badge", {scale:0}, {scale:1, duration:.35, stagger:.3, ease:"back.out(2.5)"}, 6.6);
+ft("#suite-box", {opacity:1}, {opacity:0, duration:.4}, 9.75);
+
+    window.__timelines["suite"] = tl;
+  </script>
+</template>

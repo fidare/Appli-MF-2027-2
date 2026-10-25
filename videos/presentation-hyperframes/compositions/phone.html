@@ -1,0 +1,101 @@
+<template>
+  <style>
+
+@font-face { font-family:'Bebas Neue'; font-weight:400; src:url('assets/fonts/bebas-neue.woff2') format('woff2'); }
+@font-face { font-family:'Barlow'; font-weight:400; src:url('assets/fonts/barlow-400.woff2') format('woff2'); }
+@font-face { font-family:'Barlow'; font-weight:600; src:url('assets/fonts/barlow-600.woff2') format('woff2'); }
+@font-face { font-family:'Barlow'; font-weight:700; src:url('assets/fonts/barlow-700.woff2') format('woff2'); }
+
+
+#root { position:absolute; inset:0; font-family:'Barlow',sans-serif; color:#f4f6fb; --ink:#f4f6fb; --text:#cdd4e2; --muted:#8592ab; --red:#e62429; --red2:#ff6d61;
+  --gold:#f0cf7d; --gold2:#d3a43a; --hud:#78dcff; --card:#0f1420; }
+.bebas { font-family:'Bebas Neue',sans-serif; font-weight:400; letter-spacing:.02em; }
+.kicker { font-weight:600; letter-spacing:.42em; color:#f0cf7d; font-size:30px; text-transform:uppercase; }
+.red { background:linear-gradient(90deg,#f28a72,#e62429 45%,#ff6d61); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.shield { filter:drop-shadow(0 0 30px rgba(230,36,41,.6)); }
+
+
+#ph-body { position:absolute; left:250px; top:80px; width:510px; height:920px; border-radius:62px; padding:16px;
+  background:linear-gradient(145deg,#2a2f3d,#0c0f17 40%,#1b2030);
+  box-shadow:0 0 0 2px rgba(240,207,125,.35), 0 40px 120px rgba(0,0,0,.7), 0 0 90px rgba(230,36,41,.18); }
+#ph-screen { position:relative; width:478px; height:888px; border-radius:48px; overflow:hidden; background:#0b0f1a; }
+#ph-notch { position:absolute; top:12px; left:174px; width:130px; height:34px; border-radius:20px; background:#000; z-index:5; }
+#ph-wrap { position:absolute; inset:0; }
+.shot { position:absolute; left:0; top:0; width:478px; opacity:0; }
+.tap { position:absolute; width:0; height:0; z-index:6; }
+.tap i { position:absolute; left:-35px; top:-35px; width:70px; height:70px; border-radius:50%; opacity:0; }
+.tap .dot { background:rgba(255,255,255,.35); border:3px solid #fff; box-shadow:0 0 30px rgba(255,255,255,.7); }
+.tap .ring { border:3px solid #f0cf7d; }
+#ph-dots { position:absolute; left:133px; top:578px; width:204px; height:68px; display:flex; align-items:center; justify-content:center; gap:22px; z-index:4; opacity:0; }
+#ph-dots i { width:18px; height:18px; border-radius:50%; background:#f0cf7d; opacity:0; box-shadow:0 0 12px #f0cf7d; }
+#ph-scan { position:absolute; left:0; top:0; width:478px; height:4px; background:#78dcff; box-shadow:0 0 24px 6px rgba(120,220,255,.6); opacity:0; z-index:5; }
+
+  </style>
+  <div id="root" data-composition-id="phone" data-width="1920" data-height="1080">
+    <div id="ph-body">
+      <div id="ph-screen" data-layout-allow-overflow>
+        <div id="ph-notch"></div>
+        <div id="ph-wrap">
+          <img class="shot" id="ph-i1" src="assets/shots/1.jpg">
+          <img class="shot" id="ph-i2" src="assets/shots/2.jpg">
+          <img class="shot" id="ph-i6" src="assets/shots/6.jpg">
+          <img class="shot" id="ph-i3" src="assets/shots/3.jpg">
+          <img class="shot" id="ph-i4" src="assets/shots/4.jpg">
+          <img class="shot" id="ph-i5" src="assets/shots/5.jpg">
+          <div id="ph-dots"><i></i><i></i><i></i><i></i></div>
+          <div class="tap" id="ph-tap1" style="left:125px;top:808px"><i class="dot"></i><i class="ring"></i></div><div class="tap" id="ph-tap2" style="left:238px;top:700px"><i class="dot"></i><i class="ring"></i></div><div class="tap" id="ph-tap3" style="left:124px;top:721px"><i class="dot"></i><i class="ring"></i></div><div class="tap" id="ph-tap4" style="left:124px;top:763px"><i class="dot"></i><i class="ring"></i></div><div class="tap" id="ph-tap5" style="left:153px;top:773px"><i class="dot"></i><i class="ring"></i></div><div class="tap" id="ph-tap6" style="left:237px;top:633px"><i class="dot"></i><i class="ring"></i></div>
+        </div>
+        <div id="ph-scan"></div>
+      </div>
+    </div>
+  </div>
+  <script>
+
+const tl = gsap.timeline({ paused: true });
+const ft = (t, a, b, at) => tl.fromTo(t, a, Object.assign({ immediateRender: false }, b), at);
+
+
+const show = (id, at, d) => ft(id, {opacity:0}, {opacity:1, duration:d || .4}, at);
+const hide = (id, at) => ft(id, {opacity:1}, {opacity:0, duration:.01}, at);
+tl.fromTo("#ph-body", {x:-900, opacity:0}, {x:0, opacity:1, duration:.9, ease:"power3.out"}, .1);
+show("#ph-i1", 0, .01);
+// Connexion
+ft("#ph-i2", {opacity:0, scale:1.04}, {opacity:1, scale:1, duration:.35}, 3.25);
+hide("#ph-i1", 3.6);
+show("#ph-dots", 3.8, .01);
+[5.8, 6.15, 6.5, 6.85].forEach((t, i) =>
+  ft("#ph-dots i:nth-child(" + (i + 1) + ")", {opacity:0, scale:0}, {opacity:1, scale:1, duration:.15, ease:"back.out(3)"}, t));
+// Les 4 phases
+hide("#ph-dots", 9.3);
+show("#ph-i6", 9.3);
+hide("#ph-i2", 9.7);
+ft("#ph-wrap", {scale:1, transformOrigin:"50% 40%"}, {scale:1.3, duration:1.6, ease:"power2.inOut"}, 9.8);
+ft("#ph-wrap", {scale:1.3}, {scale:1, duration:.6, ease:"power2.inOut"}, 16.4);
+// Recrues
+show("#ph-i3", 16.9);
+hide("#ph-i6", 17.3);
+// Fiche candidate
+show("#ph-i4", 26.8);
+hide("#ph-i3", 27.2);
+ft("#ph-scan", {y:40, opacity:0}, {y:560, opacity:1, duration:1.1, ease:"sine.inOut"}, 27.8);
+ft("#ph-scan", {opacity:1}, {opacity:0, duration:.3}, 28.9);
+ft("#ph-i4", {y:0}, {y:-300, duration:1.4, ease:"power2.inOut"}, 31.0);
+ft("#ph-i5", {opacity:0, y:40}, {opacity:1, y:0, duration:.5}, 32.2);
+hide("#ph-i4", 32.8);
+// Classer au S.H.I.E.L.D.
+show("#ph-i6", 36.4);
+hide("#ph-i5", 36.8);
+ft("#ph-wrap", {scale:1, transformOrigin:"50% 80%"}, {scale:1.35, duration:1.4, ease:"power2.inOut"}, 37.0);
+ft("#ph-wrap", {scale:1.35}, {scale:1, duration:.6}, 45.1);
+ft("#ph-body", {x:0, opacity:1}, {x:-900, opacity:0, duration:.7, ease:"power3.in"}, 45.8);
+// Doigt
+ft("#ph-tap1 .dot", {opacity:0, scale:1.4}, {opacity:1, scale:.8, duration:.18, ease:"power2.out"}, 2.80);ft("#ph-tap1 .dot", {opacity:1, scale:.8}, {opacity:0, scale:.6, duration:.25}, 3.10);ft("#ph-tap1 .ring", {opacity:.9, scale:.6}, {opacity:0, scale:2.4, duration:.6, ease:"power2.out"}, 2.92);
+ft("#ph-tap2 .dot", {opacity:0, scale:1.4}, {opacity:1, scale:.8, duration:.18, ease:"power2.out"}, 7.80);ft("#ph-tap2 .dot", {opacity:1, scale:.8}, {opacity:0, scale:.6, duration:.25}, 8.10);ft("#ph-tap2 .ring", {opacity:.9, scale:.6}, {opacity:0, scale:2.4, duration:.6, ease:"power2.out"}, 7.92);
+ft("#ph-tap3 .dot", {opacity:0, scale:1.4}, {opacity:1, scale:.8, duration:.18, ease:"power2.out"}, 18.40);ft("#ph-tap3 .dot", {opacity:1, scale:.8}, {opacity:0, scale:.6, duration:.25}, 18.70);ft("#ph-tap3 .ring", {opacity:.9, scale:.6}, {opacity:0, scale:2.4, duration:.6, ease:"power2.out"}, 18.52);
+ft("#ph-tap4 .dot", {opacity:0, scale:1.4}, {opacity:1, scale:.8, duration:.18, ease:"power2.out"}, 23.20);ft("#ph-tap4 .dot", {opacity:1, scale:.8}, {opacity:0, scale:.6, duration:.25}, 23.50);ft("#ph-tap4 .ring", {opacity:.9, scale:.6}, {opacity:0, scale:2.4, duration:.6, ease:"power2.out"}, 23.32);
+ft("#ph-tap5 .dot", {opacity:0, scale:1.4}, {opacity:1, scale:.8, duration:.18, ease:"power2.out"}, 34.40);ft("#ph-tap5 .dot", {opacity:1, scale:.8}, {opacity:0, scale:.6, duration:.25}, 34.70);ft("#ph-tap5 .ring", {opacity:.9, scale:.6}, {opacity:0, scale:2.4, duration:.6, ease:"power2.out"}, 34.52);
+ft("#ph-tap6 .dot", {opacity:0, scale:1.4}, {opacity:1, scale:.8, duration:.18, ease:"power2.out"}, 39.80);ft("#ph-tap6 .dot", {opacity:1, scale:.8}, {opacity:0, scale:.6, duration:.25}, 40.10);ft("#ph-tap6 .ring", {opacity:.9, scale:.6}, {opacity:0, scale:2.4, duration:.6, ease:"power2.out"}, 39.92);
+
+    window.__timelines["phone"] = tl;
+  </script>
+</template>
