@@ -670,20 +670,20 @@ $fn$;
 
 -- ------------------------------------------------------------
 -- 5. Les 10 joueurs (PIN par défaut, modifiables dans Table Editor)
---    Mister Gamboy color = organisateur (est_admin).
+--    Drax (gamboy-color) = organisateur (est_admin).
 -- ------------------------------------------------------------
 
 insert into public.mf_joueurs (pseudo, nom_affiche, pin, est_admin) values
-  ('gamboy-color',     'Mister Gamboy color',       '4821', true),
-  ('adibou',           'Mister Adibou',             '7365', false),
-  ('britney-spears',   'Miss Britney spears',       '1594', false),
-  ('kmaro',            'Mister Kmaro',              '6072', false),
-  ('loana-petrucciani','Mister Loana Petrucciani',  '2918', false),
-  ('mel-b',            'Miss Mel B',                '8437', false),
-  ('minikeums',        'Mister Minikeums',          '5140', false),
-  ('nokia-3310',       'Mister Nokia 3310',         '3706', false),
-  ('pussycat-dolls',   'Miss Pussycat dolls',       '6589', false),
-  ('tokio-hotel',      'Tokio Hotel',               '1428', false)
+  ('gamboy-color',      'Drax',              '4821', true),
+  ('adibou',            'Thor',              '7365', false),
+  ('britney-spears',    'Iron Woman',        '1594', false),
+  ('kmaro',             'Doctor Strange',    '6072', false),
+  ('loana-petrucciani', 'Cyclope',           '2918', false),
+  ('mel-b',             'Sylvie',            '8437', false),
+  ('minikeums',         'Spider-Man',        '5140', false),
+  ('nokia-3310',        'La Torche humaine', '3706', false),
+  ('pussycat-dolls',    'Captain America',   '6589', false),
+  ('tokio-hotel',       'Natasha Romanoff',  '1428', false)
 on conflict (pseudo) do nothing;
 
 -- ------------------------------------------------------------

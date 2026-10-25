@@ -72,8 +72,8 @@ Dernière mise à jour : 29/07/2026
    est public, les PIN d'origine du fichier `miss-france.sql` sont donc
    lisibles par tout le monde (dont les copains). Le script ne les
    écrasera pas (`on conflict do nothing`).
-2. Ajouter les photos d'enfance des joueurs (`mf_joueurs.photo_url`)
-3. Corriger le pseudo « Tokio Hotel » (titre Mister/Miss inconnu)
+2. ~~Photos des joueurs~~ : fait (miniatures dans `site/miss/joueurs/`, noms de héros via `joueurs-noms.sql`)
+3. ~~Pseudo « Tokio Hotel »~~ : renommé Natasha Romanoff
 
 ## À faire quand le casting 2027 sera connu
 
