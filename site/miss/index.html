@@ -1620,7 +1620,7 @@ function viewHeader() {
       : "")
     + '</header>';
 
-  var tabs = [["accueil", "crown", "Jeunettes"], ["selection", "list", "Sélection"], ["resultat", "trophy", "Résultat"], ["benchmark", "chart", "Benchmark"]];
+  var tabs = [["accueil", "crown", "Recrues"], ["selection", "list", "Sélection"], ["resultat", "trophy", "Résultat"], ["benchmark", "chart", "Benchmark"]];
   if (S.profil.est_admin) tabs.push(["admin", "sliders", "QG"]);
   h += '<nav class="tabs">';
   tabs.forEach(function (t) {
@@ -1708,7 +1708,7 @@ function huissierCard() {
 // ----- Accueil : galerie -----
 function viewAccueil() {
   var c = myCounts();
-  var h = '<h2>Les Jeunettes en lice :</h2>'
+  var h = '<h2>Les recrues de l\'Initiative :</h2>'
     + '<p class="small muted">Mon escouade : <span class="cnt">' + c.t15 + ' / 15</span> · Mes finalistes : <span class="cnt">' + c.t5 + ' / 5</span></p>'
     + huissierCard()
     + '<input id="search-input" class="search" placeholder="Chercher un prénom, une région…" value="' + esc(S.q) + '" oninput="App.search(this)">';
@@ -1872,7 +1872,7 @@ function viewSelection() {
     var extra = statutBadge(e[1]);
     if (!locked && S.config.phase === "selection15") extra += btn("App.statut(" + e[0].id + ",'aucun')", icon("trash"), "ghost mini");
     return ligne(e[0], e[1], extra);
-  }).join("") : '<p class="muted small">Ton escouade est vide. Fonce chez les Jeunettes recruter !</p>';
+  }).join("") : '<p class="muted small">Ton escouade est vide. Fonce dans l\'onglet Recrues !</p>';
   h += '</div>';
 
   if (S.avancement) {
