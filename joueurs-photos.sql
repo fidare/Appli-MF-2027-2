@@ -32,3 +32,7 @@ update public.mf_joueurs
 update public.mf_joueurs
   set photo_url = 'https://fidare.github.io/Appli-MF-2027-2/miss/joueurs/nokia-3310.jpg'
   where pseudo = 'nokia-3310';
+
+update public.mf_joueurs
+  set photo_url = 'https://fidare.github.io/Appli-MF-2027-2/miss/joueurs/tokio-hotel.jpg'
+  where pseudo = 'tokio-hotel';
