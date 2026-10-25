@@ -41,6 +41,18 @@ create table if not exists public.mf_candidates (
 alter table public.mf_candidates
   add column if not exists est_finaliste boolean not null default false;
 
+-- Fiche détaillée : poids, mensurations, photos supplémentaires
+-- (tableau d'URL) et réseaux sociaux (lien complet ou @pseudo).
+alter table public.mf_candidates
+  add column if not exists poids text,
+  add column if not exists mensurations text,
+  add column if not exists photos text[] not null default '{}',
+  add column if not exists instagram text,
+  add column if not exists tiktok text,
+  add column if not exists facebook text,
+  add column if not exists youtube text,
+  add column if not exists x text;
+
 create table if not exists public.mf_pronostics (
   id bigint generated always as identity primary key,
   joueur_id bigint not null references public.mf_joueurs (id) on delete cascade,

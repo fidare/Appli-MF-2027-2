@@ -500,6 +500,28 @@
     color: #4a5a7a;
     box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
   }
+  /* Fiche : vignettes de la galerie, carte d'identité et réseaux. */
+  .thumbs { display: flex; justify-content: center; gap: 0.45rem; overflow-x: auto; padding: 0.1rem 0.1rem 0.4rem; margin-bottom: 0.4rem; scrollbar-width: none; }
+  .thumbs button {
+    flex: none; width: 3.2rem; height: 4.2rem; padding: 0; cursor: pointer; overflow: hidden;
+    background: #0d1322; border: 1px solid rgba(240, 207, 125, 0.25); opacity: 0.55;
+    clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+  }
+  .thumbs button.on { opacity: 1; border-color: var(--gold); }
+  .thumbs img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.45rem; margin: 0 0 0.8rem; }
+  .stats div { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(240, 207, 125, 0.14); padding: 0.45rem 0.65rem; }
+  .stats div:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  .stats span { display: block; font-size: 0.6rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold); }
+  .stats b { font-size: 0.92rem; font-weight: 600; color: var(--ink); }
+  .socials { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; margin: 0 0 0.8rem; }
+  .socials a {
+    display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.4rem 0.8rem;
+    font-size: 0.78rem; font-weight: 600; color: var(--ink); text-decoration: none;
+    border: 1px solid rgba(120, 220, 255, 0.35); background: rgba(120, 220, 255, 0.08); border-radius: 999px;
+  }
+  .socials a:hover, .socials a:focus-visible { outline: none; border-color: #78dcff; box-shadow: 0 0 14px rgba(120, 220, 255, 0.3); }
+  .socials .ic { width: 1.05rem; height: 1.05rem; }
 
   /* Interface de visée façon casque d'Iron Man, en relief devant la
      photo. Cyan par défaut, violet pour une finaliste, or pour la
@@ -744,7 +766,12 @@ var ICONS = {
   users: '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5M16 5.6a3.2 3.2 0 0 1 0 5.8M17.5 14.8c2 .6 3.4 2.2 3.9 4.7"/>',
   trash: '<path d="M4.5 6.5h15M9.5 6V4.5h5V6M6.5 6.5l.8 13h9.4l.8-13M10 10.5v5.5M14 10.5v5.5"/>',
   spark: '<path d="M12 4l1.7 4.8L18.5 10l-4.8 1.7L12 16.5l-1.7-4.8L5.5 10l4.8-1.7z"/><path d="M18.6 15.6l.65 1.85 1.85.65-1.85.65-.65 1.85-.65-1.85-1.85-.65 1.85-.65z"/>',
-  check: '<path d="M4.5 12.5 10 18 19.5 6.5"/>'
+  check: '<path d="M4.5 12.5 10 18 19.5 6.5"/>',
+  instagram: '<rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="0.6"/>',
+  tiktok: '<path d="M14 3.5v11.2a3.8 3.8 0 1 1-3.8-3.8M14 3.5c.4 2.6 2.2 4.4 5 4.6"/>',
+  facebook: '<path d="M14.5 20.5v-7h2.6l.4-3h-3V8.6c0-.9.3-1.5 1.6-1.5h1.5V4.4a20 20 0 0 0-2.3-.1c-2.3 0-3.8 1.4-3.8 3.9v2.3H9v3h2.5v7"/>',
+  youtube: '<rect x="2.5" y="5.5" width="19" height="13" rx="4"/><path d="M10 9.2v5.6l4.8-2.8z"/>',
+  x: '<path d="M4.5 4.5l15 15M19.5 4.5l-15 15"/>'
 };
 // Emblème de l'ouverture : un « A » qui déborde de son anneau d'or.
 // Les longueurs de tracé (290 et 375) sont celles des formes, pour
@@ -791,6 +818,7 @@ var S = {
   showElim: false,   // galerie : rouvrir le rideau sur les éliminées
   fiche: null,
   ficheSurprise: false,
+  ficheIdx: 0,
   avancement: null,
   res: null,
   admJoueurs: null
@@ -1322,9 +1350,10 @@ window.App = {
   search: function (inp) { S.q = inp.value; renderKeepFocus(inp, "search-input"); },
   toggleElim: function () { S.showElim = !S.showElim; render(); },
   admSearch: function (inp) { S.admQ = inp.value; renderKeepFocus(inp, "adm-search"); },
-  fiche: function (cid) { S.fiche = cid; S.ficheSurprise = false; S.ficheAnim = true; tiltAskGyro(); render(); },
+  fiche: function (cid) { S.fiche = cid; S.ficheSurprise = false; S.ficheIdx = 0; S.ficheAnim = true; tiltAskGyro(); render(); },
   closeFiche: function () { S.fiche = null; render(); },
   surprise: function () { S.ficheSurprise = !S.ficheSurprise; render(); },
+  photo: function (i) { S.ficheIdx = i; S.ficheSurprise = false; render(); },
 
   figer: function () {
     rpc("mf_figer", { p_jeton: S.session.jeton })
@@ -2246,24 +2275,60 @@ function hudFiche(x, anim) {
   return h;
 }
 
+// Photos de la fiche : la principale puis celles de la colonne photos.
+function missPhotos(x) {
+  return [x.photo_url].concat(Array.isArray(x.photos) ? x.photos : []).filter(Boolean);
+}
+
+// Réseaux sociaux : la base accepte un lien complet ou un simple @pseudo.
+var RESEAUX = [
+  ["instagram", "Instagram", "https://www.instagram.com/"],
+  ["tiktok", "TikTok", "https://www.tiktok.com/@"],
+  ["facebook", "Facebook", "https://www.facebook.com/"],
+  ["youtube", "YouTube", "https://www.youtube.com/@"],
+  ["x", "X", "https://x.com/"]
+];
+function reseauUrl(v, base) {
+  v = String(v).trim();
+  if (/^https?:\/\//i.test(v)) return v;
+  if (/^(www\.)?[a-z0-9-]+(\.[a-z0-9-]+)+\//i.test(v)) return "https://" + v;
+  if (/[:\/\s]/.test(v)) return null;
+  return base + encodeURIComponent(v.replace(/^@/, ""));
+}
+
 function viewFiche() {
   if (S.fiche == null) return "";
   var x = S.candidates.find(function (c) { return c.id === S.fiche; });
   if (!x) return "";
   var p = S.mine[x.id];
+  var photos = missPhotos(x), idx = Math.min(S.ficheIdx, Math.max(photos.length - 1, 0));
+  var ficheImg = S.ficheSurprise || !photos.length ? missPhoto(x, S.ficheSurprise)
+    : '<img src="' + esc(photos[idx]) + '" alt="' + esc(x.nom) + '">';
+  var stats = [["Âge", x.age ? x.age + " ans" : ""], ["Taille", x.taille], ["Poids", x.poids], ["Mensurations", x.mensurations], ["Métier", x.profession]]
+    .filter(function (s) { return s[1]; });
+  var liens = RESEAUX.map(function (r) {
+    var u = x[r[0]] ? reseauUrl(x[r[0]], r[2]) : null;
+    return u ? '<a href="' + esc(u) + '" target="_blank" rel="noopener noreferrer">' + icon(r[0]) + r[1] + '</a>' : "";
+  }).join("");
   var h = '<div class="modal-bg" onclick="if(event.target===this)App.closeFiche()"><div class="modal">'
     + '<button class="close" onclick="App.closeFiche()" aria-label="Fermer">✕</button>'
-    + '<div class="tiltwrap"><div class="tiltcard" id="tilt-card"><div class="bigph">' + missPhoto(x, S.ficheSurprise) + '</div>'
+    + '<div class="tiltwrap"><div class="tiltcard" id="tilt-card"><div class="bigph">' + ficheImg + '</div>'
     + hudFiche(x, S.ficheAnim) + '</div></div>';
   S.ficheAnim = false;
+  if (photos.length > 1) {
+    h += '<div class="thumbs">';
+    photos.forEach(function (u, i) {
+      h += '<button class="' + (i === idx && !S.ficheSurprise ? "on" : "") + '" onclick="App.photo(' + i + ')" aria-label="Photo ' + (i + 1) + '">'
+        + '<img src="' + esc(u) + '" alt="" loading="lazy"></button>';
+    });
+    h += '</div>';
+  }
   if (x.photo_surprise_url) h += '<p class="center" style="margin:0 0 0.5rem">' + btn("App.surprise()", S.ficheSurprise ? "Remettre la vraie photo" : icon("spark") + " Surprise", "mini") + '</p>';
   h += '<h2 class="center" style="margin:0.2rem 0 0">' + esc(x.nom) + '</h2>'
     + '<p class="center" style="color:var(--pink);font-weight:700;margin:0.1rem 0 0.6rem">Miss ' + esc(x.region) + '</p>'
-    + '<ul class="small" style="color:var(--text)">'
-    + (x.age ? "<li>" + esc(x.age) + " ans</li>" : "")
-    + (x.taille ? "<li>" + esc(x.taille) + "</li>" : "")
-    + (x.profession ? "<li>" + esc(x.profession) + "</li>" : "")
-    + '</ul><div class="center">' + finalisteBadge(x) + statutBadge(p) + '</div>'
+    + (stats.length ? '<div class="stats">' + stats.map(function (s) { return '<div><span>' + s[0] + '</span><b>' + esc(s[1]) + '</b></div>'; }).join("") + '</div>' : "")
+    + (liens ? '<div class="socials">' + liens + '</div>' : "")
+    + '<div class="center">' + finalisteBadge(x) + statutBadge(p) + '</div>'
     + '<div class="center" style="margin-top:0.6rem">' + missActions(x) + '</div>'
     + '</div></div>';
   return h;

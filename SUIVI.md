@@ -26,6 +26,10 @@ Dernière mise à jour : 29/07/2026
   sur les biseaux ; halos des fiches portés par l'enveloppe `.missw`)
 - Ciel animé en fond (`#sky`) : nébuleuses rouge / bleue / violette qui
   dérivent, 70 étoiles SVG dont certaines scintillent, étoile filante
+- Fiche Miss : galerie (colonne `photos`, vignettes sous la photo), carte
+  d'identité (âge, taille, poids, mensurations, métier) et boutons des
+  réseaux sociaux (instagram, tiktok, facebook, youtube, x : lien ou
+  @pseudo) ; colonnes ajoutées par `candidates-fiche.sql`
 - Inclinaison 3D de la fiche volontairement discrète (±7°, lissée)
 - Écrins des fiches Miss selon le palmarès officiel : liseré rose pour
   le top 15, vibranium tournant pour les finalistes, rouge et or Iron Man tournant + halo
