@@ -770,12 +770,12 @@ function icon(n) {
 }
 
 var PHASES = {
-  preparation: { label: "Préparation du casting", desc: "Le tapis rouge se déroule, les paillettes se comptent… Le jeu n'est pas encore ouvert." },
-  selection15: { label: "Phase 1 — Tes 15 + Essai Nº1", desc: "Compose ton équipe de <b>15 Miss</b> et pose ton <b>essai Miss France Nº1</b> (le gros lot)." },
-  top5:        { label: "Phase 2 — Tes 5 + Essai Nº2", desc: "Il reste <b>15 Miss en lice</b> : choisis les <b>5</b> que tu vois en finale et pose ton <b>essai Nº2</b> (le filet de secours)." },
-  ordre:       { label: "Phase 3 — L'ordre final", desc: "Les <b>5 finalistes officielles</b> sont connues ! Classe-les de la <b>1<sup>re</sup></b> (ta Miss France) à la <b>5<sup>e</sup></b>." },
-  cloture:     { label: "Élection en direct !", desc: "Pronostics verrouillés chez l'huissier. Les Miss sont annoncées dans l'ordre, mais <b>les points restent sous scellés</b> : personne ne voit son score." },
-  resultats:   { label: "Résultats officiels", desc: "L'organisateur dévoile le classement <b>place par place</b>, de la dernière à la première. Ton résultat s'ouvre quand ta place est annoncée." }
+  preparation: { label: "Préparation du casting", desc: "Nick Fury épluche les dossiers des recrues… L'Initiative Miss France n'est pas encore lancée." },
+  selection15: { label: "Phase 1 — Tes 15 + Essai Nº1", desc: "Recrute ton escouade de <b>15 Miss</b> et pose ton <b>essai Miss France Nº1</b> (le Tesseract du jeu)." },
+  top5:        { label: "Phase 2 — Tes 5 + Essai Nº2", desc: "Il reste <b>15 Miss en lice</b> : choisis les <b>5</b> qui formeront ta team de choc et pose ton <b>essai Nº2</b> (le plan B de Stark)." },
+  ordre:       { label: "Phase 3 — L'ordre final", desc: "Les <b>5 finalistes officielles</b> sont connues, comme 5 Pierres d'Infinité ! Classe-les de la <b>1<sup>re</sup></b> (ta Miss France) à la <b>5<sup>e</sup></b>." },
+  cloture:     { label: "Endgame en direct !", desc: "Pronostics classés secret défense au S.H.I.E.L.D. Les Miss sont annoncées dans l'ordre, mais <b>les points restent sous scellés</b> : personne ne voit son score." },
+  resultats:   { label: "Résultats officiels", desc: "Nick Fury dévoile le classement <b>place par place</b>, de la dernière à la première. Ton résultat s'ouvre quand ta place est annoncée." }
 };
 
 var S = {
@@ -869,7 +869,7 @@ function boot() {
     .then(render)
     .catch(function (e) {
       document.getElementById("app").innerHTML =
-        '<div class="card center">😢 Impossible de joindre la base du concours.<br><span class="small muted">' +
+        '<div class="card center">😢 Impossible de joindre l\'Helicarrier.<br><span class="small muted">' +
         esc(e.message) + '</span><br><br><button class="btn" onclick="location.reload()">Réessayer</button></div>';
     });
 }
@@ -1281,10 +1281,10 @@ window.App = {
     if (ev) ev.preventDefault();
     var el = document.getElementById("pin-input");
     var pin = (el && el.value || "").trim();
-    if (!/^[0-9]{4}$/.test(pin)) { toast("Le PIN, c'est 4 chiffres !", true); return false; }
+    if (!/^[0-9]{4}$/.test(pin)) { toast("Le code d'accès, c'est 4 chiffres !", true); return false; }
     rpc("mf_connexion", { p_pseudo: S.loginSel.pseudo, p_pin: pin })
       .then(function (rows) {
-        if (!rows || !rows.length) { toast("PIN incorrect… L'huissier te surveille. 👀", true); return; }
+        if (!rows || !rows.length) { toast("Accès refusé… J.A.R.V.I.S. te surveille. 👀", true); return; }
         S.session = { jeton: rows[0].jeton, pseudo: S.loginSel.pseudo };
         localStorage.setItem(STORE_KEY, JSON.stringify(S.session));
         S.loginSel = null;
@@ -1329,7 +1329,7 @@ window.App = {
   figer: function () {
     rpc("mf_figer", { p_jeton: S.session.jeton })
       .then(function () {
-        toast("Dossier scellé chez l'huissier de justice !");
+        toast("Dossier classé secret défense au S.H.I.E.L.D. !");
         fxImpact(window.innerWidth / 2, window.innerHeight / 2.6);
         fxOrage(1400);
         return Promise.all([loadProfil(), loadMine()]).then(render);
@@ -1339,7 +1339,7 @@ window.App = {
   defiger: function () {
     rpc("mf_defiger", { p_jeton: S.session.jeton })
       .then(function () {
-        toast("Dossier récupéré — tu peux modifier à nouveau.");
+        toast("Dossier déclassifié : tu peux modifier à nouveau.");
         return Promise.all([loadProfil(), loadMine()]).then(render);
       })
       .catch(function (e) { toast(e.message, true); });
@@ -1398,7 +1398,7 @@ window.App = {
     rpc("mf_admin_reset", { p_jeton: S.session.jeton })
       .then(function () {
         S.admEdits = {};
-        toast("Le jeu est réinitialisé — nouvelle partie !");
+        toast("Snap ! Le jeu est réinitialisé, nouvelle partie.");
         return refresh(true).then(loadAdmin);
       })
       .catch(function (e) { toast(e.message, true); });
@@ -1456,7 +1456,7 @@ function missPhoto(c, surprise) {
 function statutBadge(p) {
   if (!p) return "";
   var h = "";
-  if (p.statut === "top15") h += '<span class="badge pink">' + icon("check") + ' Dans mon équipe</span>';
+  if (p.statut === "top15") h += '<span class="badge pink">' + icon("check") + ' Dans mon escouade</span>';
   if (p.top5) h += '<span class="badge gold">' + icon("star") + ' Dans mes 5</span>';
   if (p.rang) h += '<span class="badge gold">Mon ordre : Nº' + p.rang + '</span>';
   if (p.essai === 1) h += '<span class="badge gold">' + icon("crown") + ' Essai 1</span>';
@@ -1498,8 +1498,8 @@ function missActions(c) {
   var h = "";
   var e = p ? p.essai : null;
   if (ph === "selection15") {
-    if (st === "top15") h += btn("App.statut(" + c.id + ",'aucun')", duo("Retirer de mon équipe", "Retirer"), "ghost mini");
-    else h += btn("App.statut(" + c.id + ",'top15')", duo("Je la veux dans mon équipe !", "Je la veux !"), "mini");
+    if (st === "top15") h += btn("App.statut(" + c.id + ",'aucun')", duo("Retirer de mon escouade", "Retirer"), "ghost mini");
+    else h += btn("App.statut(" + c.id + ",'top15')", duo("Je la recrute !", "Je recrute !"), "mini");
     h += e === 1 ? btn("App.essai(1,null)", duo("Annuler l'essai Nº1", "Annuler Nº1"), "ghost mini") : btn("App.essai(1," + c.id + ")", icon("crown") + duo(" Mon essai Nº1", " Essai Nº1"), "gold mini");
   } else if (ph === "top5") {
     if (!c.dans_top15) return "";
@@ -1556,7 +1556,7 @@ function render() {
   else if (S.tab === "resultat") html += viewResultat();
   else if (S.tab === "benchmark") html += viewBenchmark();
   else if (S.tab === "admin") html += viewAdmin();
-  html += '<footer>Concours privé entre ami·e·s · Aucune Miss n\'a été blessée pendant ces pronostics 🛡️</footer>';
+  html += '<footer>Concours privé entre ami·e·s · Aucune Miss n\'a été snappée pendant ces pronostics 🛡️</footer>';
   html += viewFiche();
   app.innerHTML = html;
   if (S.fiche != null) initFicheTilt();
@@ -1568,7 +1568,7 @@ function viewLogin() {
     + '<div class="brand-crown">' + SHIELD + '</div>'
     + '<div class="masthead"><span class="eyebrow">Miss France 2027</span>'
     + '<div class="brand big">Le Grand<br><em>Pronostic</em></div></div>'
-    + '<p class="muted small" style="margin-top:0.9rem">Qui es-tu, cher membre du jury ?<br>Clique sur ta (superbe) photo d\'enfance, puis tape ton code PIN.</p></header>';
+    + '<p class="muted small" style="margin-top:0.9rem">Identifie-toi, agent du jury !<br>Touche ta photo de super-héros, puis tape ton code d\'accès.</p></header>';
 
   if (!S.loginSel) {
     h += '<div class="logingrid">';
@@ -1579,16 +1579,16 @@ function viewLogin() {
         + '<span class="nom">' + esc(m ? m[2] : j.nom_affiche) + '</span></span></button>';
     });
     h += '</div>';
-    if (!S.joueurs.length) h += '<div class="card center muted">Aucun joueur inscrit — exécute le script SQL d\'abord.</div>';
+    if (!S.joueurs.length) h += '<div class="card center muted">Aucun agent recruté : exécute le script SQL d\'abord.</div>';
   } else {
     h += '<div class="card center">' + avatarHtml(S.loginSel.nom_affiche, S.loginSel.photo_url, true)
       + '<h2 style="margin-top:0.6rem">' + esc(S.loginSel.nom_affiche) + '</h2>'
-      + '<p class="muted small">Ton code PIN à 4 chiffres :</p>'
+      + '<p class="muted small">Ton code d\'accès à 4 chiffres :</p>'
       + '<form onsubmit="return App.tryPin(event)">'
       + '<input id="pin-input" class="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off">'
       + '<div style="margin-top:0.9rem">'
-      + '<button type="submit" class="btn">Entrer dans la soirée ✨</button> '
-      + btn("App.backLogin()", "Ce n'est pas moi !", "ghost")
+      + '<button type="submit" class="btn">Rassemblement ! ⚡</button> '
+      + btn("App.backLogin()", "C'est un Skrull, pas moi !", "ghost")
       + '</div></form></div>';
   }
   return h;
@@ -1616,17 +1616,17 @@ function viewHeader() {
     + '<div class="greet">' + avatarHtml(S.profil.nom_affiche, S.profil.photo_url, false)
     + '<div class="who">' + esc(S.profil.nom_affiche) + '</div></div>'
     + (S.tab === "accueil"
-      ? '<p class="small muted center" style="max-width:620px;margin:0.6rem auto 0">Bienvenue à l\'élection de Miss France, la soirée où les sourires sont figés, les talons vertigineux et les réponses… toujours pleines de surprises ! Alors, qui réussira à marcher droit, sourire grand et parler climat sans bafouiller ? /!\\ Spoiler /!\\ : Pas nous, mais on a le droit d\'y croire !</p>'
+      ? '<p class="small muted center" style="max-width:620px;margin:0.6rem auto 0">Bienvenue dans l\'Initiative Miss France : 30 recrues, une seule couronne, et plus de suspense qu\'un générique de fin Marvel. Qui saura marcher droit en talons, sourire comme Captain America et parler climat sans bafouiller ? /!\\ Spoiler /!\\ : Pas nous, mais même Thanos y a cru jusqu\'au bout !</p>'
       : "")
     + '</header>';
 
   var tabs = [["accueil", "crown", "Jeunettes"], ["selection", "list", "Sélection"], ["resultat", "trophy", "Résultat"], ["benchmark", "chart", "Benchmark"]];
-  if (S.profil.est_admin) tabs.push(["admin", "sliders", "Régie"]);
+  if (S.profil.est_admin) tabs.push(["admin", "sliders", "QG"]);
   h += '<nav class="tabs">';
   tabs.forEach(function (t) {
     h += '<button class="' + (S.tab === t[0] ? "on" : "") + '" onclick="App.goTab(\'' + t[0] + '\')"><span class="ico">' + icon(t[1]) + '</span>' + t[2] + '</button>';
   });
-  h += '<button onclick="App.logout()" title="Déconnexion"><span class="ico">' + icon("exit") + '</span>Sortir</button></nav>';
+  h += '<button onclick="App.logout()" title="Déconnexion"><span class="ico">' + icon("exit") + '</span>Quitter</button></nav>';
 
   h += stepperHtml();
   return h;
@@ -1679,9 +1679,9 @@ function huissierCard() {
   var c = myCounts();
   if (S.profil.fige) {
     return '<div class="card center">'
-      + '<span class="badge gold">' + icon("award") + ' Dossier scellé chez l\'huissier de justice</span>'
-      + '<p class="small muted" style="margin:0.5rem 0">Ta sélection est officielle — plus aucune modification possible.</p>'
-      + btn("App.defiger()", "Récupérer mon dossier", "ghost mini") + '</div>';
+      + '<span class="badge gold">' + icon("award") + ' Dossier classé secret défense au S.H.I.E.L.D.</span>'
+      + '<p class="small muted" style="margin:0.5rem 0">Ta sélection est officielle : plus aucune modification possible.</p>'
+      + btn("App.defiger()", "Déclassifier mon dossier", "ghost mini") + '</div>';
   }
   var ready = false, manques = [];
   if (ph === "selection15") {
@@ -1696,11 +1696,11 @@ function huissierCard() {
     if (c.ranges < 5) manques.push((5 - c.ranges) + " rang(s) à attribuer");
     ready = !manques.length;
   }
-  var hint = "Avant de pouvoir sceller : " + manques.join(" et ") + ".";
+  var hint = "Avant de classer ton dossier : " + manques.join(" et ") + ".";
   return '<div class="card center">'
     + (ready
-      ? btn("App.figer()", icon("award") + " Envoyer à l'huissier de justice !", "gold")
-        + '<p class="small muted" style="margin:0.4rem 0 0">Sceller ta sélection la rend officielle (tu pourras récupérer ton dossier tant que la phase est ouverte).</p>'
+      ? btn("App.figer()", icon("award") + " Classer au S.H.I.E.L.D. !", "gold")
+        + '<p class="small muted" style="margin:0.4rem 0 0">Classer ton dossier au S.H.I.E.L.D. rend ta sélection officielle (tu pourras le déclassifier tant que la phase est ouverte).</p>'
       : '<p class="small muted" style="margin:0">' + icon("award") + ' ' + hint + '</p>')
     + '</div>';
 }
@@ -1709,7 +1709,7 @@ function huissierCard() {
 function viewAccueil() {
   var c = myCounts();
   var h = '<h2>Les Jeunettes en lice :</h2>'
-    + '<p class="small muted">Mon équipe : <span class="cnt">' + c.t15 + ' / 15</span> · Mes finalistes : <span class="cnt">' + c.t5 + ' / 5</span></p>'
+    + '<p class="small muted">Mon escouade : <span class="cnt">' + c.t15 + ' / 15</span> · Mes finalistes : <span class="cnt">' + c.t5 + ' / 5</span></p>'
     + huissierCard()
     + '<input id="search-input" class="search" placeholder="Chercher un prénom, une région…" value="' + esc(S.q) + '" oninput="App.search(this)">';
 
@@ -1725,10 +1725,10 @@ function viewAccueil() {
   var note = "";
   if (phFinale && finConnues) {
     base = base.filter(function (x) { return x.est_finaliste; });
-    note = "Les 5 finalistes officielles — les autres ont quitté la scène.";
+    note = "Les 5 finalistes officielles : les autres ont été snappées.";
   } else if ((ph === "top5" || phFinale) && top15Connu) {
     base = base.filter(function (x) { return x.dans_top15; });
-    note = "Les " + base.length + " Miss encore en course — les éliminées ont quitté la scène.";
+    note = "Les " + base.length + " Miss encore en course : les éliminées ont été snappées.";
   }
   if (note) h += '<p class="small muted center" style="margin:0 0 0.6rem">' + note + '</p>';
 
@@ -1741,10 +1741,10 @@ function viewAccueil() {
   var list = cherche(base);
 
   if (!S.candidates.length) {
-    return h + '<div class="card center muted">Le casting n\'est pas encore arrivé… L\'organisateur prépare les fiches des candidates. 💅</div>';
+    return h + '<div class="card center muted">Les recrues ne sont pas encore arrivées… Nick Fury prépare leurs dossiers. 💅</div>';
   }
   h += list.length ? grilleMiss(list, 0)
-    : '<div class="card center muted">Personne ne correspond à cette recherche.</div>';
+    : '<div class="card center muted">Aucune recrue ne correspond à cette recherche.</div>';
 
   // Une fois les résultats publiés, on peut rouvrir le rideau sur toutes
   // celles qui ont quitté la scène (elles restent affichées en dessous,
@@ -1824,7 +1824,7 @@ function viewSelection() {
   }
 
   var h = '<h2>Ma sélection</h2>'
-    + '<p class="small muted">Miss retenues : <span class="cnt">' + c.t15 + ' / 15</span> — brouillon enregistré automatiquement ; scelle-le chez l\'huissier pour le rendre officiel.</p>'
+    + '<p class="small muted">Miss retenues : <span class="cnt">' + c.t15 + ' / 15</span> — brouillon enregistré automatiquement ; classe-le au S.H.I.E.L.D. pour le rendre officiel.</p>'
     + huissierCard();
 
   h += '<div class="card"><h3>' + icon("star") + ' Mes 5 finalistes (' + c.t5 + '/5)</h3>';
@@ -1867,20 +1867,20 @@ function viewSelection() {
   });
   h += '</div>';
 
-  h += '<div class="card"><h3>' + icon("heart") + ' Mon équipe des 15 (' + c.t15 + '/15)</h3>';
+  h += '<div class="card"><h3>' + icon("heart") + ' Mon escouade des 15 (' + c.t15 + '/15)</h3>';
   h += top15.length ? top15.map(function (e) {
     var extra = statutBadge(e[1]);
     if (!locked && S.config.phase === "selection15") extra += btn("App.statut(" + e[0].id + ",'aucun')", icon("trash"), "ghost mini");
     return ligne(e[0], e[1], extra);
-  }).join("") : '<p class="muted small">Ton équipe est vide. Fonce à l\'Accueil recruter !</p>';
+  }).join("") : '<p class="muted small">Ton escouade est vide. Fonce chez les Jeunettes recruter !</p>';
   h += '</div>';
 
   if (S.avancement) {
-    h += '<div class="card"><h3>' + icon("users") + ' Où en sont les autres ?</h3><p class="small muted">Leurs choix restent secrets — seul l\'avancement est visible.</p>';
+    h += '<div class="card"><h3>' + icon("users") + ' Où en sont les autres agents ?</h3><p class="small muted">Leurs choix restent classés secret défense : seul l\'avancement est visible.</p>';
     S.avancement.forEach(function (a) {
       h += '<div class="listline">' + avatarHtml(a.nom_affiche, a.photo_url, false)
         + '<div class="grow"><b>' + esc(a.nom_affiche) + '</b>' + (a.fige ? ' <span class="badge gold">' + icon("award") + ' scellé</span>' : "")
-        + '<div class="small muted">équipe ' + a.nb_top15 + '/15 · finalistes ' + a.nb_top5 + '/5 · rangs ' + a.nb_ordre + '/5 · essais ' + a.nb_essais + '/2</div></div></div>';
+        + '<div class="small muted">escouade ' + a.nb_top15 + '/15 · finalistes ' + a.nb_top5 + '/5 · rangs ' + a.nb_ordre + '/5 · essais ' + a.nb_essais + '/2</div></div></div>';
     });
     h += '</div>';
   }
@@ -1891,7 +1891,7 @@ function viewSelection() {
 function viewResultat() {
   var ph = S.config.phase;
   if (ph !== "cloture" && ph !== "resultats") {
-    return '<h2>Résultat</h2><div class="card center muted">Patience… Cette page s\'allumera le soir de l\'élection, quand les résultats commenceront à tomber. 📺</div>';
+    return '<h2>Résultat</h2><div class="card center muted">Patience… Comme une scène post-générique, cette page ne s\'allumera qu\'à la fin : le soir de l\'élection. 📺</div>';
   }
 
   // Pendant l'élection, plus personne ne voit ses points : l'huissier
@@ -1901,8 +1901,8 @@ function viewResultat() {
     return '<h2>Mon résultat</h2>'
       + '<div class="card center"><div style="font-size:2.4rem;line-height:1">🗳️</div>'
       + '<h3 style="margin:0.4rem 0 0.2rem">Dépouillement en cours…</h3>'
-      + '<p class="small muted" style="margin:0">Les Miss sont annoncées une à une et l\'huissier compte les points à huis clos. '
-      + 'Aucun score, aucun classement ne sortira d\'ici avant le grand dévoilement — de la dernière place à la première. Croise les doigts. 🤞</p></div>';
+      + '<p class="small muted" style="margin:0">Les Miss sont annoncées une à une et J.A.R.V.I.S. compte les points à huis clos. '
+      + 'Aucun score ne sortira d\'ici avant le grand dévoilement, de la dernière place à la première. Doctor Strange a vu 14 000 605 issues : à toi de croiser les doigts. 🤞</p></div>';
   }
 
   // Phase « Résultats officiels » : mon détail s'ouvre le jour où MA
@@ -1916,9 +1916,9 @@ function viewResultat() {
     return '<h2>Mon résultat</h2>'
       + '<div class="card center"><div style="font-size:2.4rem;line-height:1">🥁</div>'
       + '<h3 style="margin:0.4rem 0 0.2rem">Ta place n\'est pas encore annoncée</h3>'
-      + '<p class="small muted" style="margin:0 0 0.4rem">L\'organisateur remonte le classement, de la dernière place à la première. '
+      + '<p class="small muted" style="margin:0 0 0.4rem">Nick Fury remonte le classement, de la dernière place à la première. '
       + 'Ton score complet s\'affichera ici dès que ton nom sera appelé.</p>'
-      + '<p class="small"><span class="cnt">' + ri.n + ' / ' + ri.nb + '</span> places déjà dévoilées — suis le dévoilement dans <b>Benchmark</b>.</p></div>';
+      + '<p class="small"><span class="cnt">' + ri.n + ' / ' + ri.nb + '</span> places déjà dévoilées : suis le dévoilement dans <b>Benchmark</b>.</p></div>';
   }
 
   var cfg = S.config;
@@ -1983,7 +1983,7 @@ function viewResultat() {
   h += '<div class="card center"><span class="eyebrow">Ma place au classement</span>'
     + '<div class="row" style="justify-content:center;gap:0.7rem;margin-top:0.4rem">'
     + '<span class="rank r' + moi.place + '">' + moi.place + '</span>'
-    + '<b style="font-size:1.15rem">' + (moi.place === 1 ? "Vainqueur du Grand Pronostic ! 👑" : moi.place + "<sup>e</sup> sur " + ri.nb) + '</b></div></div>';
+    + '<b style="font-size:1.15rem">' + (moi.place === 1 ? "Digne de Mjöllnir : vainqueur du Grand Pronostic ! 👑" : moi.place + "<sup>e</sup> sur " + ri.nb) + '</b></div></div>';
   h += '<div class="card center"><span class="eyebrow">Total général</span><h1 style="font-size:2.6rem;margin:0.1rem">' + total + ' pts</h1>'
     + '<p class="small muted">15 Miss : <b>' + pts15 + '</b> · 5 Miss : <b>' + pts5 + '</b> · Bon ordre : <b>' + ptsOrd + '</b> · Essais : <b>' + (ptsE1 + ptsE2) + '</b> · QCM : <b>' + qcm + '</b></p></div>';
 
@@ -1991,7 +1991,7 @@ function viewResultat() {
   h += '<div class="card"><h3>5 Miss sélectionnées <span class="small muted">(' + cfg.pts_top5 + ' pts par Miss trouvée)</span> — <span class="cnt">' + pts5 + ' pts</span></h3>' + (h5 || '<p class="muted small">Aucune finaliste.</p>') + '</div>';
   h += '<div class="card"><h3>Les 5 finalistes dans le bon ordre <span class="small muted">(' + cfg.pts_ordre + ' pts par bon rang)</span> — <span class="cnt">' + ptsOrd + ' pts</span></h3>' + (hOrd || '<p class="muted small">Aucun classement.</p>') + '</div>';
   h += '<div class="card"><h3>2 essais Miss France — <span class="cnt">' + (ptsE1 + ptsE2) + ' pts</span></h3>' + hE + '</div>';
-  h += '<div class="card"><h3>QCM — <span class="cnt">' + qcm + ' pts</span></h3><p class="small muted">Notés à la main par le président du jury, décimales vexantes incluses.</p></div>';
+  h += '<div class="card"><h3>QCM — <span class="cnt">' + qcm + ' pts</span></h3><p class="small muted">Notés à la main par Nick Fury en personne, décimales vexantes incluses.</p></div>';
   return h;
 }
 
@@ -2017,11 +2017,11 @@ function viewBenchmark() {
     + '<h3 style="margin:0.3rem 0 0.2rem"><span class="cnt">' + ri.n + ' / ' + ri.nb + '</span> places annoncées</h3>'
     + '<p class="small muted" style="margin:0">'
     + (ri.complet
-      ? 'Tout est dit — le Grand Pronostic a son vainqueur. 👑'
-      : 'L\'organisateur remonte le classement, de la dernière place à la première. Reste sur la page : elle se met à jour toute seule. 🥁')
+      ? 'Avengers… nous avons un vainqueur ! 👑'
+      : 'Nick Fury remonte le classement, de la dernière place à la première. Reste sur la page : elle se met à jour toute seule. 🥁')
     + '</p></div>';
 
-  h += '<h2>Le podium des jurés</h2>';
+  h += '<h2>Le podium des Avengers</h2>';
   var parPlace = {};
   rows.forEach(function (r) { parPlace[r.place] = r; });
   for (var pl = 1; pl <= ri.nb; pl++) {
@@ -2037,7 +2037,7 @@ function viewBenchmark() {
       h += '<div class="card"><div class="row">'
         + '<span class="rank">' + pl + '</span>'
         + '<div style="flex:1"><b style="font-size:1.05rem;color:var(--muted)">— place à dévoiler —</b>'
-        + '<div class="small muted">' + (pl === 1 ? 'Le nom du vainqueur, tout en bas du suspense…' : 'Chut. 🤫')
+        + '<div class="small muted">' + (pl === 1 ? 'Le nom du vainqueur, gardé pour la scène post-générique…' : 'Chut. 🤫')
         + (r ? ' <span class="badge dark">régie : ' + esc(r.nom_affiche) + '</span>' : "") + '</div></div>'
         + '<div class="cnt" style="font-size:1.4rem;color:var(--muted)">???</div></div></div>';
     }
@@ -2079,9 +2079,9 @@ function viewBenchmark() {
 function viewAdmin() {
   if (!S.profil.est_admin) return "";
   var cfg = S.config;
-  var h = '<h2>🎛️ La régie de l\'organisateur</h2>';
+  var h = '<h2>🎛️ Le QG de Nick Fury</h2>';
 
-  h += '<div class="card"><h3>Phase du jeu</h3><p class="small muted">Change la phase pour faire avancer tout le monde en même temps.</p>'
+  h += '<div class="card"><h3>Phase du jeu</h3><p class="small muted">Change la phase pour faire avancer tous les agents en même temps.</p>'
     + '<select class="inp" onchange="App.aPhase(this)">';
   Object.keys(PHASES).forEach(function (k) {
     h += '<option value="' + k + '"' + (cfg.phase === k ? " selected" : "") + '>' + PHASES[k].label + '</option>';
@@ -2149,7 +2149,7 @@ function viewAdmin() {
   }
   h += '</div>';
 
-  h += '<div class="card"><h3>' + icon("trash") + ' Zone dangereuse</h3>'
+  h += '<div class="card"><h3>' + icon("trash") + ' Protocole Snap</h3>'
     + '<p class="small muted">Repartir de zéro pour une nouvelle partie : efface tous les pronostics et dossiers scellés de tous les joueurs, remet à zéro les résultats réels et les points QCM, et repasse le jeu en « Préparation du casting ». Les joueurs (PIN, photos) et les fiches des candidates sont conservés.</p>'
     + '<div class="center">' + btn("App.aReset()", "Réinitialiser le jeu", "dark") + '</div></div>';
   return h;

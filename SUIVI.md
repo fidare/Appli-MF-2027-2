@@ -54,10 +54,10 @@ Dernière mise à jour : 29/07/2026
   sortent pas de la base). Un joueur voit son détail quand sa place est
   appelée ; les graphiques du Benchmark n'apparaissent qu'une fois les
   N places annoncées (paillettes de sacre à ce moment-là)
-- Huissier de justice : à chaque phase, sélection complète exigée pour
+- Classement au S.H.I.E.L.D. (ex-huissier) : à chaque phase, sélection complète exigée pour
   sceller son dossier (verrouillage serveur, récupérable tant que la
   phase est ouverte) ; badge « scellé » visible des autres
-- Régie : tableau complet compact avec recherche, compteurs Top 15 x/15
+- Régie (onglet « QG », textes Marvel) : tableau complet compact avec recherche, compteurs Top 15 x/15
   et Finalistes x/5, enregistrement groupé en un clic, saisie QCM,
   bouton « Réinitialiser le jeu » (double confirmation, conserve
   joueurs et candidates)
