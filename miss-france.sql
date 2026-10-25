@@ -669,7 +669,7 @@ end;
 $fn$;
 
 -- ------------------------------------------------------------
--- 5. Les 11 joueurs (PIN par défaut, modifiables dans Table Editor)
+-- 5. Les 10 joueurs (PIN par défaut, modifiables dans Table Editor)
 --    Mister Gamboy color = organisateur (est_admin).
 -- ------------------------------------------------------------
 
@@ -681,7 +681,6 @@ insert into public.mf_joueurs (pseudo, nom_affiche, pin, est_admin) values
   ('loana-petrucciani','Mister Loana Petrucciani',  '2918', false),
   ('mel-b',            'Miss Mel B',                '8437', false),
   ('minikeums',        'Mister Minikeums',          '5140', false),
-  ('msn-messenger',    'Miss MSN Messenger',        '9263', false),
   ('nokia-3310',       'Mister Nokia 3310',         '3706', false),
   ('pussycat-dolls',   'Miss Pussycat dolls',       '6589', false),
   ('tokio-hotel',      'Tokio Hotel',               '1428', false)
