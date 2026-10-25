@@ -396,18 +396,25 @@
   .avatar img { width: 100%; height: 100%; object-fit: cover; }
   .avatar.big { width: 6.2rem; height: 6.2rem; font-size: 1.7rem; border: 2px solid var(--gold); box-shadow: 0 0 0 5px rgba(240, 207, 125, 0.12), 0 0 30px rgba(240, 207, 125, 0.4); }
 
-  .logingrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.7rem; }
+  /* Jury en 2 colonnes de badges (photo à gauche, titre + nom à droite) :
+     les lignes tombent juste, et un joueur seul sur la dernière ligne
+     est centré. */
+  .logingrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.7rem; max-width: 560px; margin: 0 auto; }
   .logingrid button {
     border: 1px solid transparent;
     background:
       var(--corners),
       linear-gradient(160deg, var(--card2), var(--card)) padding-box,
       linear-gradient(160deg, rgba(240,207,125,0.45), rgba(240,207,125,0.06)) border-box;
-    padding: 0.9rem 0.4rem; cursor: pointer; display: flex; flex-direction: column;
-    align-items: center; gap: 0.5rem; box-shadow: var(--shadow);
+    padding: 0.7rem 0.75rem; cursor: pointer; display: flex; flex-direction: row;
+    align-items: center; gap: 0.7rem; box-shadow: var(--shadow); text-align: left; min-width: 0;
   }
+  .logingrid button:last-child:nth-child(odd) { grid-column: 1 / -1; justify-self: center; width: calc(50% - 0.35rem); }
   .logingrid button:hover, .logingrid button:focus-visible { outline: none; box-shadow: 0 0 20px rgba(240, 207, 125, 0.25), var(--shadow); }
-  .logingrid .nom { font-size: 0.75rem; font-weight: 600; color: var(--ink); }
+  .logingrid .avatar { box-shadow: 0 0 0 2px rgba(240, 207, 125, 0.55), 0 0 14px rgba(240, 207, 125, 0.18); }
+  .logingrid .id { display: flex; flex-direction: column; min-width: 0; line-height: 1.15; }
+  .logingrid .titre { font-size: 0.62rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold); }
+  .logingrid .nom { font-size: 0.86rem; font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
 
   .pin {
     font-size: 1.6rem; letter-spacing: 0.8rem; text-align: center; width: 11rem;
@@ -686,7 +693,6 @@
   @media (min-width: 700px) {
     .wrap { max-width: 960px; padding-left: 1rem; padding-right: 1rem; }
     .grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.9rem; }
-    .logingrid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
     .modal-bg { align-items: center; padding: 1rem; }
   }
 </style>
@@ -1567,8 +1573,10 @@ function viewLogin() {
   if (!S.loginSel) {
     h += '<div class="logingrid">';
     S.joueurs.forEach(function (j) {
+      var m = /^(Mister|Miss)\s+(.+)$/i.exec(j.nom_affiche);
       h += '<button onclick="App.pickJoueur(' + j.id + ')">' + avatarHtml(j.nom_affiche, j.photo_url, false)
-        + '<span class="nom">' + esc(j.nom_affiche) + '</span></button>';
+        + '<span class="id">' + (m ? '<span class="titre">' + esc(m[1]) + '</span>' : '')
+        + '<span class="nom">' + esc(m ? m[2] : j.nom_affiche) + '</span></span></button>';
     });
     h += '</div>';
     if (!S.joueurs.length) h += '<div class="card center muted">Aucun joueur inscrit — exécute le script SQL d\'abord.</div>';
