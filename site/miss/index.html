@@ -489,10 +489,14 @@
     padding: 1.1rem 1.1rem calc(1.3rem + env(safe-area-inset-bottom));
   }
   /* Bande sous la photo : bouton de retour à gauche, vignettes au centre. */
-  .modal .under { position: relative; min-height: 2.6rem; margin-bottom: 0.4rem; }
-  .modal .under .thumbs { margin-bottom: 0; padding-left: 2.8rem; padding-right: 2.8rem; }
+  /* Le bouton occupe sa propre colonne : les vignettes défilent à sa
+     droite et sont masquées à son bord, sans jamais passer dessous. */
+  .modal .under { display: flex; align-items: center; gap: 0.5rem; min-height: 2.6rem; margin-bottom: 0.4rem; }
+  .modal .under .thumbs { flex: 1; min-width: 0; margin-bottom: 0; justify-content: flex-start; }
+  .modal .under .thumbs button:first-child { margin-left: auto; }
+  .modal .under .thumbs button:last-child { margin-right: auto; }
   .modal .close {
-    position: absolute; top: 50%; left: 0; transform: translateY(-50%); border: none;
+    flex: none; border: none;
     background: rgba(255, 255, 255, 0.12); color: var(--ink);
     border-radius: 50%; width: 2.1rem; height: 2.1rem; cursor: pointer; font-weight: 700; z-index: 2;
   }
