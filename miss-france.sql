@@ -90,6 +90,10 @@ create table if not exists public.mf_config (
 alter table public.mf_config
   add column if not exists reveal_n int not null default 0;
 
+-- Filtre de la régie appliqué à la galerie de tous les joueurs ('' = aucun).
+alter table public.mf_config
+  add column if not exists filtre text not null default '';
+
 insert into public.mf_config (id) values (1) on conflict (id) do nothing;
 
 -- Dossiers déposés « chez l'huissier » : un joueur qui a scellé sa
@@ -616,7 +620,20 @@ begin
   delete from mf_validations where true;
   update mf_candidates set dans_top15 = false, est_finaliste = false, rang_final = null where true;
   update mf_joueurs set points_qcm = 0 where true;
-  update mf_config set phase = 'preparation', reveal_n = 0 where id = 1;
+  update mf_config set phase = 'preparation', reveal_n = 0, filtre = '' where id = 1;
+end;
+$$;
+
+-- Filtre de la régie : la galerie de tous les joueurs ne montre plus
+-- que les Miss dont le nom ou la région contient ce texte ('' = aucun).
+create or replace function public.mf_admin_filtre(p_jeton uuid, p_filtre text)
+returns void
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  perform mf_admin_id(p_jeton);
+  update mf_config set filtre = left(trim(coalesce(p_filtre, '')), 60) where id = 1;
 end;
 $$;
 

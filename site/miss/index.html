@@ -1445,6 +1445,14 @@ window.App = {
   },
   // Dévoiler / remasquer des places du classement (p_n = nombre de
   // places publiques, comptées depuis la dernière).
+  aFiltre: function (vider) {
+    var inp = document.getElementById("adm-filtre");
+    var v = vider ? "" : (inp ? inp.value.trim() : "");
+    rpc("mf_admin_filtre", { p_jeton: S.session.jeton, p_filtre: v })
+      .then(function () { toast(v ? "Filtre « " + v + " » appliqué à tous les joueurs" : "Filtre retiré pour tous les joueurs"); return loadConfig(); })
+      .then(render)
+      .catch(function (e) { toast(e.message, true); });
+  },
   aReveal: function (n) {
     rpc("mf_admin_reveal", { p_jeton: S.session.jeton, p_n: n })
       .then(function (v) {
@@ -1770,6 +1778,13 @@ function viewAccueil() {
     note = "Les " + base.length + " Miss encore en course : les éliminées ont été snappées.";
   }
   if (note) h += '<p class="small muted center" style="margin:0 0 0.6rem">' + note + '</p>';
+
+  // Filtre imposé par la régie à tous les joueurs.
+  var fr = (S.config.filtre || "").trim().toLowerCase();
+  if (fr) {
+    base = base.filter(function (x) { return (x.nom + " " + x.region).toLowerCase().indexOf(fr) >= 0; });
+    h += '<p class="small center" style="margin:0 0 0.6rem;color:var(--gold)">Filtre de la régie : « ' + esc(S.config.filtre.trim()) + ' »</p>';
+  }
 
   var q = S.q.trim().toLowerCase();
   function cherche(l) {
@@ -2128,6 +2143,15 @@ function viewAdmin() {
   });
   h += '</select></div>';
 
+  var fr = cfg.filtre || "";
+  h += '<div class="card"><h3>Filtre pour tous les joueurs</h3>'
+    + '<p class="small muted">Tape un nom ou une région : la galerie de tous les joueurs ne montre plus que les Miss correspondantes (mise à jour chez eux en quelques secondes).</p>'
+    + '<input id="adm-filtre" class="search" placeholder="Ex. Martin, Bretagne…" value="' + esc(fr) + '" onkeydown="if(event.key===\'Enter\')App.aFiltre(false)">'
+    + '<div class="center">' + btn("App.aFiltre(false)", "Appliquer à tous", "gold")
+    + (fr ? btn("App.aFiltre(true)", "Retirer le filtre", "ghost") : "") + '</div>'
+    + (fr ? '<p class="small center" style="margin:0.5rem 0 0">Filtre actif : <b>« ' + esc(fr) + ' »</b></p>' : "")
+    + '</div>';
+
   h += viewAdminReveal();
 
   var nbEdits = Object.keys(S.admEdits || {}).length;
@@ -2374,9 +2398,9 @@ setInterval(function () {
       maybeSacre();
     }).catch(function () {});
   } else {
-    var avant = S.config.phase + "|" + (S.profil && S.profil.fige);
+    var avant = S.config.phase + "|" + (S.profil && S.profil.fige) + "|" + S.config.filtre;
     Promise.all([loadConfig(), loadProfil()]).then(function () {
-      var apres = S.config.phase + "|" + (S.profil && S.profil.fige);
+      var apres = S.config.phase + "|" + (S.profil && S.profil.fige) + "|" + S.config.filtre;
       if (apres !== avant) render();
     }).catch(function () {});
   }
