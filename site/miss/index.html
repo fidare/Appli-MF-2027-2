@@ -2,7 +2,8 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#06080f">
 <title>Miss France 2027 — Les Pronostics</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -72,7 +73,16 @@
     border-radius: 2px; transform-origin: right center;
   }
 
-  .wrap { max-width: 640px; margin: 0 auto; padding: 1.1rem 0.9rem calc(7rem + env(safe-area-inset-bottom)); }
+  .wrap { max-width: 640px; margin: 0 auto; padding: calc(1.1rem + env(safe-area-inset-top)) 0.9rem calc(7rem + env(safe-area-inset-bottom)); }
+  /* Bandes opaques sous l'heure de l'iPhone et sous le dock : le contenu
+     qui défile n'y apparaît plus (fondu sur le bord intérieur). */
+  .edge { position: fixed; left: 0; right: 0; pointer-events: none; background: var(--bg); }
+  .edge.t { top: 0; height: env(safe-area-inset-top); z-index: 45; }
+  .edge.b { bottom: 0; height: calc(0.7rem + env(safe-area-inset-bottom)); z-index: 39; }
+  .edge::after { content: ""; position: absolute; left: 0; right: 0; height: 1.2rem; }
+  .edge.t::after { height: min(1.2rem, calc(env(safe-area-inset-top) * 10)); }
+  .edge.t::after { top: 100%; background: linear-gradient(var(--bg), transparent); }
+  .edge.b::after { bottom: 100%; background: linear-gradient(transparent, var(--bg)); }
 
   h1, h2, h3 { font-family: var(--serif); color: var(--ink); line-height: 1.05; font-weight: 400; letter-spacing: 0.04em; }
   h1 { font-size: 2rem; margin: 0.35rem 0; text-wrap: balance; }
@@ -738,6 +748,7 @@
 <div id="sky" aria-hidden="true"><i class="neb n1"></i><i class="neb n2"></i><i class="neb n3"></i><i class="shoot"></i></div>
 <div class="wrap"><div id="app" class="center muted" style="padding-top:4rem">Assemblage des Avengers…</div></div>
 <div id="toast"></div>
+<div class="edge t" aria-hidden="true"></div><div class="edge b" aria-hidden="true"></div>
 
 <script>
 "use strict";
