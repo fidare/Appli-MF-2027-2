@@ -488,8 +488,11 @@
     max-height: 92vh; overflow-y: auto; position: relative;
     padding: 1.1rem 1.1rem calc(1.3rem + env(safe-area-inset-bottom));
   }
+  /* Bande sous la photo : bouton de retour à gauche, vignettes au centre. */
+  .modal .under { position: relative; min-height: 2.6rem; margin-bottom: 0.4rem; }
+  .modal .under .thumbs { margin-bottom: 0; padding-left: 2.8rem; padding-right: 2.8rem; }
   .modal .close {
-    position: absolute; top: 0.7rem; right: 0.8rem; border: none;
+    position: absolute; top: 50%; left: 0; transform: translateY(-50%); border: none;
     background: rgba(255, 255, 255, 0.12); color: var(--ink);
     border-radius: 50%; width: 2.1rem; height: 2.1rem; cursor: pointer; font-weight: 700; z-index: 2;
   }
@@ -2315,10 +2318,10 @@ function viewFiche() {
     return u ? '<a href="' + esc(u) + '" target="_blank" rel="noopener noreferrer">' + icon(r[0]) + r[1] + '</a>' : "";
   }).join("");
   var h = '<div class="modal-bg" onclick="if(event.target===this)App.closeFiche()"><div class="modal">'
-    + '<button class="close" onclick="App.closeFiche()" aria-label="Fermer">✕</button>'
     + '<div class="tiltwrap"><div class="tiltcard" id="tilt-card"><div class="bigph">' + ficheImg + '</div>'
     + hudFiche(x, S.ficheAnim) + '</div></div>';
   S.ficheAnim = false;
+  h += '<div class="under"><button class="close" onclick="App.closeFiche()" aria-label="Retour">✕</button>';
   if (photos.length > 1) {
     h += '<div class="thumbs">';
     photos.forEach(function (u, i) {
@@ -2327,6 +2330,7 @@ function viewFiche() {
     });
     h += '</div>';
   }
+  h += '</div>';
   if (x.photo_surprise_url) h += '<p class="center" style="margin:0 0 0.5rem">' + btn("App.surprise()", S.ficheSurprise ? "Remettre la vraie photo" : icon("spark") + " Surprise", "mini") + '</p>';
   h += '<h2 class="center" style="margin:0.2rem 0 0">' + esc(x.nom) + '</h2>'
     + '<p class="center" style="color:var(--pink);font-weight:700;margin:0.1rem 0 0.6rem">Miss ' + esc(x.region) + '</p>'
