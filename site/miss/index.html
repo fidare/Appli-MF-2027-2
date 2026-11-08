@@ -1445,13 +1445,17 @@ window.App = {
   },
   // Dévoiler / remasquer des places du classement (p_n = nombre de
   // places publiques, comptées depuis la dernière).
-  aFiltre: function (vider) {
-    var inp = document.getElementById("adm-filtre");
-    var v = vider ? "" : (inp ? inp.value.trim() : "");
-    rpc("mf_admin_filtre", { p_jeton: S.session.jeton, p_filtre: v })
-      .then(function () { toast(v ? "Filtre « " + v + " » appliqué à tous les joueurs" : "Filtre retiré pour tous les joueurs"); return loadConfig(); })
-      .then(render)
-      .catch(function (e) { toast(e.message, true); });
+  // Filtre de la régie appliqué à la frappe (enregistré 0,6 s après la
+  // dernière touche) : pas de bouton à cliquer.
+  aFiltre: function (inp) {
+    var v = inp ? inp.value : "";
+    S.config.filtre = v;
+    if (inp) renderKeepFocus(inp, "adm-filtre"); else render();
+    clearTimeout(S.filtreTimer);
+    S.filtreTimer = setTimeout(function () {
+      rpc("mf_admin_filtre", { p_jeton: S.session.jeton, p_filtre: v.trim() })
+        .catch(function (e) { toast(e.message, true); });
+    }, inp ? 600 : 0);
   },
   aReveal: function (n) {
     rpc("mf_admin_reveal", { p_jeton: S.session.jeton, p_n: n })
@@ -1753,13 +1757,9 @@ function huissierCard() {
 }
 
 // ----- Accueil : galerie -----
-function viewAccueil() {
-  var c = myCounts();
-  var h = '<h2>Les recrues de l\'Initiative :</h2>'
-    + '<p class="small muted">Mon escouade : <span class="cnt">' + c.t15 + ' / 15</span> · Mes finalistes : <span class="cnt">' + c.t5 + ' / 5</span></p>'
-    + huissierCard()
-    + '<input id="search-input" class="search" placeholder="Chercher un prénom, une région…" value="' + esc(S.q) + '" oninput="App.search(this)">';
-
+// Miss affichées dans la galerie : selon les résultats réels saisis en
+// Régie, puis le filtre imposé par la régie à tous les joueurs.
+function galerieBase() {
   // Filtrage automatique selon les résultats réels saisis en Régie : dès
   // que le top 15 officiel est connu, les éliminées disparaissent ; dès
   // que les 5 finalistes sont connues (ordre final, élection en direct,
@@ -1777,14 +1777,26 @@ function viewAccueil() {
     base = base.filter(function (x) { return x.dans_top15; });
     note = "Les " + base.length + " Miss encore en course : les éliminées ont été snappées.";
   }
-  if (note) h += '<p class="small muted center" style="margin:0 0 0.6rem">' + note + '</p>';
 
-  // Filtre imposé par la régie à tous les joueurs.
+  // Filtre imposé par la régie à tous les joueurs (s'applique aussi aux
+  // éliminées, d'où la fonction renvoyée).
   var fr = (S.config.filtre || "").trim().toLowerCase();
-  if (fr) {
-    base = base.filter(function (x) { return (x.nom + " " + x.region).toLowerCase().indexOf(fr) >= 0; });
-    h += '<p class="small center" style="margin:0 0 0.6rem;color:var(--gold)">Filtre de la régie : « ' + esc(S.config.filtre.trim()) + ' »</p>';
+  function filtre(l) {
+    return fr ? l.filter(function (x) { return (x.nom + " " + x.region).toLowerCase().indexOf(fr) >= 0; }) : l;
   }
+  return { list: filtre(base), course: base, appliquer: filtre, note: note, filtre: fr ? S.config.filtre.trim() : "" };
+}
+
+function viewAccueil() {
+  var c = myCounts();
+  var h = '<h2>Les recrues de l\'Initiative :</h2>'
+    + '<p class="small muted">Mon escouade : <span class="cnt">' + c.t15 + ' / 15</span> · Mes finalistes : <span class="cnt">' + c.t5 + ' / 5</span></p>'
+    + huissierCard()
+    + '<input id="search-input" class="search" placeholder="Chercher un prénom, une région…" value="' + esc(S.q) + '" oninput="App.search(this)">';
+
+  var gb = galerieBase(), base = gb.list;
+  if (gb.note) h += '<p class="small muted center" style="margin:0 0 0.6rem">' + gb.note + '</p>';
+  if (gb.filtre) h += '<p class="small center" style="margin:0 0 0.6rem;color:var(--gold)">Filtre de la régie : « ' + esc(gb.filtre) + ' »</p>';
 
   var q = S.q.trim().toLowerCase();
   function cherche(l) {
@@ -1803,10 +1815,10 @@ function viewAccueil() {
   // Une fois les résultats publiés, on peut rouvrir le rideau sur toutes
   // celles qui ont quitté la scène (elles restent affichées en dessous,
   // les finalistes gardent la vedette en haut).
-  var sorties = S.candidates.filter(function (x) {
-    return base.indexOf(x) < 0;
-  });
-  if (ph === "resultats" && sorties.length) {
+  var sorties = gb.appliquer(S.candidates.filter(function (x) {
+    return gb.course.indexOf(x) < 0;
+  }));
+  if (S.config.phase === "resultats" && sorties.length) {
     h += '<div class="card center" style="margin-top:1rem">'
       + btn("App.toggleElim()", (S.showElim ? "Masquer" : "Revoir") + " les " + sorties.length + " Miss éliminées", S.showElim ? "ghost" : "")
       + '<p class="small muted" style="margin:0.4rem 0 0">Tout le casting 2027, du premier tableau au sacre.</p></div>';
@@ -2145,12 +2157,16 @@ function viewAdmin() {
 
   var fr = cfg.filtre || "";
   h += '<div class="card"><h3>Filtre pour tous les joueurs</h3>'
-    + '<p class="small muted">Tape un nom ou une région : la galerie de tous les joueurs ne montre plus que les Miss correspondantes (mise à jour chez eux en quelques secondes).</p>'
-    + '<input id="adm-filtre" class="search" placeholder="Ex. Martin, Bretagne…" value="' + esc(fr) + '" onkeydown="if(event.key===\'Enter\')App.aFiltre(false)">'
-    + '<div class="center">' + btn("App.aFiltre(false)", "Appliquer à tous", "gold")
-    + (fr ? btn("App.aFiltre(true)", "Retirer le filtre", "ghost") : "") + '</div>'
-    + (fr ? '<p class="small center" style="margin:0.5rem 0 0">Filtre actif : <b>« ' + esc(fr) + ' »</b></p>' : "")
+    + '<p class="small muted">Tape un nom ou une région : la galerie de tous les joueurs ne montre plus que les Miss correspondantes, sans rien valider (mise à jour chez eux en quelques secondes).</p>'
+    + '<input id="adm-filtre" class="search" placeholder="Ex. Martin, Bretagne…" value="' + esc(fr) + '" oninput="App.aFiltre(this)">'
+    + (fr.trim() ? '<div class="center">' + btn("App.aFiltre(null)", "Retirer le filtre", "ghost mini") + '</div>' : "")
     + '</div>';
+  // Les Miss filtrées, comme sur l'accueil, pour jouer depuis le QG.
+  if (fr.trim()) {
+    var gl = galerieBase().list;
+    h += gl.length ? grilleMiss(gl, 0)
+      : '<div class="card center muted">Aucune Miss ne correspond à « ' + esc(fr.trim()) + ' ».</div>';
+  }
 
   h += viewAdminReveal();
 
