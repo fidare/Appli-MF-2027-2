@@ -473,7 +473,10 @@
   .pin:not(:focus) { --cut: 12px; --bc: var(--goldline); }
   .pin:focus { --cut: 12px; }
 
+  /* Fiche ouverte : la page derrière ne défile plus. */
+  html:has(.modal-bg), html:has(.modal-bg) body { overflow: hidden; }
   .modal-bg {
+    overscroll-behavior: contain;
     position: fixed; inset: 0; background: rgba(3, 5, 10, 0.75);
     backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
     z-index: 50; display: flex; align-items: flex-end; justify-content: center;
@@ -486,6 +489,7 @@
       linear-gradient(140deg, rgba(240,207,125,0.55), rgba(240,207,125,0.08)) border-box;
     width: 100%; max-width: 520px;
     max-height: 92vh; overflow-y: auto; position: relative;
+    overscroll-behavior: contain;
     padding: 1.1rem 1.1rem calc(1.3rem + env(safe-area-inset-bottom));
   }
   /* Bande sous la photo : bouton de retour à gauche, vignettes au centre. */
@@ -1237,6 +1241,12 @@ function tiltMouse(e) {
   tiltTarget(-dy * 14, dx * 14);
 }
 document.addEventListener("pointermove", tiltMouse);
+
+// Fiche ouverte : un glissé hors de la fiche (sur le fond assombri)
+// ne fait pas défiler la page derrière.
+document.addEventListener("touchmove", function (e) {
+  if (S.fiche != null && !e.target.closest(".modal")) e.preventDefault();
+}, { passive: false });
 
 // Swipe horizontal sur la photo de la fiche : photo suivante ou
 // précédente (le défilement vertical reste libre).
