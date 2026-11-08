@@ -74,6 +74,14 @@
   }
 
   .wrap { max-width: 640px; margin: 0 auto; padding: calc(1.1rem + env(safe-area-inset-top)) 0.9rem calc(7rem + env(safe-area-inset-bottom)); }
+  /* La page ne défile pas elle-même : c'est #scroller, calé sur l'écran
+     visible, qui défile. Safari (iOS 26) affiche ce qui dépasse sous sa
+     barre d'adresse flottante : il n'y a plus que le fond. */
+  html, body { height: 100%; overflow: hidden; }
+  #scroller {
+    position: fixed; inset: 0; overflow-y: auto; overflow-x: hidden;
+    -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+  }
   /* Bandes opaques sous l'heure de l'iPhone et sous le dock : le contenu
      qui défile n'y apparaît plus (fondu sur le bord intérieur). */
   .edge { position: fixed; left: 0; right: 0; pointer-events: none; background: var(--bg); }
@@ -484,7 +492,7 @@
   .pin:focus { --cut: 12px; }
 
   /* Fiche ouverte : la page derrière ne défile plus. */
-  html:has(.modal-bg), html:has(.modal-bg) body { overflow: hidden; }
+  #scroller:has(.modal-bg) { overflow: hidden; }
   .modal-bg {
     overscroll-behavior: contain;
     position: fixed; inset: 0; background: rgba(3, 5, 10, 0.75);
@@ -746,7 +754,7 @@
 </head>
 <body>
 <div id="sky" aria-hidden="true"><i class="neb n1"></i><i class="neb n2"></i><i class="neb n3"></i><i class="shoot"></i></div>
-<div class="wrap"><div id="app" class="center muted" style="padding-top:4rem">Assemblage des Avengers…</div></div>
+<div id="scroller"><div class="wrap"><div id="app" class="center muted" style="padding-top:4rem">Assemblage des Avengers…</div></div></div>
 <div id="toast"></div>
 <div class="edge t" aria-hidden="true"></div><div class="edge b" aria-hidden="true"></div>
 
