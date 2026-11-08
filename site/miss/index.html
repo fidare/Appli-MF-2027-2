@@ -173,6 +173,9 @@
     --bg: linear-gradient(135deg, #f3cf7a, #cf9a2c); color: #241a06;
     --glow: drop-shadow(0 4px 10px rgba(240, 207, 125, 0.45));
   }
+  /* Dans la fiche : boutons plats, sans halo ni transition (le halo
+     tremblait sur les iPhone anciens pendant les animations du HUD). */
+  .modal .btn { filter: none; transition: none; }
   .btn.mini { --cut: 7px; padding: 0.4rem 0.78rem; font-size: 0.78rem; }
   .btn[disabled] { opacity: 0.5; cursor: not-allowed; }
 
@@ -671,16 +674,15 @@
     }
 
     /* Interface de visée : rotations lentes en continu, balayage de
-       scan régulier, et entrée en scène à l'ouverture de la fiche. */
+       scan unique, et entrée en scène à l'ouverture de la fiche. */
     .hud .spin { transform-box: fill-box; transform-origin: center; animation: spin 9s linear infinite; }
     .hud .spin.rev { animation-duration: 6s; animation-direction: reverse; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .hud .scan { animation: scan 5s ease-in-out infinite; }
+    .hud.in .scan { animation: scan 2s ease-in-out 0.3s both; }
     @keyframes scan {
       0% { transform: translateY(0); opacity: 0; }
-      4% { opacity: 1; }
-      36% { opacity: 0.9; }
-      40% { transform: translateY(400px); opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 0.9; }
       100% { transform: translateY(400px); opacity: 0; }
     }
     .hud .blink { animation: blink 1.1s steps(2, start) infinite; }
@@ -1196,15 +1198,13 @@ function fxTap(fn) {
 }
 
 // ------------------------------------------------------------------
-// Carte 3D dans la fiche : la photo s'incline avec le gyroscope du
-// téléphone (ou la souris sur ordinateur), avec un reflet qui glisse.
+// Carte 3D dans la fiche : la photo s'incline avec la souris sur
+// ordinateur (pas de gyroscope sur téléphone).
 // ------------------------------------------------------------------
-var tiltBase = null;
 var tilt = { rx: 0, ry: 0, tx: 0, ty: 0, raf: null };
 
 // La carte suit une cible avec lissage dans une boucle d'animation :
-// les mesures brutes du gyroscope (irrégulières) ne pilotent jamais
-// directement le rendu — fini les saccades.
+// les mesures brutes ne pilotent jamais directement le rendu.
 function tiltTarget(rx, ry) {
   tilt.tx = Math.max(-7, Math.min(7, rx));
   tilt.ty = Math.max(-7, Math.min(7, ry));
@@ -1220,28 +1220,6 @@ function tiltTarget(rx, ry) {
   tilt.raf = requestAnimationFrame(step);
 }
 
-function tiltOrientation(e) {
-  if (REDUCED || S.fiche == null) return;
-  if (e.beta == null || e.gamma == null) return;
-  if (!tiltBase) tiltBase = { b: e.beta, g: e.gamma };
-  tiltTarget((tiltBase.b - e.beta) * 0.35, (e.gamma - tiltBase.g) * 0.35);
-}
-
-// iOS demande une permission explicite pour le gyroscope, à déclencher
-// depuis un geste de l'utilisateur (l'ouverture d'une fiche).
-function tiltAskGyro() {
-  if (S.gyroAsked) return;
-  S.gyroAsked = true;
-  if (typeof DeviceOrientationEvent !== "undefined"
-      && typeof DeviceOrientationEvent.requestPermission === "function") {
-    DeviceOrientationEvent.requestPermission().then(function (r) {
-      if (r === "granted") window.addEventListener("deviceorientation", tiltOrientation);
-    }).catch(function () {});
-  } else {
-    window.addEventListener("deviceorientation", tiltOrientation);
-  }
-}
-
 // Souris : la carte suit la position globale du pointeur sur toute la
 // page (pas seulement au survol de la photo).
 function tiltMouse(e) {
@@ -1252,11 +1230,6 @@ function tiltMouse(e) {
   tiltTarget(-dy * 14, dx * 14);
 }
 document.addEventListener("pointermove", tiltMouse);
-
-function initFicheTilt() {
-  if (REDUCED) return;
-  tiltBase = null; // la position actuelle du téléphone devient le neutre
-}
 
 // Ouverture après la saisie du PIN : deux portes blindées à liseré
 // rouge coulissent sur le jeu.
@@ -1352,7 +1325,7 @@ window.App = {
   search: function (inp) { S.q = inp.value; renderKeepFocus(inp, "search-input"); },
   toggleElim: function () { S.showElim = !S.showElim; render(); },
   admSearch: function (inp) { S.admQ = inp.value; renderKeepFocus(inp, "adm-search"); },
-  fiche: function (cid) { S.fiche = cid; S.ficheSurprise = false; S.ficheIdx = 0; S.ficheAnim = true; tiltAskGyro(); render(); },
+  fiche: function (cid) { S.fiche = cid; S.ficheSurprise = false; S.ficheIdx = 0; S.ficheAnim = true; render(); },
   closeFiche: function () { S.fiche = null; render(); },
   surprise: function () { S.ficheSurprise = !S.ficheSurprise; render(); },
   photo: function (i) { S.ficheIdx = i; S.ficheSurprise = false; render(); },
@@ -1590,7 +1563,6 @@ function render() {
   html += '<footer>Concours privé entre ami·e·s · Aucune Miss n\'a été snappée pendant ces pronostics 🛡️</footer>';
   html += viewFiche();
   app.innerHTML = html;
-  if (S.fiche != null) initFicheTilt();
 }
 
 // ----- Login -----
