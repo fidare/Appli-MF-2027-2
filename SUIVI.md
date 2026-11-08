@@ -31,6 +31,8 @@ Dernière mise à jour : 29/07/2026
   réseaux sociaux (instagram, tiktok, facebook, youtube, x : lien ou
   @pseudo) ; colonnes ajoutées par `candidates-fiche.sql`
 - Inclinaison 3D de la fiche volontairement discrète (±7°, lissée)
+- Filtre de la régie (QG) : l'admin tape un nom ou une région, la galerie
+  de tous les joueurs se filtre (`mf_config.filtre`, `filtre-regie.sql`)
 - Écrins des fiches Miss selon le palmarès officiel : liseré rose pour
   le top 15, vibranium tournant pour les finalistes, rouge et or Iron Man tournant + halo
   battant + couronne + reflet balayant le portrait pour la Miss France
