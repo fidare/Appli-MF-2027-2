@@ -1752,6 +1752,9 @@ function huissierCard() {
       + '<p class="small muted" style="margin:0.5rem 0">Ta sélection est officielle : plus aucune modification possible.</p>'
       + btn("App.defiger()", "Déclassifier mon dossier", "ghost mini") + '</div>';
   }
+  // Sélection au-delà du compte : le bouton du S.H.I.E.L.D. indique
+  // combien en retirer (et reste inactif tant que ce n'est pas fait).
+  var trop = ph === "selection15" ? c.t15 - 15 : ph === "top5" ? c.t5 - 5 : 0;
   var ready = false, manques = [];
   if (ph === "selection15") {
     if (c.t15 < 15) manques.push((15 - c.t15) + " Miss à recruter");
@@ -1766,6 +1769,12 @@ function huissierCard() {
     ready = !manques.length;
   }
   var hint = "Avant de classer ton dossier : " + manques.join(" et ") + ".";
+  if (trop > 0) {
+    return '<div class="card center">'
+      + '<button class="btn gold" disabled>' + icon("award") + ' Il faut retirer ' + trop + (ph === "top5" ? " finaliste" : " Miss") + (trop > 1 && ph === "top5" ? "s" : "") + '</button>'
+      + (manques.length ? '<p class="small muted" style="margin:0.4rem 0 0">' + hint + '</p>' : "")
+      + '</div>';
+  }
   return '<div class="card center">'
     + (ready
       ? btn("App.figer()", icon("award") + " Classer au S.H.I.E.L.D. !", "gold")

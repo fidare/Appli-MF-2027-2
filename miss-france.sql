@@ -187,7 +187,6 @@ as $$
 declare
   v_j bigint;
   v_phase text;
-  v_nb int;
 begin
   select id into v_j from mf_joueurs where jeton = p_jeton;
   if v_j is null then raise exception 'Session invalide, reconnecte-toi.'; end if;
@@ -201,12 +200,7 @@ begin
 
   if v_phase = 'selection15' then
     if p_statut = 'top15' then
-      select count(*) into v_nb from mf_pronostics
-        where joueur_id = v_j and statut = 'top15';
-      if v_nb >= 15 and not exists (select 1 from mf_pronostics
-          where joueur_id = v_j and candidate_id = p_candidate and statut = 'top15') then
-        raise exception 'Ta liste des 15 est pleine ! Retire quelqu''un d''abord.';
-      end if;
+      -- Pas de plafond : on peut dépasser 15, l'huissier exige 15 pile.
       insert into mf_pronostics (joueur_id, candidate_id, statut)
         values (v_j, p_candidate, 'top15')
       on conflict (joueur_id, candidate_id) do update
@@ -223,11 +217,7 @@ begin
       if not exists (select 1 from mf_candidates c where c.id = p_candidate and c.dans_top15) then
         raise exception 'Cette Miss n''est plus en lice — choisis parmi les 15 encore en course !';
       end if;
-      select count(*) into v_nb from mf_pronostics where joueur_id = v_j and top5;
-      if v_nb >= 5 and not exists (select 1 from mf_pronostics
-          where joueur_id = v_j and candidate_id = p_candidate and top5) then
-        raise exception 'Tu as déjà 5 finalistes ! Retires-en une d''abord.';
-      end if;
+      -- Pas de plafond : on peut dépasser 5, l'huissier exige 5 pile.
       insert into mf_pronostics (joueur_id, candidate_id, top5)
         values (v_j, p_candidate, true)
       on conflict (joueur_id, candidate_id) do update
