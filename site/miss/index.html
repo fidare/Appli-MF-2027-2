@@ -497,7 +497,7 @@
   /* La carte qui s'incline porte la photo et, flottant devant elle,
      l'interface de visée : la 3D est conservée ici (et non sur la
      photo, dont overflow: hidden aplatirait la profondeur). */
-  .modal .tiltcard { position: relative; transform-style: preserve-3d; will-change: transform; }
+  .modal .tiltcard { touch-action: pan-y; position: relative; transform-style: preserve-3d; will-change: transform; }
   .modal .bigph {
     position: relative; overflow: hidden; aspect-ratio: 3 / 4;
     background: linear-gradient(160deg, #1f2b44, #0d1322);
@@ -1230,6 +1230,25 @@ function tiltMouse(e) {
   tiltTarget(-dy * 14, dx * 14);
 }
 document.addEventListener("pointermove", tiltMouse);
+
+// Swipe horizontal sur la photo de la fiche : photo suivante ou
+// précédente (le défilement vertical reste libre).
+var swipe = null;
+document.addEventListener("touchstart", function (e) {
+  if (S.fiche == null || e.touches.length !== 1 || !e.target.closest("#tilt-card")) { swipe = null; return; }
+  swipe = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+}, { passive: true });
+document.addEventListener("touchend", function (e) {
+  if (!swipe) return;
+  var t = e.changedTouches[0], dx = t.clientX - swipe.x, dy = t.clientY - swipe.y;
+  swipe = null;
+  if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+  var x = S.candidates.find(function (c) { return c.id === S.fiche; });
+  var n = x ? missPhotos(x).length : 0;
+  if (n < 2) return;
+  var i = S.ficheSurprise ? 0 : Math.min(S.ficheIdx, n - 1);
+  App.photo((i + (dx < 0 ? 1 : -1) + n) % n);
+}, { passive: true });
 
 // Ouverture après la saisie du PIN : deux portes blindées à liseré
 // rouge coulissent sur le jeu.
