@@ -3,109 +3,142 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bulletin papier MF 2027</title>
+<title>Bulletins papier MF 2027</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-  @page { size: A4 portrait; margin: 9mm 10mm; }
-  :root { --ink: #111; --mute: #555; --line: #999; --paper: #fff; --bg: #e9e9ee; }
-  * { box-sizing: border-box; }
+  @page { size: A4 portrait; margin: 8mm 9mm; }
+  :root { --bg: #1a1c24; --ink: #111; --mute: #555; }
+  * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   html, body { margin: 0; }
-  body { background: var(--bg); color: var(--ink); font: 10.5pt/1.25 Arial, Helvetica, sans-serif; }
-  .tools { max-width: 210mm; margin: 16px auto; padding: 0 16px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-  .tools button { font: inherit; font-weight: 700; padding: 10px 18px; border: 0; border-radius: 6px; background: #b3121b; color: #fff; cursor: pointer; }
-  .tools p { margin: 0; color: var(--mute); font-size: 10pt; }
-  .sheet { background: var(--paper); width: 210mm; max-width: 100%; min-height: 297mm; margin: 0 auto 24px; padding: 9mm 10mm; box-shadow: 0 2px 12px rgba(0,0,0,.15); }
-  header { display: flex; justify-content: space-between; align-items: flex-end; gap: 6mm; border-bottom: 2px solid var(--ink); padding-bottom: 2mm; }
-  h1 { margin: 0; font-size: 17pt; letter-spacing: .5px; text-transform: uppercase; }
-  h1 small { display: block; font-size: 9pt; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--mute); }
-  .joueur { flex: 1; max-width: 85mm; font-weight: 700; }
-  .joueur span { display: block; border-bottom: 1px solid var(--ink); height: 8mm; }
-  .consignes { margin: 2.5mm 0; font-size: 8.6pt; color: #222; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3mm; }
-  .consignes div { border: 1px solid var(--line); padding: 1.5mm 2mm; }
-  .consignes b { display: block; font-size: 9pt; }
+  body { background: var(--bg); color: var(--ink); font: 10.5pt/1.25 Barlow, Arial, Helvetica, sans-serif; }
+  .tools { max-width: 210mm; margin: 16px auto; padding: 0 16px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; color: #ddd; }
+  .tools select, .tools button { font: inherit; font-weight: 700; padding: 10px 14px; border-radius: 6px; border: 1px solid #555; background: #fff; color: #111; }
+  .tools button { border: 0; background: #b3121b; color: #fff; cursor: pointer; }
+  .tools p { margin: 0; flex-basis: 100%; font-size: 10pt; color: #aaa; }
+
+  .sheet { --c1: #b3121b; --c2: #1b3a8a; --t: #fbe9ea; --on: #fff;
+    background: #fff; width: 210mm; max-width: 100%; min-height: 297mm; margin: 0 auto 24px;
+    padding: 8mm 9mm; box-shadow: 0 4px 18px rgba(0,0,0,.4); }
+  .band { display: flex; align-items: center; gap: 4mm; padding: 2.5mm 3.5mm;
+    background: linear-gradient(115deg, var(--c1) 0 62%, var(--c2) 62.2% 100%); color: var(--on);
+    clip-path: polygon(4mm 0, 100% 0, 100% calc(100% - 4mm), calc(100% - 4mm) 100%, 0 100%, 0 4mm); }
+  .band img { width: 19mm; height: 19mm; object-fit: cover; border: 1mm solid var(--on); border-radius: 50%; flex: none; background: #fff; }
+  .band .id { flex: 1; min-width: 0; }
+  .band .hero { font-family: "Bebas Neue", Impact, "Arial Narrow", sans-serif; font-size: 30pt; line-height: .95; letter-spacing: 1px; }
+  .band .titre { font-weight: 700; font-size: 9pt; text-transform: uppercase; letter-spacing: 1.5px; opacity: .9; }
+  .band .ligne { display: block; border-bottom: 1.5px solid var(--on); height: 9mm; width: 70mm; max-width: 100%; }
+  .band .ed { color: var(--on2); text-align: right; font-family: "Bebas Neue", Impact, sans-serif; font-size: 15pt; line-height: 1; }
+  .band .ed small { display: block; font-family: Barlow, Arial, sans-serif; font-size: 7.5pt; letter-spacing: 1px; text-transform: uppercase; }
+
+  .consignes { margin: 2.5mm 0; font-size: 8.4pt; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2.5mm; }
+  .consignes div { border-left: 1.2mm solid var(--c1); background: var(--t); padding: 1.3mm 2mm; }
+  .consignes div:nth-child(2) { border-color: var(--c2); }
+  .consignes b { display: block; font-family: "Bebas Neue", Impact, sans-serif; font-weight: 400; font-size: 12pt; letter-spacing: .5px; color: var(--c1); }
+  .consignes div:nth-child(2) b { color: var(--c2t); }
+
   table { width: 100%; border-collapse: collapse; }
-  th { font-size: 8.5pt; text-transform: uppercase; text-align: left; border-bottom: 1.5px solid var(--ink); padding: 1mm 1.5mm; }
-  th.c { text-align: center; width: 17mm; }
-  td { border-bottom: 1px solid #ccc; padding: 0 1.5mm; height: 5.7mm; }
-  tr:nth-child(even) td { background: #f3f3f3; }
-  td.n { width: 7mm; color: var(--mute); text-align: right; }
-  td.reg { width: 58mm; font-weight: 700; }
+  th { font-family: "Bebas Neue", Impact, sans-serif; font-weight: 400; font-size: 11.5pt; letter-spacing: .5px; text-align: left;
+    color: var(--on2); background: var(--c2); padding: .6mm 1.5mm; }
+  th.c { text-align: center; width: 16mm; }
+  td { border-bottom: 1px solid #ddd; padding: 0 1.5mm; height: 5.55mm; }
+  tbody tr:nth-child(even) td { background: var(--t); }
+  td.n { width: 7mm; color: var(--c1); font-weight: 700; text-align: right; }
+  td.reg { width: 58mm; font-weight: 700; white-space: nowrap; }
   td.c { text-align: center; }
-  .box { display: inline-block; width: 4mm; height: 4mm; border: 1.3px solid var(--ink); vertical-align: middle; }
-  .rang { display: inline-block; width: 8mm; height: 4.6mm; border: 1.3px solid var(--ink); border-radius: 2px; vertical-align: middle; }
-  .essais { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; margin-top: 3mm; }
-  .essai { border: 1.5px solid var(--ink); padding: 1.5mm 2.5mm; }
-  .essai b { font-size: 9pt; }
-  .essai span { display: block; border-bottom: 1px solid var(--ink); height: 7mm; }
+  .box { display: inline-block; width: 4mm; height: 4mm; border: 1.4px solid var(--c1); background: #fff; vertical-align: middle; }
+  .rang { display: inline-block; width: 8mm; height: 4.4mm; border: 1.4px solid var(--c2); background: #fff; border-radius: 1mm; vertical-align: middle; }
+
+  .compteurs { margin-top: 1.5mm; display: flex; justify-content: space-between; font-size: 8.4pt; color: var(--mute); }
+  .essais { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; margin-top: 2.5mm; }
+  .essai { border: 1.5px solid var(--c1); padding: 1.3mm 2.5mm; position: relative; }
+  .essai + .essai { border-color: var(--c2); }
+  .essai b { font-family: "Bebas Neue", Impact, sans-serif; font-weight: 400; font-size: 12.5pt; letter-spacing: .5px; color: var(--c1); }
+  .essai + .essai b { color: var(--c2t); }
   .essai small { color: var(--mute); font-size: 8pt; }
-  .compteurs { margin-top: 2mm; display: flex; justify-content: space-between; font-size: 8.5pt; color: var(--mute); }
+  .essai span { display: block; border-bottom: 1px solid var(--ink); height: 7mm; }
+
   @media print {
     body { background: #fff; }
     .tools { display: none; }
-    .sheet { width: auto; min-height: 0; margin: 0; padding: 0; box-shadow: none; }
-    tr:nth-child(even) td { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .sheet { width: auto; min-height: 0; margin: 0; padding: 0; box-shadow: none; break-after: page; }
+    .sheet:last-child { break-after: auto; }
+    .sheet[hidden] { display: none; }
   }
   @media screen and (max-width: 800px) {
     .sheet { padding: 16px; }
     .consignes { grid-template-columns: 1fr; }
     td.reg { width: auto; }
+    .band .hero { font-size: 24pt; }
   }
 </style>
 </head>
 <body>
 <div class="tools">
+  <select id="choix" aria-label="Feuille à imprimer"></select>
   <button type="button" onclick="window.print()">Imprimer</button>
-  <p>Bulletin de secours : une feuille A4 par joueur, à remplir au stylo si l'appli ne répond pas.</p>
+  <p>Bulletins de secours : une feuille A4 aux couleurs de chaque héros, à remplir au stylo si l'appli ne répond pas.</p>
 </div>
+<div id="feuilles"></div>
 
-<main class="sheet">
-  <header>
-    <h1>Pronostics Miss France 2027<small>Bulletin de secours papier</small></h1>
-    <div class="joueur">Joueur<span></span></div>
+<script>
+const MISS = [["Alsace", "Chiara Blazevic"], ["Aquitaine", "Solène Videau"], ["Auvergne", "Lina Berthelier"], ["Bourgogne", "Ilona Perrot"], ["Bretagne", "Margot Ferré-Bernard"], ["Centre-Val de Loire", "Justine Bourrelier"], ["Champagne-Ardenne", "Céline Leduc"], ["Corse", "Satine Nomary"], ["Côte d'Azur", "May Haoues"], ["Franche-Comté", "Emma Ninot"], ["Guadeloupe", "Julia Désirée"], ["Guyane", "Sandra Justine"], ["Île-de-France", "Camilla Alash"], ["Languedoc", "Candice Gauch"], ["Limousin", "Élise Escuriol"], ["Lorraine", "Léane Froment"], ["Martinique", "Maureen-Alycia Lucéa-Merlin"], ["Mayotte", "Emma Saïd Issouf"], ["Midi-Pyrénées", "Carla Rachaïl"], ["Nord-Pas-de-Calais", "Shana Mendes"], ["Normandie", "Pauline Gourlez"], ["Nouvelle-Calédonie", "Lana Prost"], ["Pays de la Loire", "Maëlle Hamon"], ["Picardie", "Marie Villez"], ["Poitou-Charentes", "Mandy Goudal"], ["Provence", "Ophélie Vitalbo"], ["Réunion", "Laëtitia Roguet"], ["Rhône-Alpes", "Julia Grid-Costantino"], ["Roussillon", "Juliette Gauthier"], ["Saint-Martin et Saint-Barthélemy", "Naïla Parotte"], ["Tahiti", "Leia Diard"]];
+
+// c1 / c2 : couleurs du personnage ; on : texte sur le bandeau ;
+// on2 : texte sur c2 (en-tête du tableau) ; c2t : c2 assombrie pour du texte sur blanc
+const HEROS = [
+  { nom: "Captain America",    photo: "pussycat-dolls",    c1: "#1b3a8a", c2: "#c8102e", on: "#fff" },
+  { nom: "Iron Woman",         photo: "britney-spears",    c1: "#a50f1a", c2: "#d4a017", on: "#fff", on2: "#111", c2t: "#8f6a08" },
+  { nom: "Thor",               photo: "adibou",            c1: "#2b4b9b", c2: "#b3121b", on: "#fff" },
+  { nom: "Spider-Man",         photo: "minikeums",         c1: "#c8102e", c2: "#1f3f99", on: "#fff" },
+  { nom: "Black Widow",        photo: "tokio-hotel",       c1: "#1a1a1a", c2: "#d0102b", on: "#fff" },
+  { nom: "Doctor Strange",     photo: "kmaro",             c1: "#1f3570", c2: "#9e1b22", on: "#fff" },
+  { nom: "Cyclope",            photo: "loana-petrucciani", c1: "#163a8c", c2: "#e0b000", on: "#fff", on2: "#111", c2t: "#8a6a00" },
+  { nom: "La Torche humaine",  photo: "nokia-3310",        c1: "#e0530b", c2: "#1f4ea3", on: "#fff" },
+  { nom: "Drax",               photo: "gamboy-color",      c1: "#4c6656", c2: "#a3221e", on: "#fff" },
+  { nom: "Sylvie",             photo: "mel-b",             c1: "#2f6b3a", c2: "#b8902a", on: "#fff", c2t: "#86661a" },
+  { nom: "",                   photo: "",                  c1: "#b3121b", c2: "#1b3a8a", on: "#fff" }
+];
+
+// Teinte très claire de c1 pour les fonds (lignes alternées, consignes)
+function teinte(hex, k) {
+  const n = parseInt(hex.slice(1), 16);
+  const m = v => Math.round(v + (255 - v) * k);
+  return `rgb(${m(n >> 16)}, ${m((n >> 8) & 255)}, ${m(n & 255)})`;
+}
+const esc = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+const lignes = MISS.map(([reg, nom], i) =>
+  `<tr><td class="n">${i + 1}</td><td class="reg">${esc(reg)}</td><td>${esc(nom)}</td>` +
+  `<td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td>` +
+  `<td class="c"><span class="rang"></span></td></tr>`).join("");
+
+const feuilles = document.getElementById("feuilles");
+const choix = document.getElementById("choix");
+choix.innerHTML = `<option value="tous">Toutes les feuilles (${HEROS.length})</option>` +
+  HEROS.map((h, i) => `<option value="${i}">${h.nom ? esc(h.nom) : "Feuille vierge"}</option>`).join("");
+
+feuilles.innerHTML = HEROS.map((h, i) => `
+<main class="sheet" data-i="${i}" style="--c1:${h.c1};--c2:${h.c2};--on:${h.on};--on2:${h.on2 || h.on};--c2t:${h.c2t || h.c2};--t:${teinte(h.c1, .9)}">
+  <header class="band">
+    ${h.photo ? `<img src="joueurs/${h.photo}.jpg" alt="">` : ""}
+    <div class="id">
+      <div class="titre">Dossier de l'agent</div>
+      ${h.nom ? `<div class="hero">${esc(h.nom)}</div>` : `<span class="ligne"></span>`}
+    </div>
+    <div class="ed">Pronostics<br>Miss France 2027<small>Bulletin de secours</small></div>
   </header>
 
   <section class="consignes">
-    <div><b>1. Mes 15</b>Cochez 15 Miss parmi les 31 (colonne « 15 »), puis écrivez votre essai Miss France Nº1.</div>
-    <div><b>2. Mes 5</b>Une fois le vrai top 15 annoncé, cochez 5 Miss parmi ces 15 (colonne « 5 »), puis l'essai Nº2.</div>
-    <div><b>3. Ordre final</b>Une fois les 5 finalistes annoncées, notez leur rang de 1 (Miss France) à 5.</div>
+    <div><b>1. Mes 15</b>Cochez 15 Miss parmi les 31 (colonne « 15 »), puis l'essai Miss France Nº1.</div>
+    <div><b>2. Mes 5</b>Le vrai top 15 annoncé, cochez 5 Miss parmi ces 15 (colonne « 5 »), puis l'essai Nº2.</div>
+    <div><b>3. Ordre final</b>Les 5 finalistes annoncées, notez leur rang de 1 (Miss France) à 5.</div>
   </section>
 
   <table>
-    <thead>
-      <tr><th></th><th>Région</th><th>Miss</th><th class="c">15</th><th class="c">5</th><th class="c">Rang</th></tr>
-    </thead>
-    <tbody>
-      <tr><td class="n">1</td><td class="reg">Alsace</td><td class="nom">Chiara Blazevic</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
-      <tr><td class="n">2</td><td class="reg">Aquitaine</td><td class="nom">Solène Videau</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
-      <tr><td class="n">3</td><td class="reg">Auvergne</td><td class="nom">Lina Berthelier</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
-      <tr><td class="n">4</td><td class="reg">Bourgogne</td><td class="nom">Ilona Perrot</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
-      <tr><td class="n">5</td><td class="reg">Bretagne</td><td class="nom">Margot Ferré-Bernard</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
-      <tr><td class="n">6</td><td class="reg">Centre-Val de Loire</td><td class="nom">Justine Bourrelier</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
-      <tr><td class="n">7</td><td class="reg">Champagne-Ardenne</td><td class="nom">Céline Leduc</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
-      <tr><td class="n">8</td><td class="reg">Corse</td><td class="nom">Satine Nomary</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
-      <tr><td class="n">9</td><td class="reg">Côte d'Azur</td><td class="nom">May Haoues</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
-      <tr><td class="n">10</td><td class="reg">Franche-Comté</td><td class="nom">Emma Ninot</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
-      <tr><td class="n">11</td><td class="reg">Guadeloupe</td><td class="nom">Julia Désirée</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
-      <tr><td class="n">12</td><td class="reg">Guyane</td><td class="nom">Sandra Justine</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
-      <tr><td class="n">13</td><td class="reg">Île-de-France</td><td class="nom">Camilla Alash</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
-      <tr><td class="n">14</td><td class="reg">Languedoc</td><td class="nom">Candice Gauch</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
-      <tr><td class="n">15</td><td class="reg">Limousin</td><td class="nom">Élise Escuriol</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
-      <tr><td class="n">16</td><td class="reg">Lorraine</td><td class="nom">Léane Froment</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
-      <tr><td class="n">17</td><td class="reg">Martinique</td><td class="nom">Maureen-Alycia Lucéa-Merlin</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
-      <tr><td class="n">18</td><td class="reg">Mayotte</td><td class="nom">Emma Saïd Issouf</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
-      <tr><td class="n">19</td><td class="reg">Midi-Pyrénées</td><td class="nom">Carla Rachaïl</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
-      <tr><td class="n">20</td><td class="reg">Nord-Pas-de-Calais</td><td class="nom">Shana Mendes</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
-      <tr><td class="n">21</td><td class="reg">Normandie</td><td class="nom">Pauline Gourlez</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
-      <tr><td class="n">22</td><td class="reg">Nouvelle-Calédonie</td><td class="nom">Lana Prost</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
-      <tr><td class="n">23</td><td class="reg">Pays de la Loire</td><td class="nom">Maëlle Hamon</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
-      <tr><td class="n">24</td><td class="reg">Picardie</td><td class="nom">Marie Villez</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
-      <tr><td class="n">25</td><td class="reg">Poitou-Charentes</td><td class="nom">Mandy Goudal</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
-      <tr><td class="n">26</td><td class="reg">Provence</td><td class="nom">Ophélie Vitalbo</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
-      <tr><td class="n">27</td><td class="reg">Réunion</td><td class="nom">Laëtitia Roguet</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
-      <tr><td class="n">28</td><td class="reg">Rhône-Alpes</td><td class="nom">Julia Grid-Costantino</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
-      <tr><td class="n">29</td><td class="reg">Roussillon</td><td class="nom">Juliette Gauthier</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
-      <tr><td class="n">30</td><td class="reg">Saint-Martin et Saint-Barthélemy</td><td class="nom">Naïla Parotte</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
-      <tr><td class="n">31</td><td class="reg">Tahiti</td><td class="nom">Leia Diard</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
-    </tbody>
+    <thead><tr><th></th><th>Région</th><th>Miss</th><th class="c">15</th><th class="c">5</th><th class="c">Rang</th></tr></thead>
+    <tbody>${lignes}</tbody>
   </table>
 
   <div class="compteurs"><span>Total cochés : colonne 15 = ____ / 15 · colonne 5 = ____ / 5</span><span>Rangs 1 à 5, chacun une seule fois</span></div>
@@ -114,6 +147,13 @@
     <div class="essai"><b>Essai Miss France Nº1</b> <small>(avec la phase 1)</small><span></span></div>
     <div class="essai"><b>Essai Miss France Nº2</b> <small>(avec la phase 2)</small><span></span></div>
   </section>
-</main>
+</main>`).join("");
+
+choix.addEventListener("change", () => {
+  feuilles.querySelectorAll(".sheet").forEach(s => {
+    s.hidden = choix.value !== "tous" && s.dataset.i !== choix.value;
+  });
+});
+</script>
 </body>
 </html>
