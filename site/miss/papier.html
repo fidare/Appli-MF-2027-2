@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bulletin papier MF 2027</title>
+<style>
+  @page { size: A4 portrait; margin: 9mm 10mm; }
+  :root { --ink: #111; --mute: #555; --line: #999; --paper: #fff; --bg: #e9e9ee; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { background: var(--bg); color: var(--ink); font: 10.5pt/1.25 Arial, Helvetica, sans-serif; }
+  .tools { max-width: 210mm; margin: 16px auto; padding: 0 16px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .tools button { font: inherit; font-weight: 700; padding: 10px 18px; border: 0; border-radius: 6px; background: #b3121b; color: #fff; cursor: pointer; }
+  .tools p { margin: 0; color: var(--mute); font-size: 10pt; }
+  .sheet { background: var(--paper); width: 210mm; max-width: 100%; min-height: 297mm; margin: 0 auto 24px; padding: 9mm 10mm; box-shadow: 0 2px 12px rgba(0,0,0,.15); }
+  header { display: flex; justify-content: space-between; align-items: flex-end; gap: 6mm; border-bottom: 2px solid var(--ink); padding-bottom: 2mm; }
+  h1 { margin: 0; font-size: 17pt; letter-spacing: .5px; text-transform: uppercase; }
+  h1 small { display: block; font-size: 9pt; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--mute); }
+  .joueur { flex: 1; max-width: 85mm; font-weight: 700; }
+  .joueur span { display: block; border-bottom: 1px solid var(--ink); height: 8mm; }
+  .consignes { margin: 2.5mm 0; font-size: 8.6pt; color: #222; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3mm; }
+  .consignes div { border: 1px solid var(--line); padding: 1.5mm 2mm; }
+  .consignes b { display: block; font-size: 9pt; }
+  table { width: 100%; border-collapse: collapse; }
+  th { font-size: 8.5pt; text-transform: uppercase; text-align: left; border-bottom: 1.5px solid var(--ink); padding: 1mm 1.5mm; }
+  th.c { text-align: center; width: 17mm; }
+  td { border-bottom: 1px solid #ccc; padding: 0 1.5mm; height: 5.7mm; }
+  tr:nth-child(even) td { background: #f3f3f3; }
+  td.n { width: 7mm; color: var(--mute); text-align: right; }
+  td.reg { width: 58mm; font-weight: 700; }
+  td.c { text-align: center; }
+  .box { display: inline-block; width: 4mm; height: 4mm; border: 1.3px solid var(--ink); vertical-align: middle; }
+  .rang { display: inline-block; width: 8mm; height: 4.6mm; border: 1.3px solid var(--ink); border-radius: 2px; vertical-align: middle; }
+  .essais { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; margin-top: 3mm; }
+  .essai { border: 1.5px solid var(--ink); padding: 1.5mm 2.5mm; }
+  .essai b { font-size: 9pt; }
+  .essai span { display: block; border-bottom: 1px solid var(--ink); height: 7mm; }
+  .essai small { color: var(--mute); font-size: 8pt; }
+  .compteurs { margin-top: 2mm; display: flex; justify-content: space-between; font-size: 8.5pt; color: var(--mute); }
+  @media print {
+    body { background: #fff; }
+    .tools { display: none; }
+    .sheet { width: auto; min-height: 0; margin: 0; padding: 0; box-shadow: none; }
+    tr:nth-child(even) td { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+  @media screen and (max-width: 800px) {
+    .sheet { padding: 16px; }
+    .consignes { grid-template-columns: 1fr; }
+    td.reg { width: auto; }
+  }
+</style>
+</head>
+<body>
+<div class="tools">
+  <button type="button" onclick="window.print()">Imprimer</button>
+  <p>Bulletin de secours : une feuille A4 par joueur, à remplir au stylo si l'appli ne répond pas.</p>
+</div>
+
+<main class="sheet">
+  <header>
+    <h1>Pronostics Miss France 2027<small>Bulletin de secours papier</small></h1>
+    <div class="joueur">Joueur<span></span></div>
+  </header>
+
+  <section class="consignes">
+    <div><b>1. Mes 15</b>Cochez 15 Miss parmi les 31 (colonne « 15 »), puis écrivez votre essai Miss France Nº1.</div>
+    <div><b>2. Mes 5</b>Une fois le vrai top 15 annoncé, cochez 5 Miss parmi ces 15 (colonne « 5 »), puis l'essai Nº2.</div>
+    <div><b>3. Ordre final</b>Une fois les 5 finalistes annoncées, notez leur rang de 1 (Miss France) à 5.</div>
+  </section>
+
+  <table>
+    <thead>
+      <tr><th></th><th>Région</th><th>Miss</th><th class="c">15</th><th class="c">5</th><th class="c">Rang</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="n">1</td><td class="reg">Alsace</td><td class="nom">Chiara Blazevic</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
+      <tr><td class="n">2</td><td class="reg">Aquitaine</td><td class="nom">Solène Videau</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
+      <tr><td class="n">3</td><td class="reg">Auvergne</td><td class="nom">Lina Berthelier</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
+      <tr><td class="n">4</td><td class="reg">Bourgogne</td><td class="nom">Ilona Perrot</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
+      <tr><td class="n">5</td><td class="reg">Bretagne</td><td class="nom">Margot Ferré-Bernard</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
+      <tr><td class="n">6</td><td class="reg">Centre-Val de Loire</td><td class="nom">Justine Bourrelier</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
+      <tr><td class="n">7</td><td class="reg">Champagne-Ardenne</td><td class="nom">Céline Leduc</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
+      <tr><td class="n">8</td><td class="reg">Corse</td><td class="nom">Satine Nomary</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
+      <tr><td class="n">9</td><td class="reg">Côte d'Azur</td><td class="nom">May Haoues</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
+      <tr><td class="n">10</td><td class="reg">Franche-Comté</td><td class="nom">Emma Ninot</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
+      <tr><td class="n">11</td><td class="reg">Guadeloupe</td><td class="nom">Julia Désirée</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
+      <tr><td class="n">12</td><td class="reg">Guyane</td><td class="nom">Sandra Justine</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
+      <tr><td class="n">13</td><td class="reg">Île-de-France</td><td class="nom">Camilla Alash</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
+      <tr><td class="n">14</td><td class="reg">Languedoc</td><td class="nom">Candice Gauch</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
+      <tr><td class="n">15</td><td class="reg">Limousin</td><td class="nom">Élise Escuriol</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
+      <tr><td class="n">16</td><td class="reg">Lorraine</td><td class="nom">Léane Froment</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
+      <tr><td class="n">17</td><td class="reg">Martinique</td><td class="nom">Maureen-Alycia Lucéa-Merlin</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
+      <tr><td class="n">18</td><td class="reg">Mayotte</td><td class="nom">Emma Saïd Issouf</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
+      <tr><td class="n">19</td><td class="reg">Midi-Pyrénées</td><td class="nom">Carla Rachaïl</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
+      <tr><td class="n">20</td><td class="reg">Nord-Pas-de-Calais</td><td class="nom">Shana Mendes</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
+      <tr><td class="n">21</td><td class="reg">Normandie</td><td class="nom">Pauline Gourlez</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
+      <tr><td class="n">22</td><td class="reg">Nouvelle-Calédonie</td><td class="nom">Lana Prost</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
+      <tr><td class="n">23</td><td class="reg">Pays de la Loire</td><td class="nom">Maëlle Hamon</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
+      <tr><td class="n">24</td><td class="reg">Picardie</td><td class="nom">Marie Villez</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
+      <tr><td class="n">25</td><td class="reg">Poitou-Charentes</td><td class="nom">Mandy Goudal</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
+      <tr><td class="n">26</td><td class="reg">Provence</td><td class="nom">Ophélie Vitalbo</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
+      <tr><td class="n">27</td><td class="reg">Réunion</td><td class="nom">Laëtitia Roguet</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
+      <tr><td class="n">28</td><td class="reg">Rhône-Alpes</td><td class="nom">Julia Grid-Costantino</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
+      <tr><td class="n">29</td><td class="reg">Roussillon</td><td class="nom">Juliette Gauthier</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
+      <tr><td class="n">30</td><td class="reg">Saint-Martin et Saint-Barthélemy</td><td class="nom">Naïla Parotte</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
+      <tr><td class="n">31</td><td class="reg">Tahiti</td><td class="nom">Leia Diard</td><td class="c"><span class="box"></span></td><td class="c"><span class="box"></span></td><td class="c"><span class="rang"></span></td></tr>
+    </tbody>
+  </table>
+
+  <div class="compteurs"><span>Total cochés : colonne 15 = ____ / 15 · colonne 5 = ____ / 5</span><span>Rangs 1 à 5, chacun une seule fois</span></div>
+
+  <section class="essais">
+    <div class="essai"><b>Essai Miss France Nº1</b> <small>(avec la phase 1)</small><span></span></div>
+    <div class="essai"><b>Essai Miss France Nº2</b> <small>(avec la phase 2)</small><span></span></div>
+  </section>
+</main>
+</body>
+</html>
