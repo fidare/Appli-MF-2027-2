@@ -2441,9 +2441,16 @@ setInterval(function () {
       maybeSacre();
     }).catch(function () {});
   } else {
-    var avant = S.config.phase + "|" + (S.profil && S.profil.fige) + "|" + S.config.filtre;
-    Promise.all([loadConfig(), loadProfil()]).then(function () {
-      var apres = S.config.phase + "|" + (S.profil && S.profil.fige) + "|" + S.config.filtre;
+    // Les résultats réels (top 15, finalistes) saisis en Régie doivent
+    // filtrer la galerie de tous les joueurs : on recharge aussi les
+    // candidates et on compare leur empreinte.
+    function sig() {
+      return S.config.phase + "|" + (S.profil && S.profil.fige) + "|" + S.config.filtre + "|"
+        + S.candidates.map(function (x) { return x.id + ":" + (x.dans_top15 ? 1 : 0) + (x.est_finaliste ? 1 : 0) + (x.rang_final || ""); }).join(",");
+    }
+    var avant = sig();
+    Promise.all([loadConfig(), loadProfil(), loadCandidates()]).then(function () {
+      var apres = sig();
       if (apres !== avant) render();
     }).catch(function () {});
   }
