@@ -1600,8 +1600,15 @@ function btn(onclick, label, cls) {
 function rangSelect(cid, cur) {
   var h = '<label class="small muted">Place finale : </label><select class="inp" onchange="App.rang(' + cid + ', this)">';
   h += '<option value=""' + (cur ? "" : " selected") + '>—</option>';
+  // Places déjà attribuées à une autre finaliste : retirées de la liste.
+  var prises = {};
+  S.candidates.forEach(function (x) {
+    var p = S.mine[x.id];
+    if (x.id !== cid && x.est_finaliste && p && p.rang) prises[p.rang] = true;
+  });
   for (var i = 1; i <= 5; i++) {
-    h += '<option value="' + i + '"' + (cur === i ? " selected" : "") + '>Nº' + i + (i === 1 ? " (Miss France)" : "") + '</option>';
+    if (prises[i] && cur !== i) continue;
+    h +='<option value="' + i + '"' + (cur === i ? " selected" : "") + '>Nº' + i + (i === 1 ? " (Miss France)" : "") + '</option>';
   }
   return h + "</select>";
 }
