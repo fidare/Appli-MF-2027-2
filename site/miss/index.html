@@ -1984,6 +1984,10 @@ function viewSelection() {
 // ----- Résultat (mes points) -----
 function viewResultat() {
   var ph = S.config.phase;
+  // Phases 2 et 3 : dès que le top 15 officiel est saisi en Régie, chaque
+  // joueur voit son propre bilan top 15 (rien sur les autres joueurs).
+  var top15Connu = S.candidates.some(function (x) { return x.dans_top15; });
+  if ((ph === "top5" || ph === "ordre") && top15Connu) return viewBilanTop15();
   if (ph !== "cloture" && ph !== "resultats") {
     return '<h2>Résultat</h2><div class="card center muted">Patience… Comme une scène post-générique, cette page ne s\'allumera qu\'à la fin : le soir de l\'élection. 📺</div>';
   }
@@ -2087,6 +2091,34 @@ function viewResultat() {
   h += '<div class="card"><h3>2 essais Miss France — <span class="cnt">' + (ptsE1 + ptsE2) + ' pts</span></h3>' + hE + '</div>';
   h += '<div class="card"><h3>QCM — <span class="cnt">' + qcm + ' pts</span></h3><p class="small muted">Notés à la main par Nick Fury en personne, décimales vexantes incluses.</p></div>';
   return h;
+}
+
+// Bilan provisoire de mon escouade face au vrai top 15 (phases 2 et 3).
+function viewBilanTop15() {
+  var cfg = S.config;
+  var byId = {};
+  S.candidates.forEach(function (x) { byId[x.id] = x; });
+  var mine = [];
+  Object.keys(S.mine).forEach(function (k) {
+    var p = S.mine[k], x = byId[k];
+    if (x && p.statut === "top15") mine.push(x);
+  });
+  mine.sort(function (a, b) {
+    return (b.dans_top15 ? 1 : 0) - (a.dans_top15 ? 1 : 0) || a.nom.localeCompare(b.nom);
+  });
+  var ok = mine.filter(function (x) { return x.dans_top15; }).length;
+  var pts = ok * cfg.pts_top15;
+  var lignes = mine.map(function (x) {
+    return '<div class="listline"><span class="avatar">' + missPhoto(x) + '</span>'
+      + '<div class="grow"><b style="color:var(--pink)">' + esc(x.nom) + '</b><div class="small muted">Miss ' + esc(x.region) + '</div></div>'
+      + '<span class="badge ' + (x.dans_top15 ? "ok" : "bad") + '">' + (x.dans_top15 ? "Qualifiée" : "Éliminée") + '</span></div>';
+  }).join("");
+  return '<h2>Mon bilan top 15</h2>'
+    + '<div class="card center"><span class="eyebrow">Mon escouade face au vrai top 15</span>'
+    + '<h1 style="font-size:2.6rem;margin:0.1rem">' + ok + ' / ' + mine.length + '</h1>'
+    + '<p class="small muted" style="margin:0">Soit <b>' + pts + ' pts</b> (' + cfg.pts_top15 + ' pts par Miss trouvée). '
+    + 'Score provisoire : le reste se joue ce soir, et le classement complet reste sous scellés jusqu\'au dévoilement.</p></div>'
+    + '<div class="card"><h3>Mes 15 recrues</h3>' + (lignes || '<p class="muted small">Aucune sélection.</p>') + '</div>';
 }
 
 // ----- Benchmark -----
