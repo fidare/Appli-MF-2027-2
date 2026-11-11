@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Éditions précédentes</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #06080f; --card: #0f1420; --card2: #172033;
+    --ink: #f4f6fb; --text: #cdd4e2; --muted: #8592ab;
+    --line: rgba(255,255,255,0.09); --goldline: rgba(240,207,125,0.38);
+    --red: #e62429; --red-deep: #a8141b; --blue: #2f6fd6;
+    --gold: #f0cf7d; --gold-deep: #d3a43a;
+    --serif: "Bebas Neue", Impact, sans-serif;
+    --sans: "Barlow", sans-serif;
+  }
+  @page { size: 210mm 297mm; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); }
+  .poster {
+    position: relative; width: 794px; height: 1123px; overflow: hidden;
+    background-color: var(--bg);
+    padding: 34px 40px 28px;
+    display: flex; flex-direction: column;
+  }
+  /* Ciel : nébuleuses + trame comics */
+  .sky { position: absolute; inset: 0; z-index: 0; }
+  .sky::before {
+    content: ""; position: absolute; inset: 0;
+    background:
+      radial-gradient(520px 380px at 12% 6%, rgba(230,36,41,0.32), transparent 70%),
+      radial-gradient(560px 420px at 95% 30%, rgba(47,111,214,0.30), transparent 70%),
+      radial-gradient(500px 420px at 20% 78%, rgba(124,92,255,0.20), transparent 70%),
+      radial-gradient(520px 360px at 88% 100%, rgba(230,36,41,0.22), transparent 70%);
+  }
+  .sky::after {
+    content: ""; position: absolute; inset: 0;
+    background-image: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1.4px);
+    background-size: 6px 6px;
+  }
+  .sky svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .content { position: relative; z-index: 1; flex: 1; display: flex; flex-direction: column; }
+
+  /* En-tête */
+  header { text-align: center; }
+  .emblem { width: 66px; height: 66px; display: block; margin: 0 auto 8px;
+    filter: drop-shadow(0 6px 18px rgba(230,36,41,0.55)); }
+  .eyebrow {
+    font-family: var(--sans); font-weight: 700; font-size: 12px; letter-spacing: 0.32em;
+    text-transform: uppercase; color: var(--gold);
+  }
+  h1 {
+    font-family: var(--serif); font-weight: 400; margin: 8px 0 0; line-height: 0.9;
+    font-size: 78px; letter-spacing: 0.02em; white-space: nowrap; color: var(--ink);
+    text-shadow: 0 0 30px rgba(230,36,41,0.45), 4px 4px 0 var(--red-deep);
+  }
+  h1 em { font-style: normal; color: var(--gold);
+    background: linear-gradient(180deg, #fff3c4, #f0cf7d 55%, #c08d2c);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    text-shadow: none; filter: drop-shadow(4px 4px 0 rgba(120,80,10,0.8)); }
+  .sub { margin-top: 10px; font-size: 14px; color: var(--muted); letter-spacing: 0.06em; }
+  .sub b { color: var(--text); font-weight: 600; }
+  .rule { display: flex; align-items: center; gap: 12px; margin: 12px auto 0; width: 70%; }
+  .rule i { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--goldline), transparent); }
+  .rule .shield { width: 22px; height: 22px; }
+
+  /* Grille */
+  .grid { margin-top: 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px 16px; flex: 1; align-content: start; }
+  .card {
+    --cut: 16px;
+    position: relative; padding: 12px 16px 10px;
+    background: linear-gradient(180deg, rgba(23,32,51,0.92), rgba(15,20,32,0.94));
+    clip-path: polygon(var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%, 0 var(--cut));
+  }
+  /* liseré redessiné sur les biseaux */
+  .card::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: var(--bc, rgba(255,255,255,0.16));
+    clip-path: polygon(var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%, 0 var(--cut),
+      var(--cut) 0, calc(var(--cut) + 0.4px) 1px, 1px calc(var(--cut) + 0.4px), 1px calc(100% - 1px), calc(100% - var(--cut) - 0.4px) calc(100% - 1px), calc(100% - 1px) calc(100% - var(--cut) - 0.4px), calc(100% - 1px) 1px, calc(var(--cut) + 0.4px) 1px);
+  }
+  .card.red { --bc: rgba(230,36,41,0.55); }
+  .card.blue { --bc: rgba(47,111,214,0.6); }
+  .card.gold { --bc: var(--goldline); }
+  .year { display: flex; align-items: baseline; justify-content: space-between; }
+  .year span { font-family: var(--serif); font-size: 15px; letter-spacing: 0.2em; color: var(--muted); }
+  .year b { font-family: var(--serif); font-weight: 400; font-size: 40px; line-height: 1; color: var(--ink); letter-spacing: 0.03em; }
+  .card.red .year b { color: #ff5a5e; }
+  .card.blue .year b { color: #6f9cf0; }
+  .card.gold .year b { color: var(--gold); }
+
+  .winner {
+    --cut: 9px; margin: 8px 0 6px; padding: 7px 11px 6px; position: relative;
+    background: linear-gradient(135deg, #f3cf7a, #cf9a2c);
+    clip-path: polygon(var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%, 0 var(--cut));
+    color: #1a1204; display: flex; align-items: center; gap: 10px;
+  }
+  .winner svg { width: 26px; height: 26px; flex: none; }
+  .winner small { display: block; font-weight: 700; font-size: 9.5px; letter-spacing: 0.22em; text-transform: uppercase; opacity: 0.75; }
+  .winner strong { display: block; font-family: var(--serif); font-weight: 400; font-size: 27px; line-height: 0.95; letter-spacing: 0.04em; }
+
+  ol { list-style: none; margin: 0; padding: 0; }
+  li { display: flex; align-items: baseline; gap: 10px; padding: 2.5px 2px; border-bottom: 1px solid var(--line); font-size: 14px; font-weight: 500; color: var(--ink); }
+  li:last-child { border-bottom: 0; }
+  li .n { font-family: var(--serif); font-size: 17px; color: var(--muted); min-width: 20px; text-align: right; }
+  li.p2 .n { color: #d9dee8; } li.p3 .n { color: #d89a62; }
+  li .tie { color: var(--muted); font-weight: 400; padding: 0 2px; }
+
+  /* Carte palmarès */
+  .hof .row { display: flex; align-items: center; gap: 10px; padding: 5px 2px; border-bottom: 1px solid var(--line); }
+  .hof .row:last-child { border-bottom: 0; }
+  .hof .row .name { flex: 1; font-family: var(--serif); font-size: 24px; letter-spacing: 0.04em; color: var(--ink); line-height: 1; }
+  .hof .row .yrs { font-size: 11.5px; color: var(--muted); letter-spacing: 0.06em; }
+  .hof .crowns { display: flex; gap: 3px; }
+  .hof .crowns svg { width: 18px; height: 18px; }
+  .hof .row.top .name { color: var(--gold); font-size: 30px; }
+  .hof .note { margin-top: 12px; font-size: 12.5px; line-height: 1.45; color: var(--text); }
+  .hof .note em { font-style: normal; color: var(--gold); font-weight: 600; }
+
+  footer { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 14px; }
+  footer .tag {
+    --cut: 10px; padding: 10px 22px 8px;
+    background: linear-gradient(135deg, #ff3b3f, var(--red-deep));
+    clip-path: polygon(var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%, 0 var(--cut));
+    font-family: var(--serif); font-size: 26px; letter-spacing: 0.08em; color: #fff;
+    box-shadow: 0 6px 20px rgba(230,36,41,0.5);
+  }
+  footer .tag em { font-style: normal; color: #fff3c4; }
+</style>
+</head>
+<body>
+<div class="poster">
+  <div class="sky"><svg id="stars" viewBox="0 0 794 1123" preserveAspectRatio="none"></svg></div>
+
+  <div class="content">
+    <header>
+      <svg class="emblem" viewBox="0 0 120 120" aria-hidden="true"><defs>
+        <linearGradient id="emb-ring" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff3c4"/><stop offset="0.45" stop-color="#f0cf7d"/><stop offset="1" stop-color="#a97a22"/></linearGradient>
+        <linearGradient id="emb-a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff5a5e"/><stop offset="0.55" stop-color="#e62429"/><stop offset="1" stop-color="#8f1016"/></linearGradient></defs>
+        <path d="M60 14 A46 46 0 1 1 60 106 A46 46 0 1 1 60 14" fill="none" stroke="url(#emb-ring)" stroke-width="6"/>
+        <path d="M60 12 L98 102 L80 102 L72.5 83 L47.5 83 L40 102 L22 102 Z M60 42 L68.5 71 L51.5 71 Z" fill="url(#emb-a)" fill-rule="evenodd" stroke="#ffd9a0" stroke-width="1"/>
+      </svg>
+      <div class="eyebrow">Le Grand Pronostic · Miss France</div>
+      <h1>Éditions <em>précédentes</em></h1>
+      <div class="sub">Les archives du <b>S.H.I.E.L.D.</b> · Classements officiels 2019 → 2025</div>
+      <div class="rule"><i></i>
+        <svg class="shield" viewBox="0 0 40 40"><circle cx="20" cy="20" r="19" fill="#e62429"/><circle cx="20" cy="20" r="15" fill="#f4f6fb"/><circle cx="20" cy="20" r="11" fill="#e62429"/><circle cx="20" cy="20" r="7.5" fill="#2f6fd6"/><path d="M20 13.2l1.6 4.6h4.8l-3.9 2.9 1.5 4.6-4-2.9-4 2.9 1.5-4.6-3.9-2.9h4.8z" fill="#f4f6fb"/></svg>
+      <i></i></div>
+    </header>
+
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <footer><div class="tag">Édition 2027 · <em>Avengers, rassemblement !</em></div></footer>
+</div>
+
+<script>
+var CROWN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z" fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><circle cx="12" cy="15" r="1.4" fill="#f3cf7a"/></svg>';
+var GOLD_CROWN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z" fill="#f0cf7d" stroke="#a97a22" stroke-width="1" stroke-linejoin="round"/></svg>';
+
+var EDITIONS = [
+  { y: 2019, c: "red",  mf: "Lucas",    r: ["Cyril", "Justine", "Coco", "Célia", "Mélissa"] },
+  { y: 2020, c: "blue", mf: "Mathieu",  r: ["Célia", "Lucas", "Cyril", "Justine", "Mélissa", "Romain", "Coco"] },
+  { y: 2023, c: "gold", mf: "Mathieu",  r: ["Célia", "Mélissa", "Romain", ["Mattéo", "Coco"], "Cyril", "Lucas", "Justine", "Rudy"] },
+  { y: 2024, c: "blue", mf: "Cyril",    r: ["Justine", "Lucas", "Coco", "Célia", "Rudy", "Mathieu", ["Mélissa", "Romain"]] },
+  { y: 2025, c: "red",  mf: "Mélissa",  r: ["Mattéo", "Coco", "Guillaume", "Cyril", "Justine", "Tina", "Romain", "Rudy", "Mathieu", "Célia"] }
+];
+
+var h = "";
+EDITIONS.forEach(function (e) {
+  h += '<section class="card ' + e.c + '"><div class="year"><span>Édition</span><b>' + e.y + '</b></div>'
+    + '<div class="winner">' + CROWN + '<div><small>Miss France</small><strong>' + e.mf + '</strong></div></div><ol>';
+  e.r.forEach(function (n, i) {
+    var p = i + 2;
+    var name = Array.isArray(n) ? n.join('<span class="tie">/</span>') : n;
+    h += '<li class="p' + p + '"><span class="n">' + p + '</span><span>' + name + '</span></li>';
+  });
+  h += '</ol></section>';
+});
+
+// Carte palmarès : titres cumulés
+var tally = {};
+EDITIONS.forEach(function (e) { (tally[e.mf] = tally[e.mf] || []).push(e.y); });
+var rows = Object.keys(tally).map(function (k) { return { n: k, y: tally[k] }; })
+  .sort(function (a, b) { return b.y.length - a.y.length || a.y[0] - b.y[0]; });
+h += '<section class="card gold hof"><div class="year"><span>Palmarès</span><b>Titres</b></div><div style="height:6px"></div>';
+rows.forEach(function (r, i) {
+  h += '<div class="row' + (i === 0 ? ' top' : '') + '"><div class="name">' + r.n + '<div class="yrs">' + r.y.join(' · ') + '</div></div>'
+    + '<div class="crowns">' + r.y.map(function () { return GOLD_CROWN; }).join('') + '</div></div>';
+});
+h += '<div class="note"><em>Mathieu</em>, seul double vainqueur. <em>Mélissa</em>, tenante du titre, remet sa couronne en jeu en 2027.</div></section>';
+document.getElementById("grid").innerHTML = h;
+
+// Étoiles (positions pseudo-aléatoires reproductibles)
+var s = 7, st = "";
+function rnd() { s = (s * 9301 + 49297) % 233280; return s / 233280; }
+for (var i = 0; i < 90; i++) {
+  var x = rnd() * 794, y = rnd() * 1123, r = 0.4 + rnd() * 1.3, o = 0.25 + rnd() * 0.6;
+  st += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + r.toFixed(2) + '" fill="' + (rnd() < 0.2 ? '#f0cf7d' : '#fff') + '" opacity="' + o.toFixed(2) + '"/>';
+}
+document.getElementById("stars").innerHTML = st;
+</script>
+</body>
+</html>
