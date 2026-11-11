@@ -1984,6 +1984,7 @@ function viewSelection() {
 // ----- Résultat (mes points) -----
 function viewResultat() {
   var ph = S.config.phase;
+  if (ph === "ordre") return viewBilanOrdre();
   if (ph !== "cloture" && ph !== "resultats") {
     return '<h2>Résultat</h2><div class="card center muted">Patience… Comme une scène post-générique, cette page ne s\'allumera qu\'à la fin : le soir de l\'élection. 📺</div>';
   }
@@ -2086,6 +2087,58 @@ function viewResultat() {
   h += '<div class="card"><h3>Les 5 finalistes dans le bon ordre <span class="small muted">(' + cfg.pts_ordre + ' pts par bon rang)</span> — <span class="cnt">' + ptsOrd + ' pts</span></h3>' + (hOrd || '<p class="muted small">Aucun classement.</p>') + '</div>';
   h += '<div class="card"><h3>2 essais Miss France — <span class="cnt">' + (ptsE1 + ptsE2) + ' pts</span></h3>' + hE + '</div>';
   h += '<div class="card"><h3>QCM — <span class="cnt">' + qcm + ' pts</span></h3><p class="small muted">Notés à la main par Nick Fury en personne, décimales vexantes incluses.</p></div>';
+  return h;
+}
+
+// Phase 3 : le vrai top 15 et les 5 finalistes sont connus. Chacun voit
+// si ses choix des phases 1 et 2 sont justes, sans aucun point affiché
+// (les scores restent sous scellés jusqu'au dévoilement).
+function viewBilanOrdre() {
+  var byId = {};
+  S.candidates.forEach(function (x) { byId[x.id] = x; });
+  var mine15 = [], mine5 = [], essais = [null, null, null];
+  Object.keys(S.mine).forEach(function (k) {
+    var p = S.mine[k], x = byId[k];
+    if (!x) return;
+    if (p.statut === "top15") mine15.push(x);
+    if (p.top5) mine5.push(x);
+    if (p.essai === 1) essais[1] = x;
+    if (p.essai === 2) essais[2] = x;
+  });
+  // Les bonnes réponses d'abord, puis par nom
+  var tri = function (cle) {
+    return function (a, b) { return (b[cle] ? 1 : 0) - (a[cle] ? 1 : 0) || a.nom.localeCompare(b.nom); };
+  };
+  mine15.sort(tri("dans_top15"));
+  mine5.sort(tri("est_finaliste"));
+
+  function ligne(x, badge) {
+    return '<div class="listline"><span class="avatar">' + missPhoto(x) + '</span>'
+      + '<div class="grow"><b style="color:var(--pink)">' + esc(x.nom) + '</b><div class="small muted">Miss ' + esc(x.region) + '</div></div>'
+      + badge + '</div>';
+  }
+  function verdict(ok) {
+    return '<span class="badge ' + (ok ? "ok" : "bad") + '">' + (ok ? "Bravo !" : "Dommage !") + '</span>';
+  }
+  var ok15 = mine15.filter(function (x) { return x.dans_top15; }).length;
+  var ok5 = mine5.filter(function (x) { return x.est_finaliste; }).length;
+
+  var h = '<h2>Mon bilan provisoire</h2>'
+    + '<div class="card center small muted">Le vrai top 15 et les 5 finalistes sont connus : voici tes bonnes et mauvaises réponses. '
+    + 'Les points, eux, restent sous scellés jusqu\'au grand dévoilement. 🔒</div>';
+  h += '<div class="card"><h3>Phase 1 : mes 15 Miss — <span class="cnt">' + ok15 + ' / ' + mine15.length + '</span> dans le vrai top 15</h3>'
+    + (mine15.map(function (x) { return ligne(x, verdict(x.dans_top15)); }).join("") || '<p class="muted small">Aucune sélection.</p>') + '</div>';
+  h += '<div class="card"><h3>Phase 2 : mes 5 Miss — <span class="cnt">' + ok5 + ' / ' + mine5.length + '</span> parmi les finalistes</h3>'
+    + (mine5.map(function (x) { return ligne(x, verdict(x.est_finaliste)); }).join("") || '<p class="muted small">Aucune sélection.</p>') + '</div>';
+  h += '<div class="card"><h3>Mes essais Miss France</h3>' + [1, 2].map(function (n) {
+    var x = essais[n];
+    if (!x) return '<p class="muted small">Essai ' + n + ' : — non joué —</p>';
+    var badge = x.est_finaliste
+      ? '<span class="badge gold">Encore en course</span>'
+      : '<span class="badge bad">Éliminée</span>';
+    return '<p class="small muted" style="margin:0.5rem 0 0">Essai Nº' + n + '</p>' + ligne(x, badge);
+  }).join("") + '</div>';
+  h += '<div class="card center small muted">Phase 3 : ton ordre final sera jugé pendant l\'élection.</div>';
   return h;
 }
 
