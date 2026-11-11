@@ -9,7 +9,7 @@ update public.mf_joueurs j
     ('britney-spears', 'Iron Woman'),
     ('kmaro', 'Doctor Strange'),
     ('loana-petrucciani', 'Cyclope'),
-    ('mel-b', 'Sylvie'),
+    ('mel-b', 'Loki'),
     ('minikeums', 'Spider-Man'),
     ('nokia-3310', 'La Torche humaine'),
     ('pussycat-dolls', 'Captain America'),

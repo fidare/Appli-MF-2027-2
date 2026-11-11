@@ -699,7 +699,7 @@ insert into public.mf_joueurs (pseudo, nom_affiche, pin, est_admin) values
   ('britney-spears',    'Iron Woman',        '1594', false),
   ('kmaro',             'Doctor Strange',    '6072', false),
   ('loana-petrucciani', 'Cyclope',           '2918', false),
-  ('mel-b',             'Sylvie',            '8437', false),
+  ('mel-b',             'Loki',              '8437', false),
   ('minikeums',         'Spider-Man',        '5140', false),
   ('nokia-3310',        'La Torche humaine', '3706', false),
   ('pussycat-dolls',    'Captain America',   '6589', false),
