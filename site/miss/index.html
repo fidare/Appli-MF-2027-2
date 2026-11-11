@@ -2322,17 +2322,17 @@ function viewAdmin() {
 
     h += '<div class="center" style="margin-bottom:0.6rem">' + saveBtn + '</div>'
       + '<p class="center small" style="margin:0 0 0.5rem">Top 15 : <span class="cnt">' + nT15 + '/15</span> · Finalistes : <span class="cnt">' + nFin + '/5</span></p>'
-      + '<input id="adm-search" class="search" placeholder="Filtrer par nom ou région…" value="' + esc(S.admQ || "") + '" oninput="App.admSearch(this)">';
+      + '<input id="adm-search" class="search" placeholder="Filtrer par région…" value="' + esc(S.admQ || "") + '" oninput="App.admSearch(this)">';
 
     var aq = (S.admQ || "").trim().toLowerCase();
     var alist = S.candidates.filter(function (x) {
       return !aq || (x.nom + " " + x.region).toLowerCase().indexOf(aq) >= 0;
     });
     if (!alist.length) h += '<p class="muted small center">Aucune Miss ne correspond à cette recherche.</p>';
-    h += '<div style="overflow-x:auto"><table class="adm"><thead><tr><th>Miss</th><th>Top 15</th><th>Finaliste</th><th>Rang final</th></tr></thead><tbody>';
+    h += '<div style="overflow-x:auto"><table class="adm"><thead><tr><th>Région</th><th>Top 15</th><th>Finaliste</th><th>Rang final</th></tr></thead><tbody>';
     alist.forEach(function (x) {
       var v = val(x);
-      h += '<tr' + (v.modif ? ' style="background:var(--pink-soft)"' : "") + '><td style="white-space:nowrap"><b>' + esc(x.nom) + '</b> <span class="small muted">· ' + esc(x.region) + '</span></td>'
+      h += '<tr' + (v.modif ? ' style="background:var(--pink-soft)"' : "") + '><td><b>' + esc(x.region) + '</b></td>'
         + '<td><input type="checkbox" id="adm-t15-' + x.id + '"' + (v.t15 ? " checked" : "") + ' onchange="App.admEdit(' + x.id + ')"></td>'
         + '<td><input type="checkbox" id="adm-fin-' + x.id + '"' + (v.fin ? " checked" : "") + ' onchange="App.admEdit(' + x.id + ')"></td>'
         + '<td><select class="inp" id="adm-rang-' + x.id + '" onchange="App.admEdit(' + x.id + ')"><option value="">—</option>';
