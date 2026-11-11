@@ -1805,7 +1805,11 @@ function galerieBase() {
   var phFinale = (ph === "ordre" || ph === "cloture" || ph === "resultats");
   var note = "";
   if (phFinale && finConnues) {
-    base = base.filter(function (x) { return x.est_finaliste; });
+    // Classement officiel : Miss France en tête, puis Nº2 à Nº5 ; les
+    // finalistes sans rang saisi suivent dans l'ordre habituel.
+    base = base.filter(function (x) { return x.est_finaliste; }).sort(function (a, b) {
+      return (a.rang_final || 99) - (b.rang_final || 99);
+    });
     note = "Les 5 finalistes officielles : les autres ont été snappées.";
   } else if ((ph === "top5" || phFinale) && top15Connu) {
     base = base.filter(function (x) { return x.dans_top15; });
