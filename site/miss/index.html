@@ -1599,6 +1599,48 @@ function btn(onclick, label, cls) {
   return '<button class="btn ' + (cls || "") + '" onclick="' + onclick + '">' + label + '</button>';
 }
 
+// Recherche tolérante : sans accents ni casse, chaque mot tapé doit
+// correspondre (début de mot ou fragment) à un mot du nom ou de la région,
+// avec 1 faute admise dès 4 lettres et 2 dès 7. Une vraie regex est aussi
+// acceptée si la saisie contient des caractères spéciaux (ex. « ^b », « ma(y|i) »).
+function sansAccent(t) {
+  return String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+function distance(a, b) {
+  var prev = [], cur, i, j;
+  for (j = 0; j <= b.length; j++) prev[j] = j;
+  for (i = 1; i <= a.length; i++) {
+    cur = [i];
+    for (j = 1; j <= b.length; j++) {
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+    prev = cur;
+  }
+  return prev[b.length];
+}
+function correspond(x, q) {
+  q = (q || "").trim();
+  if (!q) return true;
+  var brut = (x.nom || "") + " " + (x.region || "");
+  var texte = sansAccent(brut);
+  if (/[\^$.*+?()[\]{}|\\]/.test(q)) {
+    try { return new RegExp(sansAccent(q), "i").test(texte); } catch (e) { /* regex invalide : recherche tolérante */ }
+  }
+  var mots = texte.split(/[^a-z0-9]+/).filter(Boolean);
+  return sansAccent(q).split(/[^a-z0-9]+/).filter(Boolean).every(function (m) {
+    if (texte.indexOf(m) >= 0) return true;
+    var tol = m.length >= 7 ? 2 : m.length >= 4 ? 1 : 0;
+    if (!tol) return false;
+    return mots.some(function (w) {
+      // Compare au mot entier et à son début (saisie en cours).
+      for (var n = Math.max(1, m.length - tol); n <= Math.min(w.length, m.length + tol); n++) {
+        if (distance(m, w.slice(0, n)) <= tol) return true;
+      }
+      return false;
+    });
+  });
+}
+
 function rangSelect(cid, cur) {
   var h = '<label class="small muted">Place finale : </label><select class="inp" onchange="App.rang(' + cid + ', this)">';
   h += '<option value=""' + (cur ? "" : " selected") + '>—</option>';
@@ -1827,7 +1869,7 @@ function galerieBase() {
   // éliminées, d'où la fonction renvoyée).
   var fr = (S.config.filtre || "").trim().toLowerCase();
   function filtre(l) {
-    return fr ? l.filter(function (x) { return (x.nom + " " + x.region).toLowerCase().indexOf(fr) >= 0; }) : l;
+    return fr ? l.filter(function (x) { return correspond(x, fr); }) : l;
   }
   return { list: filtre(base), course: base, appliquer: filtre, note: note, filtre: fr ? S.config.filtre.trim() : "" };
 }
@@ -1846,7 +1888,7 @@ function viewAccueil() {
   var q = S.q.trim().toLowerCase();
   function cherche(l) {
     return l.filter(function (x) {
-      return !q || (x.nom + " " + x.region).toLowerCase().indexOf(q) >= 0;
+      return correspond(x, q);
     });
   }
   var list = cherche(base);
@@ -2326,7 +2368,7 @@ function viewAdmin() {
 
     var aq = (S.admQ || "").trim().toLowerCase();
     var alist = S.candidates.filter(function (x) {
-      return !aq || (x.nom + " " + x.region).toLowerCase().indexOf(aq) >= 0;
+      return correspond(x, aq);
     });
     if (!alist.length) h += '<p class="muted small center">Aucune Miss ne correspond à cette recherche.</p>';
     h += '<div style="overflow-x:auto"><table class="adm"><thead><tr><th>Région</th><th>Top 15</th><th>Finaliste</th><th>Rang final</th></tr></thead><tbody>';
