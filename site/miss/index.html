@@ -1984,10 +1984,11 @@ function viewSelection() {
 // ----- Résultat (mes points) -----
 function viewResultat() {
   var ph = S.config.phase;
-  // Phases 2 et 3 : dès que le top 15 officiel est saisi en Régie, chaque
-  // joueur voit son propre bilan top 15 (rien sur les autres joueurs).
+  // Phase 2 : bilan top 15. Phase 3 : bilan complet (15, 5, essais).
+  // Chacun ne voit que ses propres réponses.
   var top15Connu = S.candidates.some(function (x) { return x.dans_top15; });
-  if ((ph === "top5" || ph === "ordre") && top15Connu) return viewBilanTop15();
+  if (ph === "ordre") return viewBilanOrdre();
+  if (ph === "top5" && top15Connu) return viewBilanTop15();
   if (ph !== "cloture" && ph !== "resultats") {
     return '<h2>Résultat</h2><div class="card center muted">Patience… Comme une scène post-générique, cette page ne s\'allumera qu\'à la fin : le soir de l\'élection. 📺</div>';
   }
@@ -2119,6 +2120,58 @@ function viewBilanTop15() {
     + '<p class="small muted" style="margin:0">Soit <b>' + pts + ' pts</b> (' + cfg.pts_top15 + ' pts par Miss trouvée). '
     + 'Score provisoire : le reste se joue ce soir, et le classement complet reste sous scellés jusqu\'au dévoilement.</p></div>'
     + '<div class="card"><h3>Mes 15 recrues</h3>' + (lignes || '<p class="muted small">Aucune sélection.</p>') + '</div>';
+}
+
+// Phase 3 : le vrai top 15 et les 5 finalistes sont connus. Chacun voit
+// si ses choix des phases 1 et 2 sont justes. Seuls les points du top 15
+// sont affichés (comme en phase 2) ; le classement reste sous scellés.
+function viewBilanOrdre() {
+  var byId = {};
+  S.candidates.forEach(function (x) { byId[x.id] = x; });
+  var mine15 = [], mine5 = [], essais = [null, null, null];
+  Object.keys(S.mine).forEach(function (k) {
+    var p = S.mine[k], x = byId[k];
+    if (!x) return;
+    if (p.statut === "top15") mine15.push(x);
+    if (p.top5) mine5.push(x);
+    if (p.essai === 1) essais[1] = x;
+    if (p.essai === 2) essais[2] = x;
+  });
+  // Les bonnes réponses d'abord, puis par nom
+  var tri = function (cle) {
+    return function (a, b) { return (b[cle] ? 1 : 0) - (a[cle] ? 1 : 0) || a.nom.localeCompare(b.nom); };
+  };
+  mine15.sort(tri("dans_top15"));
+  mine5.sort(tri("est_finaliste"));
+
+  function ligne(x, badge) {
+    return '<div class="listline"><span class="avatar">' + missPhoto(x) + '</span>'
+      + '<div class="grow"><b style="color:var(--pink)">' + esc(x.nom) + '</b><div class="small muted">Miss ' + esc(x.region) + '</div></div>'
+      + badge + '</div>';
+  }
+  function verdict(ok) {
+    return '<span class="badge ' + (ok ? "ok" : "bad") + '">' + (ok ? "Bravo !" : "Dommage !") + '</span>';
+  }
+  var ok15 = mine15.filter(function (x) { return x.dans_top15; }).length;
+  var ok5 = mine5.filter(function (x) { return x.est_finaliste; }).length;
+
+  var h = '<h2>Mon bilan provisoire</h2>'
+    + '<div class="card center small muted">Le vrai top 15 et les 5 finalistes sont connus : voici tes bonnes et mauvaises réponses. '
+    + 'Le classement complet reste sous scellés jusqu\'au grand dévoilement. 🔒</div>';
+  h += '<div class="card"><h3>Phase 1 : mes 15 Miss — <span class="cnt">' + ok15 + ' / ' + mine15.length + '</span> dans le vrai top 15 <span class="small muted">(' + ok15 * S.config.pts_top15 + ' pts)</span></h3>'
+    + (mine15.map(function (x) { return ligne(x, verdict(x.dans_top15)); }).join("") || '<p class="muted small">Aucune sélection.</p>') + '</div>';
+  h += '<div class="card"><h3>Phase 2 : mes 5 Miss — <span class="cnt">' + ok5 + ' / ' + mine5.length + '</span> parmi les finalistes</h3>'
+    + (mine5.map(function (x) { return ligne(x, verdict(x.est_finaliste)); }).join("") || '<p class="muted small">Aucune sélection.</p>') + '</div>';
+  h += '<div class="card"><h3>Mes essais Miss France</h3>' + [1, 2].map(function (n) {
+    var x = essais[n];
+    if (!x) return '<p class="muted small">Essai ' + n + ' : — non joué —</p>';
+    var badge = x.est_finaliste
+      ? '<span class="badge gold">Encore en course</span>'
+      : '<span class="badge bad">Éliminée</span>';
+    return '<p class="small muted" style="margin:0.5rem 0 0">Essai Nº' + n + '</p>' + ligne(x, badge);
+  }).join("") + '</div>';
+  h += '<div class="card center small muted">Phase 3 : ton ordre final sera jugé pendant l\'élection.</div>';
+  return h;
 }
 
 // ----- Benchmark -----
