@@ -447,7 +447,9 @@
   .row { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; }
   .listline { display: flex; align-items: center; gap: 0.7rem; padding: 0.55rem 0; border-bottom: 1px solid var(--line); }
   .listline:last-child { border-bottom: none; }
-  .listline .grow { flex: 1; min-width: 0; }
+  .listline .grow { flex: 1 1 6rem; min-width: 6rem; overflow-wrap: anywhere; }
+  .listline .tags { display: flex; flex-direction: column; align-items: flex-end; gap: 0.3rem; flex: 0 1 auto; max-width: 60%; }
+  .listline .tags .badge, .listline .tags .btn { margin: 0; white-space: nowrap; }
 
   .bar { margin: 0.65rem 0; }
   .bar .top { display: flex; justify-content: space-between; align-items: baseline; gap: 0.6rem; font-size: 0.82rem; margin-bottom: 0.28rem; }
@@ -1919,7 +1921,7 @@ function viewSelection() {
       + '<span class="avatar" style="cursor:pointer" onclick="App.fiche(' + x.id + ')">' + missPhoto(x) + '</span>'
       + '<div class="grow"><b style="color:var(--pink);cursor:pointer" onclick="App.fiche(' + x.id + ')">' + esc(x.nom) + '</b>'
       + '<div class="small muted">Miss ' + esc(x.region) + '</div></div>'
-      + '<div>' + (extra || "") + '</div></div>';
+      + '<div class="tags">' + (extra || "") + '</div></div>';
   }
 
   var h = '<h2>Ma sélection</h2>'
