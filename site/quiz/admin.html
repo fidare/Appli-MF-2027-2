@@ -149,17 +149,27 @@ function classement() {
 function vueClassement() {
   var l = classement(), max = scoreMax();
   var fin = l.filter(function (p) { return p.fin; }).length;
+  var ctl = A.d.config.controle_requis ? l.filter(function (p) { return p.fin && !p.controle; }).length : 0;
   var h = '<div class="card"><div class="row sb"><div><b class="gold">' + pluriel(l.length, "joueur") + "</b>"
-    + '<div class="small muted">' + fin + " terminé" + (fin > 1 ? "s" : "") + " · " + (l.length - fin) + " en cours</div></div>"
+    + '<div class="small muted">' + fin + " terminé" + (fin > 1 ? "s" : "") + " · " + (l.length - fin) + " en cours"
+    + (ctl ? ' · <span class="gold">' + ctl + " à contrôler</span>" : "") + "</div></div>"
     + '<div><button class="btn mini dark" onclick="Adm.exporter(\'csv\')">' + icon("down") + " CSV</button>"
     + '<button class="btn mini dark" onclick="Adm.exporter(\'xlsx\')">' + icon("down") + " Excel</button>"
     + '<button class="btn mini dark" onclick="Adm.rafraichir()" aria-label="Rafraîchir">' + icon("refresh") + "</button></div></div>"
+    + (ctl ? '<button class="btn okb mini" style="margin-top:0.7rem" onclick="Adm.controler(null,true)">' + icon("check")
+      + (ctl > 1 ? " Valider les " + ctl + " copies à contrôler" : " Valider la copie à contrôler") + "</button>" : "")
     + '<input class="inp" style="margin:0.8rem 0 0" placeholder="Rechercher un joueur" value="' + esc(A.filtre) + '" oninput="Adm.filtrer(this.value)"></div>';
   var f = norm(A.filtre);
   var vis = l.filter(function (p) { return !f || norm(p.prenom + " " + p.email).indexOf(f) >= 0; });
   if (!vis.length) h += '<p class="center muted">' + (l.length ? "Aucun joueur trouvé." : "Personne n'a encore joué.") + "</p>";
   vis.forEach(function (p) { h += carteJoueur(p, max); });
   return h;
+}
+
+function statutJoueur(p) {
+  if (!p.fin) return '<span class="badge dark">En cours</span>';
+  if (!A.d.config.controle_requis) return '<span class="badge ok">Terminé</span>';
+  return p.controle ? '<span class="badge ok">' + icon("check") + " Contrôlé</span>" : '<span class="badge gold">À contrôler</span>';
 }
 
 function carteJoueur(p, max) {
@@ -169,7 +179,7 @@ function carteJoueur(p, max) {
     + '<div class="small muted" style="overflow-wrap:anywhere">' + esc(p.email || "sans email") + " · "
     + (p.fin ? "fini le " + dateFr(p.fin) : "commencé le " + dateFr(p.debut)) + "</div></div>"
     + '<div style="text-align:right"><div class="sc">' + nb(p.score) + '<span class="muted" style="font-size:1rem"> / ' + nb(max) + "</span></div>"
-    + (p.fin ? '<span class="badge ok">Terminé</span>' : '<span class="badge dark">En cours</span>') + "</div></div>";
+    + statutJoueur(p) + "</div></div>";
   if (A.ouvert === p.id) {
     h += '<div class="det">';
     A.d.questions.forEach(function (q, i) {
@@ -186,7 +196,13 @@ function carteJoueur(p, max) {
         + '<button class="btn mini dark au' + (etat === "au" ? " on" : "") + '" title="Correction automatique" onclick="Adm.forcer(' + p.id + "," + q.id + ',null)">Auto</button>'
         + "</div></div></div>";
     });
-    h += '<div style="margin-top:0.8rem"><button class="btn mini" onclick="Adm.supprimer(' + p.id + ')">' + icon("trash") + " Supprimer ce résultat</button>"
+    h += '<div style="margin-top:0.8rem">';
+    if (p.fin && A.d.config.controle_requis) {
+      h += p.controle
+        ? '<button class="btn mini dark" onclick="Adm.controler(' + p.id + ',false)">' + icon("undo") + " Retirer la validation</button>"
+        : '<button class="btn mini okb" onclick="Adm.controler(' + p.id + ',true)">' + icon("check") + " Valider la copie</button>";
+    }
+    h += '<button class="btn mini" onclick="Adm.supprimer(' + p.id + ')">' + icon("trash") + " Supprimer ce résultat</button>"
       + '<div class="small muted" style="margin-top:0.3rem">La suppression permet aussi au joueur de rejouer.</div></div></div>';
   }
   return h + "</div>";
@@ -407,6 +423,7 @@ function vueReglages() {
     + '<label class="chk"><input type="checkbox" id="re"' + (c.email_obligatoire ? " checked" : "") + "> Email obligatoire</label>"
     + '<label class="chk"><input type="checkbox" id="rc"' + (c.correction_visible ? " checked" : "") + "> Montrer la correction aux joueurs à la fin</label>"
     + '<label class="chk"><input type="checkbox" id="rs"' + (c.score_visible ? " checked" : "") + "> Montrer leur score aux joueurs à la fin</label>"
+    + '<label class="chk"><input type="checkbox" id="rk"' + (c.controle_requis ? " checked" : "") + "> Contrôle du S.H.I.E.L.D. : score et correction visibles seulement après validation de la copie (onglet Classement)</label>"
     + '<button class="btn gold" style="margin-top:0.6rem" onclick="Adm.reglages()">Enregistrer</button></div>'
     + '<div class="center"><button class="btn dark" onclick="Adm.deconnexion()">' + icon("exit") + " Se déconnecter</button></div>";
 }
@@ -418,7 +435,7 @@ function tableauExport() {
   qs.forEach(function (q, i) { tete.push("Q" + (i + 1) + " réponse", "Q" + (i + 1) + " correct"); });
   var lignes = [tete];
   classement().forEach(function (p) {
-    var l = [p.rang, p.prenom, p.email, dateFr(p.debut), dateFr(p.fin), p.fin ? "Terminé" : "En cours", Number(p.score), max];
+    var l = [p.rang, p.prenom, p.email, dateFr(p.debut), dateFr(p.fin), !p.fin ? "En cours" : p.controle ? "Contrôlé" : "Terminé", Number(p.score), max];
     qs.forEach(function (q) {
       var r = p.reponses[q.id];
       l.push(r ? r.r : "", r && r.ok ? 1 : 0);
@@ -477,6 +494,13 @@ var Adm = {
   },
   forcer: function (pid, qid, v) {
     action(call("qz_admin_forcer", { p_participation: pid, p_question: qid, p_valeur: v }));
+  },
+  controler: function (pid, v) {
+    call("qz_admin_controler", { p_participation: pid, p_valeur: v }).then(function (n) {
+      toast(v ? (pid ? "Copie validée : le joueur voit son résultat" : pluriel(n, "copie") + " validée" + (n > 1 ? "s" : ""))
+              : "Validation retirée");
+      return charger();
+    }).catch(function (e) { toast(e.message, true); });
   },
   supprimer: function (pid) {
     var p = A.d.participations.filter(function (x) { return x.id === pid; })[0];
@@ -564,7 +588,8 @@ var Adm = {
       ouvert: document.getElementById("ro").checked,
       email_obligatoire: document.getElementById("re").checked,
       correction_visible: document.getElementById("rc").checked,
-      score_visible: document.getElementById("rs").checked
+      score_visible: document.getElementById("rs").checked,
+      controle_requis: document.getElementById("rk").checked
     } }), "Réglages enregistrés");
   },
   copier: function () {

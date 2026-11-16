@@ -30,6 +30,19 @@ insert into public.qz_config (id) values (1) on conflict do nothing;
 -- Score affiché au joueur à la fin (la correction peut l'être sans lui).
 alter table public.qz_config add column if not exists score_visible boolean not null default false;
 
+-- Contrôle du S.H.I.E.L.D. : le score et la correction d'un joueur
+-- restent cachés tant que l'administrateur n'a pas validé sa copie.
+-- (Première installation de ce contrôle : le score redevient visible
+-- une fois la copie validée.)
+do $$
+begin
+  if not exists (select 1 from information_schema.columns
+                 where table_schema = 'public' and table_name = 'qz_config' and column_name = 'controle_requis') then
+    alter table public.qz_config add column controle_requis boolean not null default true;
+    update public.qz_config set score_visible = true;
+  end if;
+end $$;
+
 create table if not exists public.qz_themes (
   id bigint generated always as identity primary key,
   ordre int not null default 0,
@@ -59,6 +72,7 @@ create table if not exists public.qz_participations (
   fin timestamptz,                        -- null : quiz en cours
   score numeric not null default 0
 );
+alter table public.qz_participations add column if not exists controle timestamptz; -- copie validée par l'admin
 create index if not exists qz_participations_appareil on public.qz_participations (appareil);
 create index if not exists qz_participations_email on public.qz_participations (email) where email <> '';
 
@@ -251,20 +265,23 @@ $$;
 
 create or replace function public.qz_etat(p_jeton uuid) returns jsonb
 language plpgsql stable security definer set search_path = public as $$
-declare p qz_participations; c qz_config;
+declare p qz_participations; c qz_config; v boolean;
 begin
   select * into p from qz_participations where jeton = p_jeton;
   if not found then return null; end if;
   select * into c from qz_config where id = 1;
+  -- Résultat visible : quiz envoyé et, si le contrôle est demandé, copie validée.
+  v := p.fin is not null and (not c.controle_requis or p.controle is not null);
   return jsonb_build_object(
     'prenom', p.prenom, 'termine', p.fin is not null,
     'reponses', coalesce((select jsonb_object_agg(r.question_id::text, r.reponse)
                           from qz_reponses r where r.participation_id = p.id), '{}'::jsonb),
-    'correction_visible', c.correction_visible,
-    'score_visible', c.score_visible,
-    'score', case when p.fin is not null and c.score_visible then p.score end,
-    'score_max', case when p.fin is not null and c.score_visible then (select coalesce(sum(points), 0) from qz_questions) end,
-    'correction', case when p.fin is not null and c.correction_visible then qz_correction(p.id) end
+    'en_attente', p.fin is not null and not v,
+    'correction_visible', v and c.correction_visible,
+    'score_visible', v and c.score_visible,
+    'score', case when v and c.score_visible then p.score end,
+    'score_max', case when v and c.score_visible then (select coalesce(sum(points), 0) from qz_questions) end,
+    'correction', case when v and c.correction_visible then qz_correction(p.id) end
   );
 end $$;
 
@@ -392,7 +409,8 @@ begin
   perform qz_admin_ok(p_jeton);
   return jsonb_build_object(
     'config', (select jsonb_build_object('titre', titre, 'intro', intro, 'ouvert', ouvert,
-                 'email_obligatoire', email_obligatoire, 'correction_visible', correction_visible, 'score_visible', score_visible)
+                 'email_obligatoire', email_obligatoire, 'correction_visible', correction_visible, 'score_visible', score_visible,
+                 'controle_requis', controle_requis)
                from qz_config where id = 1),
     'themes', coalesce((select jsonb_agg(jsonb_build_object('id', id, 'titre', titre, 'intro', intro)
                order by ordre, id) from qz_themes), '[]'::jsonb),
@@ -405,7 +423,7 @@ begin
                order by t.ordre, t.id, q.ordre, q.id)
                from qz_questions q join qz_themes t on t.id = q.theme_id), '[]'::jsonb),
     'participations', coalesce((select jsonb_agg(jsonb_build_object(
-                 'id', p.id, 'prenom', p.prenom, 'email', p.email, 'debut', p.debut, 'fin', p.fin,
+                 'id', p.id, 'prenom', p.prenom, 'email', p.email, 'debut', p.debut, 'fin', p.fin, 'controle', p.controle,
                  'score', p.score,
                  'reponses', coalesce((select jsonb_object_agg(r.question_id::text, jsonb_build_object(
                      'r', r.reponse, 'auto', r.auto_correct, 'force', r.force,
@@ -469,6 +487,20 @@ begin
   perform qz_recalc_scores();
 end $$;
 
+-- Valider (true) ou dévalider (false) une copie terminée ; sans
+-- participation (null) : toutes les copies terminées.
+create or replace function public.qz_admin_controler(p_jeton uuid, p_participation bigint, p_valeur boolean)
+returns int language plpgsql security definer set search_path = public as $$
+declare n int;
+begin
+  perform qz_admin_ok(p_jeton);
+  update qz_participations set controle = case when p_valeur then coalesce(controle, now()) end
+  where fin is not null and (p_participation is null or id = p_participation)
+    and (controle is null) = p_valeur;
+  get diagnostics n = row_count;
+  return n;
+end $$;
+
 create or replace function public.qz_admin_supprimer(p_jeton uuid, p_participation bigint)
 returns void language plpgsql security definer set search_path = public as $$
 begin
@@ -486,7 +518,8 @@ begin
     ouvert = coalesce((p->>'ouvert')::boolean, ouvert),
     email_obligatoire = coalesce((p->>'email_obligatoire')::boolean, email_obligatoire),
     correction_visible = coalesce((p->>'correction_visible')::boolean, correction_visible),
-    score_visible = coalesce((p->>'score_visible')::boolean, score_visible)
+    score_visible = coalesce((p->>'score_visible')::boolean, score_visible),
+    controle_requis = coalesce((p->>'controle_requis')::boolean, controle_requis)
   where id = 1;
 end $$;
 
