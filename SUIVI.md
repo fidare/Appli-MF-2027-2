@@ -88,9 +88,9 @@ Dernière mise à jour : 29/07/2026
   `site/miss/candidates/`). Remplace le casting de test et efface les
   pronostics existants. Poids et mensurations non publiés.
 - `candidates-portraits.sql` : portraits officiels (programme-tv.net,
-  16/11/2026) en photo principale + photo en pied, anciennes photos
-  conservées ensuite. Tahiti non publiée : photo inchangée. Sans effet
-  sur les pronostics.
+  Le Figaro pour Tahiti, 16/11/2026) en photo principale + photo en
+  pied, anciennes photos conservées ensuite. Sans effet sur les
+  pronostics.
 - Ensuite : Régie → phase « Sélection des 15 » et distribuer l'URL + les PIN
 
 ## Notes techniques

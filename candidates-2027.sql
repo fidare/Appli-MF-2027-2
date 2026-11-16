@@ -2,7 +2,7 @@
 -- Casting officiel Miss France 2027 : les 31 Miss régionales.
 -- Sources : ici.fr et CNews (âge, métier, photos Instagram des
 -- comités), Wikipédia (taille). Photo principale : portrait officiel
--- (programme-tv.net, 16/11/2026), sauf Tahiti non publiée. Photos hébergées sur le site
+-- (programme-tv.net et Le Figaro pour Tahiti, 16/11/2026). Photos hébergées sur le site
 -- (site/miss/candidates/). Poids et mensurations non publiés.
 --
 -- À coller dans Supabase → SQL Editor → Run.
@@ -136,6 +136,6 @@ insert into public.mf_candidates (nom, region, age, taille, profession, photo_ur
    array['https://fidare.github.io/Appli-MF-2027-2/miss/candidates/saint-martin-et-saint-barthelemy-pied.jpg', 'https://fidare.github.io/Appli-MF-2027-2/miss/candidates/saint-martin-et-saint-barthelemy-1.jpg', 'https://fidare.github.io/Appli-MF-2027-2/miss/candidates/saint-martin-et-saint-barthelemy-2.jpg', 'https://fidare.github.io/Appli-MF-2027-2/miss/candidates/saint-martin-et-saint-barthelemy-3.jpg']::text[],
    'naila.parotte_officiel'),
   ('Leia Diard', 'Tahiti', 22, '1,72 m', 'Professeure de danse polynésienne (licence AES)',
-   'https://fidare.github.io/Appli-MF-2027-2/miss/candidates/tahiti-1.jpg',
-   array['https://fidare.github.io/Appli-MF-2027-2/miss/candidates/tahiti-2.jpg']::text[],
+   'https://fidare.github.io/Appli-MF-2027-2/miss/candidates/tahiti-portrait.jpg',
+   array['https://fidare.github.io/Appli-MF-2027-2/miss/candidates/tahiti-pied.jpg', 'https://fidare.github.io/Appli-MF-2027-2/miss/candidates/tahiti-1.jpg', 'https://fidare.github.io/Appli-MF-2027-2/miss/candidates/tahiti-2.jpg']::text[],
    'leiadiard_off');

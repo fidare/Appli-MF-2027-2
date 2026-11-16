@@ -1,8 +1,8 @@
 -- ============================================================
--- Portraits officiels Miss France 2027 (programme-tv.net, 16/11/2026)
+-- Portraits officiels Miss France 2027 (programme-tv.net, 16/11/2026 ;
+-- Tahiti : Le Figaro)
 -- Met le portrait officiel en photo principale de chaque Miss,
 -- ajoute la photo en pied, et garde les anciennes photos ensuite.
--- Tahiti : portrait non publié, photo inchangée.
 -- Sans effet sur les pronostics. Réexécutable sans risque.
 -- À coller dans Supabase → SQL Editor → Run.
 -- ============================================================
@@ -97,3 +97,6 @@ update public.mf_candidates set photo_url = 'https://fidare.github.io/Appli-MF-2
 update public.mf_candidates set photo_url = 'https://fidare.github.io/Appli-MF-2027-2/miss/candidates/saint-martin-et-saint-barthelemy-portrait.jpg',
   photos = array['https://fidare.github.io/Appli-MF-2027-2/miss/candidates/saint-martin-et-saint-barthelemy-pied.jpg', 'https://fidare.github.io/Appli-MF-2027-2/miss/candidates/saint-martin-et-saint-barthelemy-1.jpg']::text[] || array_remove(array_remove(array_remove(coalesce(photos, '{}'), 'https://fidare.github.io/Appli-MF-2027-2/miss/candidates/saint-martin-et-saint-barthelemy-pied.jpg'), 'https://fidare.github.io/Appli-MF-2027-2/miss/candidates/saint-martin-et-saint-barthelemy-1.jpg'), 'https://fidare.github.io/Appli-MF-2027-2/miss/candidates/saint-martin-et-saint-barthelemy-portrait.jpg')
   where region = 'Saint-Martin et Saint-Barthélemy';
+update public.mf_candidates set photo_url = 'https://fidare.github.io/Appli-MF-2027-2/miss/candidates/tahiti-portrait.jpg',
+  photos = array['https://fidare.github.io/Appli-MF-2027-2/miss/candidates/tahiti-pied.jpg', 'https://fidare.github.io/Appli-MF-2027-2/miss/candidates/tahiti-1.jpg']::text[] || array_remove(array_remove(array_remove(coalesce(photos, '{}'), 'https://fidare.github.io/Appli-MF-2027-2/miss/candidates/tahiti-pied.jpg'), 'https://fidare.github.io/Appli-MF-2027-2/miss/candidates/tahiti-1.jpg'), 'https://fidare.github.io/Appli-MF-2027-2/miss/candidates/tahiti-portrait.jpg')
+  where region = 'Tahiti';
