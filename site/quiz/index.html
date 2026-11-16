@@ -246,18 +246,23 @@ function vueResultat() {
     return h + '<div class="card center"><h3>Merci ' + esc(e.prenom) + ' !</h3>'
       + '<p class="muted">Tes réponses sont bien enregistrées. Les résultats seront annoncés plus tard.</p></div>';
   }
-  var pct = e.score_max > 0 ? Math.round(100 * e.score / e.score_max) : 0;
-  var msg = pct >= 90 ? "Digne des Avengers !" : pct >= 70 ? "Très belle mission." : pct >= 50 ? "Mission accomplie." : "Le S.H.I.E.L.D. te réentraîne…";
-  h += '<div class="card center"><div class="eyebrow">Ton score, ' + esc(e.prenom) + '</div>'
-    + '<div class="score">' + nb(e.score) + "<small> / " + nb(e.score_max) + "</small></div>"
-    + '<p style="margin:0.4rem 0 0" class="gold">' + msg + "</p></div>";
+  if (e.score_visible && e.score != null) {
+    var pct = e.score_max > 0 ? Math.round(100 * e.score / e.score_max) : 0;
+    var msg = pct >= 90 ? "Digne des Avengers !" : pct >= 70 ? "Très belle mission." : pct >= 50 ? "Mission accomplie." : "Le S.H.I.E.L.D. te réentraîne…";
+    h += '<div class="card center"><div class="eyebrow">Ton score, ' + esc(e.prenom) + '</div>'
+      + '<div class="score">' + nb(e.score) + "<small> / " + nb(e.score_max) + "</small></div>"
+      + '<p style="margin:0.4rem 0 0" class="gold">' + msg + "</p></div>";
+  } else {
+    h += '<div class="card center"><h3 style="margin-top:0">Merci ' + esc(e.prenom) + ' !</h3>'
+      + '<p class="muted" style="margin:0">Tes réponses sont bien enregistrées. Voici la correction.</p></div>';
+  }
   h += "<h2>Correction</h2>";
   var theme = null;
   e.correction.forEach(function (c, i) {
     if (c.theme !== theme && themes().length > 1) { theme = c.theme; h += "<h3>" + esc(theme) + "</h3>"; }
     h += '<div class="card corr ' + (c.correct ? "ok" : "ko") + '"><div class="qnum"><span class="eyebrow">Question ' + (i + 1) + "</span>"
-      + (c.correct ? '<span class="badge ok">' + icon("check") + " +" + pluriel(c.obtenus, "pt") + "</span>"
-                   : '<span class="badge bad">' + icon("x") + " 0 pt</span>") + "</div>"
+      + (c.correct ? '<span class="badge ok">' + icon("check") + (e.score_visible ? " +" + pluriel(c.obtenus, "pt") : " Juste") + "</span>"
+                   : '<span class="badge bad">' + icon("x") + (e.score_visible ? " 0 pt" : " Faux") + "</span>") + "</div>"
       + '<div class="enonce prewrap">' + esc(c.enonce) + "</div>"
       + '<div class="rep small">Ta réponse : <b>' + (c.reponse ? esc(c.reponse) : '<span class="muted">sans réponse</span>') + "</b></div>"
       + (c.correct ? "" : '<div class="rep small">Bonne réponse : <b class="gold">' + esc(c.bonne || "") + "</b></div>")

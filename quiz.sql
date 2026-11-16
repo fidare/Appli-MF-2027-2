@@ -27,6 +27,9 @@ create table if not exists public.qz_config (
 );
 insert into public.qz_config (id) values (1) on conflict do nothing;
 
+-- Score affiché au joueur à la fin (la correction peut l'être sans lui).
+alter table public.qz_config add column if not exists score_visible boolean not null default false;
+
 create table if not exists public.qz_themes (
   id bigint generated always as identity primary key,
   ordre int not null default 0,
@@ -258,8 +261,9 @@ begin
     'reponses', coalesce((select jsonb_object_agg(r.question_id::text, r.reponse)
                           from qz_reponses r where r.participation_id = p.id), '{}'::jsonb),
     'correction_visible', c.correction_visible,
-    'score', case when p.fin is not null and c.correction_visible then p.score end,
-    'score_max', case when p.fin is not null and c.correction_visible then (select coalesce(sum(points), 0) from qz_questions) end,
+    'score_visible', c.score_visible,
+    'score', case when p.fin is not null and c.score_visible then p.score end,
+    'score_max', case when p.fin is not null and c.score_visible then (select coalesce(sum(points), 0) from qz_questions) end,
     'correction', case when p.fin is not null and c.correction_visible then qz_correction(p.id) end
   );
 end $$;
@@ -388,7 +392,7 @@ begin
   perform qz_admin_ok(p_jeton);
   return jsonb_build_object(
     'config', (select jsonb_build_object('titre', titre, 'intro', intro, 'ouvert', ouvert,
-                 'email_obligatoire', email_obligatoire, 'correction_visible', correction_visible)
+                 'email_obligatoire', email_obligatoire, 'correction_visible', correction_visible, 'score_visible', score_visible)
                from qz_config where id = 1),
     'themes', coalesce((select jsonb_agg(jsonb_build_object('id', id, 'titre', titre, 'intro', intro)
                order by ordre, id) from qz_themes), '[]'::jsonb),
@@ -481,7 +485,8 @@ begin
     intro = coalesce(p->>'intro', intro),
     ouvert = coalesce((p->>'ouvert')::boolean, ouvert),
     email_obligatoire = coalesce((p->>'email_obligatoire')::boolean, email_obligatoire),
-    correction_visible = coalesce((p->>'correction_visible')::boolean, correction_visible)
+    correction_visible = coalesce((p->>'correction_visible')::boolean, correction_visible),
+    score_visible = coalesce((p->>'score_visible')::boolean, score_visible)
   where id = 1;
 end $$;
 

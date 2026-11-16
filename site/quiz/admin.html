@@ -405,7 +405,8 @@ function vueReglages() {
     + '<label class="lab" for="ri">Texte d\'introduction</label><textarea class="inp" id="ri" rows="5">' + esc(c.intro) + "</textarea>"
     + '<label class="chk"><input type="checkbox" id="ro"' + (c.ouvert ? " checked" : "") + "> Quiz ouvert (décoché : plus personne ne peut commencer ni répondre)</label>"
     + '<label class="chk"><input type="checkbox" id="re"' + (c.email_obligatoire ? " checked" : "") + "> Email obligatoire</label>"
-    + '<label class="chk"><input type="checkbox" id="rc"' + (c.correction_visible ? " checked" : "") + "> Montrer score et correction aux joueurs à la fin</label>"
+    + '<label class="chk"><input type="checkbox" id="rc"' + (c.correction_visible ? " checked" : "") + "> Montrer la correction aux joueurs à la fin</label>"
+    + '<label class="chk"><input type="checkbox" id="rs"' + (c.score_visible ? " checked" : "") + "> Montrer leur score aux joueurs à la fin</label>"
     + '<button class="btn gold" style="margin-top:0.6rem" onclick="Adm.reglages()">Enregistrer</button></div>'
     + '<div class="center"><button class="btn dark" onclick="Adm.deconnexion()">' + icon("exit") + " Se déconnecter</button></div>";
 }
@@ -562,7 +563,8 @@ var Adm = {
       intro: document.getElementById("ri").value,
       ouvert: document.getElementById("ro").checked,
       email_obligatoire: document.getElementById("re").checked,
-      correction_visible: document.getElementById("rc").checked
+      correction_visible: document.getElementById("rc").checked,
+      score_visible: document.getElementById("rs").checked
     } }), "Réglages enregistrés");
   },
   copier: function () {
