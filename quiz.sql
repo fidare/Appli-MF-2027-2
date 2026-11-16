@@ -3,6 +3,9 @@
 -- À coller tel quel dans Supabase → SQL Editor → Run.
 -- Réexécutable sans risque : ne supprime aucune donnée.
 --
+-- Toute modification porte une clause WHERE (Supabase refuse les
+-- UPDATE et DELETE sans WHERE venant du site).
+--
 -- Sécurité : aucune table n'est lisible ni modifiable via l'API
 -- publique. Tout passe par les fonctions qz_* ci-dessous :
 --   - les joueurs n'obtiennent que les questions (sans les réponses),
@@ -39,7 +42,7 @@ begin
   if not exists (select 1 from information_schema.columns
                  where table_schema = 'public' and table_name = 'qz_config' and column_name = 'controle_requis') then
     alter table public.qz_config add column controle_requis boolean not null default true;
-    update public.qz_config set score_visible = true;
+    update public.qz_config set score_visible = true where id = 1;
   end if;
 end $$;
 
@@ -239,7 +242,8 @@ language plpgsql security definer set search_path = public as $$
 begin
   update qz_participations p set score = coalesce((
     select sum(q.points) from qz_reponses r join qz_questions q on q.id = r.question_id
-    where r.participation_id = p.id and coalesce(r.force, r.auto_correct)), 0);
+    where r.participation_id = p.id and coalesce(r.force, r.auto_correct)), 0)
+  where true; -- Supabase refuse un UPDATE sans WHERE
   perform qz_sync_qcm();
 end $$;
 
@@ -404,7 +408,7 @@ declare v_sel text := gen_random_uuid()::text;
 begin
   if length(coalesce(p_mdp, '')) < 8 then raise exception 'Au moins 8 caractères.'; end if;
   update qz_config set admin_sel = v_sel, admin_hash = qz_hash(v_sel, p_mdp) where id = 1;
-  delete from qz_admin_jetons;
+  delete from qz_admin_jetons where true;
   return 'Mot de passe enregistré.';
 end $$;
 
@@ -592,7 +596,7 @@ declare th jsonb; qu jsonb; v_tid bigint; v_ordre int; v_n int := 0; v_t int := 
 begin
   perform qz_admin_ok(p_jeton);
   if p_remplacer then
-    delete from qz_themes;
+    delete from qz_themes where true;
   end if;
   if p_intro is not null and btrim(p_intro) <> '' then
     update qz_config set intro = p_intro where id = 1;
