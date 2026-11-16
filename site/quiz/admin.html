@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#06080f">
+<meta name="robots" content="noindex">
+<title>Quiz · QG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="commun.css">
+<style>
+  nav.tabs {
+    position: fixed; left: 50%; transform: translateX(-50%);
+    bottom: calc(0.7rem + env(safe-area-inset-bottom)); z-index: 40;
+    width: min(94vw, 600px); display: flex; justify-content: space-around;
+    padding: 0.4rem 0.45rem; --cut: 16px;
+    background: rgba(8, 11, 20, 0.9);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--goldline);
+    clip-path: polygon(var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%, 0 var(--cut));
+    box-shadow: inset 0 0 22px rgba(230, 36, 41, 0.16);
+  }
+  nav.tabs button {
+    position: relative; flex: 1; background: none; border: none; color: var(--muted); cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 0.14rem;
+    font-size: 0.6rem; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; padding: 0.3rem 0;
+  }
+  nav.tabs button .ic { width: 1.35rem; height: 1.35rem; }
+  nav.tabs button.on { color: var(--gold); }
+  nav.tabs .pastille {
+    position: absolute; top: 0; left: calc(50% + 0.5rem); min-width: 1.1rem; height: 1.1rem; padding: 0 0.25rem;
+    border-radius: 999px; background: var(--pink); color: #fff; font-size: 0.62rem; line-height: 1.1rem; letter-spacing: 0;
+  }
+  .joueur { cursor: pointer; }
+  .joueur .rk { font-family: var(--serif); font-size: 1.5rem; color: var(--gold); width: 2.2rem; flex: none; text-align: center; }
+  .joueur .nm { color: var(--ink); font-weight: 600; }
+  .joueur .sc { font-family: var(--serif); font-size: 1.5rem; color: var(--ink); white-space: nowrap; }
+  .det { margin-top: 0.8rem; border-top: 1px solid var(--line); padding-top: 0.6rem; cursor: default; }
+  .dq { padding: 0.5rem 0; border-bottom: 1px solid var(--line); }
+  .dq:last-child { border-bottom: none; }
+  .dq .q { font-size: 0.82rem; color: var(--muted); }
+  .dq .r { color: var(--ink); overflow-wrap: anywhere; }
+  .seg { display: inline-flex; gap: 0.25rem; }
+  .seg .btn { margin: 0; }
+  .seg .btn.on.ok { --bg: linear-gradient(135deg, #4fdca3, #1f9c6b); color: #04170f; }
+  .seg .btn.on.ko { --bg: linear-gradient(135deg, #ff7b70, #c2392f); color: #fff; }
+  .seg .btn.on.au { --bg: rgba(240, 207, 125, 0.3); color: var(--ink); }
+  .grp { padding: 0.65rem 0; border-bottom: 1px solid var(--line); }
+  .grp:last-child { border-bottom: none; }
+  .grp .r { color: var(--ink); font-weight: 600; font-size: 1.05rem; overflow-wrap: anywhere; }
+  .help { font-size: 0.84rem; }
+  .help code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; }
+  .help pre { background: rgba(0,0,0,0.35); padding: 0.6rem; overflow-x: auto; font-size: 0.75rem; margin: 0.4rem 0; }
+  .err { color: var(--bad); }
+  .qa { padding: 0.6rem 0; border-bottom: 1px solid var(--line); }
+  .qa:last-child { border-bottom: none; }
+  .qa .t { color: var(--ink); }
+  .seg-radio { display: flex; gap: 1rem; flex-wrap: wrap; margin: 0.3rem 0 0.6rem; }
+  input[type=file].inp { padding: 0.5rem; font-size: 0.85rem; }
+  /* L'espace admin se redessine à chaque action : pas d'animation d'entrée. */
+  .card { animation: none !important; }
+</style>
+</head>
+<body class="avecnav">
+<div id="sky" aria-hidden="true"><i class="neb n1"></i><i class="neb n2"></i><i class="neb n3"></i><i class="shoot"></i></div>
+<div id="scroller"><div class="wrap nav"><div id="app" class="center muted" style="padding-top:4rem">Chargement…</div></div></div>
+<div id="nav"></div>
+<div id="toast" role="status"></div>
+<script src="commun.js"></script>
+<script>
+"use strict";
+
+var K_ADMIN = "qz-admin";
+var A = {
+  jeton: (function () { try { return sessionStorage.getItem(K_ADMIN); } catch (e) { return null; } })(),
+  d: null, tab: "classement", ouvert: null, filtre: "", edit: null, editTheme: null, apercu: null
+};
+
+function call(name, params) {
+  params = params || {};
+  params.p_jeton = A.jeton;
+  return rpc(name, params).catch(function (e) {
+    if (/expirée/.test(e.message)) { deconnexion(); }
+    throw e;
+  });
+}
+
+function deconnexion() {
+  A.jeton = null; A.d = null;
+  try { sessionStorage.removeItem(K_ADMIN); } catch (e) {}
+  render();
+}
+
+function charger() {
+  return call("qz_admin_donnees").then(function (d) { A.d = d; render(); })
+    .catch(function (e) { toast(e.message, true); });
+}
+
+function action(promesse, msg) {
+  return promesse.then(function () { if (msg) toast(msg); return charger(); })
+    .catch(function (e) { toast(e.message, true); });
+}
+
+function qById(id) { return A.d.questions.filter(function (q) { return q.id === Number(id); })[0]; }
+function themeById(id) { return A.d.themes.filter(function (t) { return t.id === id; })[0]; }
+function scoreMax() { return A.d.questions.reduce(function (s, q) { return s + Number(q.points); }, 0); }
+function bonneReponse(q) { return q.type === "qcm" ? (q.options[q.bonne_option] || "?") : (q.acceptees[0] || "?"); }
+
+function render() {
+  var app = document.getElementById("app"), nav = document.getElementById("nav");
+  app.className = ""; app.removeAttribute("style");
+  if (!A.jeton) { nav.innerHTML = ""; app.innerHTML = vueConnexion(); return; }
+  if (!A.d) { nav.innerHTML = ""; app.innerHTML = '<div class="center muted" style="padding-top:4rem">Chargement…</div>'; return; }
+  var tabs = [["classement", "trophy", "Classement"], ["valider", "inbox", "À valider"], ["questions", "list", "Questions"], ["reglages", "sliders", "Réglages"]];
+  var nbv = A.d.a_valider.length;
+  nav.innerHTML = '<nav class="tabs">' + tabs.map(function (t) {
+    return '<button class="' + (A.tab === t[0] ? "on" : "") + '" onclick="Adm.tab(\'' + t[0] + '\')">' + icon(t[1])
+      + (t[0] === "valider" && nbv ? '<span class="pastille">' + nbv + "</span>" : "") + t[2] + "</button>";
+  }).join("") + "</nav>";
+  var h = '<div class="masthead"><div class="eyebrow">QG · Espace administrateur</div><div class="brand" style="font-size:1.8rem">'
+    + brandHtml(A.d.config.titre) + "</div></div>";
+  if (A.tab === "classement") h += vueClassement();
+  else if (A.tab === "valider") h += vueValider();
+  else if (A.tab === "questions") h += vueQuestions();
+  else h += vueReglages();
+  app.innerHTML = h;
+}
+
+// ---------------------------------------------------------------- connexion
+function vueConnexion() {
+  return '<div class="masthead">' + SHIELD + '<div class="eyebrow">Quiz Marvel Miss France</div><div class="brand">Accès <em>QG</em></div></div>'
+    + '<div class="card"><form onsubmit="Adm.connexion(event)"><label class="lab" for="mdp">Mot de passe</label>'
+    + '<input class="inp" id="mdp" type="password" autocomplete="current-password" required>'
+    + '<button class="btn gold full" id="go">Entrer</button></form></div>';
+}
+
+// ---------------------------------------------------------------- classement
+function classement() {
+  var l = A.d.participations.slice(), rang = 0, prec = null;
+  l.forEach(function (p, i) {
+    if (p.score !== prec) { rang = i + 1; prec = p.score; }
+    p.rang = rang;
+  });
+  return l;
+}
+
+function vueClassement() {
+  var l = classement(), max = scoreMax();
+  var fin = l.filter(function (p) { return p.fin; }).length;
+  var h = '<div class="card"><div class="row sb"><div><b class="gold">' + pluriel(l.length, "joueur") + "</b>"
+    + '<div class="small muted">' + fin + " terminé" + (fin > 1 ? "s" : "") + " · " + (l.length - fin) + " en cours</div></div>"
+    + '<div><button class="btn mini dark" onclick="Adm.exporter(\'csv\')">' + icon("down") + " CSV</button>"
+    + '<button class="btn mini dark" onclick="Adm.exporter(\'xlsx\')">' + icon("down") + " Excel</button>"
+    + '<button class="btn mini dark" onclick="Adm.rafraichir()" aria-label="Rafraîchir">' + icon("refresh") + "</button></div></div>"
+    + '<input class="inp" style="margin:0.8rem 0 0" placeholder="Rechercher un joueur" value="' + esc(A.filtre) + '" oninput="Adm.filtrer(this.value)"></div>';
+  var f = norm(A.filtre);
+  var vis = l.filter(function (p) { return !f || norm(p.prenom + " " + p.email).indexOf(f) >= 0; });
+  if (!vis.length) h += '<p class="center muted">' + (l.length ? "Aucun joueur trouvé." : "Personne n'a encore joué.") + "</p>";
+  vis.forEach(function (p) { h += carteJoueur(p, max); });
+  return h;
+}
+
+function carteJoueur(p, max) {
+  var h = '<div class="card joueur" onclick="Adm.ouvrir(' + p.id + ', event)"><div class="row">'
+    + '<span class="rk">' + p.rang + "</span>"
+    + '<div class="grow"><div class="nm">' + esc(p.prenom) + "</div>"
+    + '<div class="small muted" style="overflow-wrap:anywhere">' + esc(p.email || "sans email") + " · "
+    + (p.fin ? "fini le " + dateFr(p.fin) : "commencé le " + dateFr(p.debut)) + "</div></div>"
+    + '<div style="text-align:right"><div class="sc">' + nb(p.score) + '<span class="muted" style="font-size:1rem"> / ' + nb(max) + "</span></div>"
+    + (p.fin ? '<span class="badge ok">Terminé</span>' : '<span class="badge dark">En cours</span>') + "</div></div>";
+  if (A.ouvert === p.id) {
+    h += '<div class="det">';
+    A.d.questions.forEach(function (q, i) {
+      var r = p.reponses[q.id] || { r: "", auto: false, force: null, ok: false };
+      var etat = r.force === true ? "ok" : r.force === false ? "ko" : "au";
+      h += '<div class="dq"><div class="q">Q' + (i + 1) + " · " + esc(q.enonce) + "</div>"
+        + '<div class="row sb"><div class="grow"><span class="r">' + (r.r ? esc(r.r) : '<span class="muted">sans réponse</span>') + "</span> "
+        + (r.ok ? '<span class="badge ok">' + icon("check") + " " + pluriel(q.points, "pt") + "</span>" : '<span class="badge bad">' + icon("x") + "</span>")
+        + (r.force !== null && r.force !== undefined ? '<span class="badge gold">corrigé à la main</span>' : "")
+        + (r.ok ? "" : '<div class="small muted">Attendu : ' + esc(bonneReponse(q)) + "</div>") + "</div>"
+        + '<div class="seg">'
+        + '<button class="btn mini dark ok' + (etat === "ok" ? " on" : "") + '" title="Compter juste" onclick="Adm.forcer(' + p.id + "," + q.id + ',true)">' + icon("check") + "</button>"
+        + '<button class="btn mini dark ko' + (etat === "ko" ? " on" : "") + '" title="Compter faux" onclick="Adm.forcer(' + p.id + "," + q.id + ',false)">' + icon("x") + "</button>"
+        + '<button class="btn mini dark au' + (etat === "au" ? " on" : "") + '" title="Correction automatique" onclick="Adm.forcer(' + p.id + "," + q.id + ',null)">Auto</button>'
+        + "</div></div></div>";
+    });
+    h += '<div style="margin-top:0.8rem"><button class="btn mini" onclick="Adm.supprimer(' + p.id + ')">' + icon("trash") + " Supprimer ce résultat</button>"
+      + '<div class="small muted" style="margin-top:0.3rem">La suppression permet aussi au joueur de rejouer.</div></div></div>';
+  }
+  return h + "</div>";
+}
+
+// ---------------------------------------------------------------- à valider
+function vueValider() {
+  var g = A.d.a_valider, h = "";
+  if (!g.length) h += '<div class="card center muted">Aucune réponse à valider pour l\'instant.</div>';
+  var parQ = {};
+  g.forEach(function (x) { (parQ[x.question_id] = parQ[x.question_id] || []).push(x); });
+  A.d.questions.forEach(function (q, i) {
+    var l = parQ[q.id];
+    if (!l) return;
+    h += '<div class="card"><div class="eyebrow">Question ' + (i + 1) + "</div>"
+      + '<div class="t" style="color:var(--ink);font-weight:600">' + esc(q.enonce) + "</div>"
+      + '<div class="small muted">Acceptées : ' + esc(q.acceptees.concat(q.validees).join(" · ")) + "</div>";
+    l.forEach(function (x, k) {
+      var autres = x.variantes.filter(function (v) { return v !== x.reponse; });
+      h += '<div class="grp"><div class="row sb"><div class="grow"><div class="r">« ' + esc(x.reponse) + " »</div>"
+        + (autres.length ? '<div class="small muted">aussi écrit : ' + esc(autres.join(" · ")) + "</div>" : "")
+        + '<div class="small"><span class="badge pink">' + pluriel(x.nb, "joueur") + "</span>"
+        + '<span class="muted">' + esc(x.joueurs.join(", ")) + "</span></div></div>"
+        + '<div><button class="btn mini okb" onclick="Adm.decider(' + q.id + "," + k + ',true)">' + icon("check") + " Valider</button>"
+        + '<button class="btn mini dark" onclick="Adm.decider(' + q.id + "," + k + ',false)">Écarter</button></div></div></div>';
+    });
+    h += "</div>";
+  });
+  var dec = A.d.decisions;
+  if (dec.length) {
+    h += "<h2>Historique</h2><div class=\"card\">";
+    dec.forEach(function (v) {
+      var q = qById(v.question_id);
+      h += '<div class="grp"><div class="row sb"><div class="grow"><span class="r" style="font-size:0.95rem">« ' + esc(v.reponse) + " »</span> "
+        + (v.accepte ? '<span class="badge ok">validée</span>' : '<span class="badge dark">écartée</span>')
+        + '<div class="small muted">' + esc(q ? q.enonce : "") + " · " + dateFr(v.date) + "</div></div>"
+        + '<button class="btn mini dark" onclick="Adm.annuler(' + v.id + ')">' + icon("undo") + " Annuler</button></div></div>";
+    });
+    h += "</div>";
+  }
+  return h;
+}
+
+// ---------------------------------------------------------------- questions
+var MODELE = "Thème;Type;Question;Options;Bonne réponse;Points\n"
+  + ";INTRO;Bienvenue dans le quiz ! Bonne chance à toutes et à tous.;;;\n"
+  + "Sport;INTRO;Échauffement avec quelques questions de sport.;;;\n"
+  + "Sport;LIBRE;Qui a gagné la dernière Ligue des champions ?;;PSG|Paris|Paris Saint-Germain;2\n"
+  + "Sport;QCM;Combien de joueurs dans une équipe de foot ?;9|11|13;11;1\n"
+  + "Cinéma;QCM;Quel héros manie le marteau Mjöllnir ?;Iron Man|Thor|Hulk;2;\n";
+
+function vueQuestions() {
+  var h = '<div class="card"><h3 style="margin-top:0">Importer des questions</h3>'
+    + '<p class="small muted" style="margin-top:0">Colle les lignes depuis Excel ou Google Sheets, ou choisis un fichier CSV.</p>'
+    + '<textarea class="inp mono" id="imp" rows="7" placeholder="Thème;Type;Question;Options;Bonne réponse;Points"></textarea>'
+    + '<input class="inp" type="file" id="fic" accept=".csv,.txt,.tsv,text/csv,text/plain" onchange="Adm.fichier(this)">'
+    + '<div class="seg-radio"><label class="chk"><input type="radio" name="mode" value="ajouter" checked> Ajouter aux questions actuelles</label>'
+    + '<label class="chk"><input type="radio" name="mode" value="remplacer"> Remplacer toutes les questions</label></div>'
+    + '<button class="btn" onclick="Adm.analyser()">Vérifier</button>'
+    + '<button class="btn dark" onclick="Adm.modele()">' + icon("down") + " Modèle CSV</button>"
+    + '<details class="help" style="margin-top:0.7rem"><summary class="gold" style="cursor:pointer">Format des colonnes</summary>'
+    + "<p>Une ligne par question, 6 colonnes (séparées par tabulation, point-virgule ou virgule) :</p>"
+    + "<ol><li><b>Thème</b> : une page par thème, dans l'ordre d'apparition. Vide = thème de la ligne précédente.</li>"
+    + "<li><b>Type</b> : <code>QCM</code>, <code>LIBRE</code> ou <code>INTRO</code> (texte d'introduction du thème ; sans thème, introduction du quiz).</li>"
+    + "<li><b>Question</b> (ou le texte d'introduction).</li>"
+    + "<li><b>Options</b> (QCM) séparées par <code>|</code>.</li>"
+    + "<li><b>Bonne réponse</b> : QCM, le texte de l'option ou son numéro (1, 2…). LIBRE, toutes les réponses acceptées séparées par <code>|</code>.</li>"
+    + "<li><b>Points</b> : 1 si vide.</li></ol><pre>" + esc(MODELE) + "</pre>"
+    + "<p>La première ligne peut être un en-tête (elle est ignorée si elle commence par « Thème »).</p></details>";
+  if (A.apercu) h += vueApercu();
+  h += "</div>";
+
+  if (!A.d.themes.length) return h + '<p class="center muted">Aucune question pour l\'instant.</p>';
+  var n = 0;
+  A.d.themes.forEach(function (t) {
+    var qs = A.d.questions.filter(function (q) { return q.theme_id === t.id; });
+    if (A.editTheme === t.id) {
+      h += '<div class="card"><label class="lab">Titre du thème</label><input class="inp" id="tt" value="' + esc(t.titre) + '">'
+        + '<label class="lab">Introduction</label><textarea class="inp" id="ti">' + esc(t.intro) + "</textarea>"
+        + '<button class="btn gold mini" onclick="Adm.majTheme(' + t.id + ')">Enregistrer</button>'
+        + '<button class="btn dark mini" onclick="Adm.editTheme(null)">Annuler</button></div>';
+    } else {
+      h += '<h2><span class="grow">' + esc(t.titre) + '</span></h2><div class="row sb" style="margin-top:-0.4rem">'
+        + '<span class="small muted prewrap">' + (t.intro ? esc(t.intro) : "Sans introduction") + "</span>"
+        + '<button class="btn mini dark" onclick="Adm.editTheme(' + t.id + ')">' + icon("edit") + " Thème</button></div>";
+    }
+    h += '<div class="card">';
+    qs.forEach(function (q) {
+      n++;
+      h += '<div class="qa">' + (A.edit === q.id ? formQuestion(q, n) : ficheQuestion(q, n)) + "</div>";
+    });
+    h += "</div>";
+  });
+  return h;
+}
+
+function ficheQuestion(q, n) {
+  var rep = q.type === "qcm"
+    ? q.options.map(function (o, i) { return i === q.bonne_option ? '<b class="gold">' + esc(o) + "</b>" : esc(o); }).join(" · ")
+    : '<b class="gold">' + esc(q.acceptees.join(" · ")) + "</b>"
+      + (q.validees.length ? ' <span class="muted">+ validées : ' + esc(q.validees.join(" · ")) + "</span>" : "");
+  return '<div class="row sb"><span class="eyebrow">Q' + n + " · " + (q.type === "qcm" ? "QCM" : "Libre") + " · " + pluriel(q.points, "pt") + "</span>"
+    + '<span><button class="btn mini dark" onclick="Adm.edit(' + q.id + ')" aria-label="Modifier">' + icon("edit") + "</button>"
+    + '<button class="btn mini dark" onclick="Adm.supprQuestion(' + q.id + ')" aria-label="Supprimer">' + icon("trash") + "</button></span></div>"
+    + '<div class="t prewrap">' + esc(q.enonce) + "</div><div class=\"small\">" + rep + "</div>";
+}
+
+function formQuestion(q, n) {
+  var h = '<div class="eyebrow">Q' + n + " · " + (q.type === "qcm" ? "QCM" : "Libre") + "</div>"
+    + '<label class="lab">Question</label><textarea class="inp" id="fe" rows="2">' + esc(q.enonce) + "</textarea>";
+  if (q.type === "qcm") {
+    h += '<label class="lab">Options (une par ligne)</label><textarea class="inp" id="fo" rows="4">' + esc(q.options.join("\n")) + "</textarea>"
+      + '<label class="lab">Numéro de la bonne option</label><input class="inp" id="fb" type="number" min="1" value="' + (q.bonne_option + 1) + '">';
+  } else {
+    h += '<label class="lab">Réponses acceptées (une par ligne)</label><textarea class="inp" id="fa" rows="4">' + esc(q.acceptees.join("\n")) + "</textarea>";
+  }
+  h += '<label class="lab">Points</label><input class="inp" id="fp" inputmode="decimal" value="' + esc(nb(q.points)) + '">'
+    + '<button class="btn gold mini" onclick="Adm.majQuestion(' + q.id + ')">Enregistrer et recalculer</button>'
+    + '<button class="btn dark mini" onclick="Adm.edit(null)">Annuler</button>';
+  return h;
+}
+
+// Lecture CSV / copier-coller (guillemets gérés, séparateur deviné).
+function lireCSV(txt) {
+  txt = txt.replace(/^﻿/, "").replace(/\r\n?/g, "\n");
+  var premiere = txt.split("\n").filter(function (l) { return l.trim(); })[0] || "";
+  var sep = premiere.indexOf("\t") >= 0 ? "\t"
+    : (premiere.split(";").length >= premiere.split(",").length ? ";" : ",");
+  var lignes = [], ligne = [], champ = "", guil = false;
+  for (var i = 0; i < txt.length; i++) {
+    var c = txt[i];
+    if (guil) {
+      if (c === '"' && txt[i + 1] === '"') { champ += '"'; i++; }
+      else if (c === '"') guil = false;
+      else champ += c;
+    } else if (c === '"' && champ === "") guil = true;
+    else if (c === sep) { ligne.push(champ); champ = ""; }
+    else if (c === "\n") { ligne.push(champ); lignes.push(ligne); ligne = []; champ = ""; }
+    else champ += c;
+  }
+  ligne.push(champ); lignes.push(ligne);
+  return lignes;
+}
+
+function analyser(txt) {
+  var res = { themes: [], intro: null, erreurs: [], nb: 0 };
+  var parTitre = {}, themeCourant = "";
+  function theme(titre) {
+    if (!parTitre[titre]) { parTitre[titre] = { titre: titre, intro: "", questions: [] }; res.themes.push(parTitre[titre]); }
+    return parTitre[titre];
+  }
+  lireCSV(txt).forEach(function (c, i) {
+    var num = i + 1;
+    c = c.map(function (x) { return (x || "").trim(); });
+    if (!c.join("")) return;
+    if (i === 0 && /^th[eè]me/i.test(c[0])) return;
+    var titre = c[0], type = norm(c[1]), texte = c[2] || "", opt = c[3] || "", bonne = c[4] || "", pts = c[5] || "";
+    if (type === "intro") {
+      if (titre) { themeCourant = titre; theme(titre).intro = texte; }
+      else res.intro = texte;
+      return;
+    }
+    if (titre) themeCourant = titre;
+    if (!themeCourant) themeCourant = "Questions";
+    if (!texte) { res.erreurs.push("Ligne " + num + " : question vide."); return; }
+    var points = pts ? Number(pts.replace(",", ".")) : 1;
+    if (!(points >= 0)) { res.erreurs.push("Ligne " + num + " : points invalides (« " + pts + " »)."); return; }
+    var q = { enonce: texte, points: points };
+    if (type === "qcm") {
+      var options = opt.split("|").map(function (x) { return x.trim(); }).filter(Boolean);
+      if (options.length < 2) { res.erreurs.push("Ligne " + num + " : un QCM demande au moins 2 options séparées par |."); return; }
+      var idx = -1;
+      if (/^\d+$/.test(bonne) && Number(bonne) >= 1 && Number(bonne) <= options.length && !options.some(function (o) { return o === bonne; })) idx = Number(bonne) - 1;
+      else options.forEach(function (o, k) { if (idx < 0 && norm(o) === norm(bonne)) idx = k; });
+      if (idx < 0) { res.erreurs.push("Ligne " + num + " : bonne réponse « " + bonne + " » introuvable dans les options."); return; }
+      q.type = "qcm"; q.options = options; q.bonne_option = idx; q.acceptees = [];
+    } else if (type === "libre" || type === "texte" || type === "ouverte" || type === "reponse libre") {
+      var acc = bonne.split("|").map(function (x) { return x.trim(); }).filter(Boolean);
+      if (!acc.length) { res.erreurs.push("Ligne " + num + " : aucune réponse acceptée."); return; }
+      q.type = "libre"; q.options = []; q.bonne_option = null; q.acceptees = acc;
+    } else {
+      res.erreurs.push("Ligne " + num + " : type « " + c[1] + " » inconnu (QCM, LIBRE ou INTRO).");
+      return;
+    }
+    theme(themeCourant).questions.push(q);
+    res.nb++;
+  });
+  res.themes = res.themes.filter(function (t) { return t.questions.length || t.intro; });
+  return res;
+}
+
+function vueApercu() {
+  var a = A.apercu, h = '<div style="margin-top:1rem;border-top:1px solid var(--line);padding-top:0.8rem">';
+  if (a.erreurs.length) {
+    h += '<p class="err" style="margin-top:0"><b>' + pluriel(a.erreurs.length, "erreur") + "</b> (lignes ignorées) :</p><ul class=\"small err\">"
+      + a.erreurs.map(function (e) { return "<li>" + esc(e) + "</li>"; }).join("") + "</ul>";
+  }
+  h += "<p><b class=\"gold\">" + pluriel(a.nb, "question") + "</b> prête" + (a.nb > 1 ? "s" : "") + " dans " + pluriel(a.themes.length, "thème") + " :</p><ul class=\"small\">";
+  a.themes.forEach(function (t) {
+    h += "<li><b>" + esc(t.titre) + "</b> : " + pluriel(t.questions.length, "question") + (t.intro ? ", avec introduction" : "") + "</li>";
+  });
+  h += "</ul>" + (a.intro ? '<p class="small">Introduction du quiz : <span class="muted">' + esc(a.intro) + "</span></p>" : "");
+  if (a.nb || a.intro) h += '<button class="btn gold" onclick="Adm.importer()">' + icon("up") + " Importer</button>";
+  return h + "</div>";
+}
+
+// ---------------------------------------------------------------- réglages
+function lienPublic() { return location.href.replace(/admin\.html.*$/, ""); }
+
+function vueReglages() {
+  var c = A.d.config;
+  return '<div class="card"><label class="lab">Lien à partager aux joueurs</label>'
+    + '<div class="row"><input class="inp grow" style="margin:0.25rem 0" readonly value="' + esc(lienPublic()) + '" onclick="this.select()">'
+    + '<button class="btn mini dark" onclick="Adm.copier()">' + icon("link") + " Copier</button></div></div>"
+    + '<div class="card"><label class="lab" for="rt">Titre du quiz</label><input class="inp" id="rt" maxlength="80" value="' + esc(c.titre) + '">'
+    + '<label class="lab" for="ri">Texte d\'introduction</label><textarea class="inp" id="ri" rows="5">' + esc(c.intro) + "</textarea>"
+    + '<label class="chk"><input type="checkbox" id="ro"' + (c.ouvert ? " checked" : "") + "> Quiz ouvert (décoché : plus personne ne peut commencer ni répondre)</label>"
+    + '<label class="chk"><input type="checkbox" id="re"' + (c.email_obligatoire ? " checked" : "") + "> Email obligatoire</label>"
+    + '<label class="chk"><input type="checkbox" id="rc"' + (c.correction_visible ? " checked" : "") + "> Montrer score et correction aux joueurs à la fin</label>"
+    + '<button class="btn gold" style="margin-top:0.6rem" onclick="Adm.reglages()">Enregistrer</button></div>'
+    + '<div class="center"><button class="btn dark" onclick="Adm.deconnexion()">' + icon("exit") + " Se déconnecter</button></div>";
+}
+
+// ---------------------------------------------------------------- export
+function tableauExport() {
+  var qs = A.d.questions, max = scoreMax();
+  var tete = ["Rang", "Prénom", "Email", "Début", "Fin", "Statut", "Score", "Score max"];
+  qs.forEach(function (q, i) { tete.push("Q" + (i + 1) + " réponse", "Q" + (i + 1) + " correct"); });
+  var lignes = [tete];
+  classement().forEach(function (p) {
+    var l = [p.rang, p.prenom, p.email, dateFr(p.debut), dateFr(p.fin), p.fin ? "Terminé" : "En cours", Number(p.score), max];
+    qs.forEach(function (q) {
+      var r = p.reponses[q.id];
+      l.push(r ? r.r : "", r && r.ok ? 1 : 0);
+    });
+    lignes.push(l);
+  });
+  var leg = [["Question", "Énoncé", "Type", "Points", "Bonne réponse / acceptées"]];
+  qs.forEach(function (q, i) {
+    leg.push(["Q" + (i + 1), q.enonce, q.type === "qcm" ? "QCM" : "Libre", Number(q.points),
+      q.type === "qcm" ? bonneReponse(q) : q.acceptees.concat(q.validees).join(" | ")]);
+  });
+  return { resultats: lignes, questions: leg };
+}
+
+function telecharger(nom, blob) {
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = nom;
+  document.body.appendChild(a); a.click();
+  setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+
+function chargerXLSX() {
+  if (window.XLSX) return Promise.resolve();
+  return new Promise(function (ok, ko) {
+    var s = document.createElement("script");
+    s.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+    s.onload = ok; s.onerror = function () { ko(new Error("Module Excel indisponible, utilise le CSV.")); };
+    document.head.appendChild(s);
+  });
+}
+
+// ---------------------------------------------------------------- actions
+var Adm = {
+  connexion: function (ev) {
+    ev.preventDefault();
+    var b = document.getElementById("go"); b.disabled = true;
+    rpc("qz_admin_connexion", { p_mdp: document.getElementById("mdp").value }).then(function (j) {
+      A.jeton = j;
+      try { sessionStorage.setItem(K_ADMIN, j); } catch (e) {}
+      render(); return charger();
+    }).catch(function (e) { b.disabled = false; toast(e.message, true); });
+  },
+  deconnexion: deconnexion,
+  tab: function (t) { A.tab = t; render(); document.getElementById("scroller").scrollTop = 0; },
+  rafraichir: function () { charger().then(function () { toast("À jour"); }); },
+  filtrer: function (v) {
+    A.filtre = v;
+    var pos = v.length;
+    render();
+    var i = document.querySelector('input[placeholder="Rechercher un joueur"]');
+    if (i) { i.focus(); i.setSelectionRange(pos, pos); }
+  },
+  ouvrir: function (id, ev) {
+    if (ev && ev.target.closest(".det")) return;
+    A.ouvert = A.ouvert === id ? null : id; render();
+  },
+  forcer: function (pid, qid, v) {
+    action(call("qz_admin_forcer", { p_participation: pid, p_question: qid, p_valeur: v }));
+  },
+  supprimer: function (pid) {
+    var p = A.d.participations.filter(function (x) { return x.id === pid; })[0];
+    if (!confirm("Supprimer définitivement le résultat de " + p.prenom + " ?")) return;
+    A.ouvert = null;
+    action(call("qz_admin_supprimer", { p_participation: pid }), "Résultat supprimé");
+  },
+  decider: function (qid, k, accepte) {
+    var x = A.d.a_valider.filter(function (g) { return g.question_id === qid; })[k];
+    action(call("qz_admin_decider", { p_question: qid, p_reponse: x.reponse, p_accepte: accepte }),
+      accepte ? "Réponse validée, scores recalculés" : "Réponse écartée");
+  },
+  annuler: function (id) {
+    action(call("qz_admin_annuler_decision", { p_id: id }), "Décision annulée, scores recalculés");
+  },
+  fichier: function (input) {
+    var f = input.files && input.files[0];
+    if (!f) return;
+    var r = new FileReader();
+    r.onload = function () {
+      var txt = String(r.result);
+      // Fichier Excel enregistré en CSV Windows (pas en UTF-8) : relecture en latin-1.
+      if (txt.indexOf("�") >= 0) {
+        var r2 = new FileReader();
+        r2.onload = function () { document.getElementById("imp").value = r2.result; Adm.analyser(); };
+        r2.readAsText(f, "windows-1252");
+        return;
+      }
+      document.getElementById("imp").value = txt; Adm.analyser();
+    };
+    r.readAsText(f, "utf-8");
+  },
+  analyser: function () {
+    var txt = document.getElementById("imp").value;
+    var mode = document.querySelector('input[name="mode"]:checked').value;
+    A.apercu = analyser(txt);
+    A.apercu.mode = mode; A.apercu.txt = txt;
+    render();
+    document.getElementById("imp").value = txt;
+    document.querySelector('input[name="mode"][value="' + mode + '"]').checked = true;
+  },
+  importer: function () {
+    var a = A.apercu, remplacer = a.mode === "remplacer";
+    if (remplacer && !confirm("Remplacer toutes les questions ? Les réponses déjà données par les joueurs à ces questions seront effacées.")) return;
+    call("qz_admin_importer", { p_themes: a.themes, p_remplacer: remplacer, p_intro: a.intro }).then(function (r) {
+      A.apercu = null;
+      toast(pluriel(r.questions, "question") + " importée" + (r.questions > 1 ? "s" : ""));
+      return charger();
+    }).catch(function (e) { toast(e.message, true); });
+  },
+  modele: function () { telecharger("modele-quiz.csv", new Blob(["﻿" + MODELE], { type: "text/csv;charset=utf-8" })); },
+  edit: function (id) { A.edit = id; render(); },
+  editTheme: function (id) { A.editTheme = id; render(); },
+  majTheme: function (id) {
+    A.editTheme = null;
+    action(call("qz_admin_maj_theme", { p_id: id, p_titre: document.getElementById("tt").value, p_intro: document.getElementById("ti").value }), "Thème enregistré");
+  },
+  majQuestion: function (id) {
+    var q = qById(id), p = { enonce: document.getElementById("fe").value };
+    var pts = Number(String(document.getElementById("fp").value).replace(",", "."));
+    if (!(pts >= 0)) { toast("Points invalides", true); return; }
+    p.points = pts;
+    function lignes(elId) { return document.getElementById(elId).value.split("\n").map(function (x) { return x.trim(); }).filter(Boolean); }
+    if (q.type === "qcm") {
+      p.options = lignes("fo");
+      var b = Number(document.getElementById("fb").value);
+      if (p.options.length < 2) { toast("Au moins 2 options", true); return; }
+      if (!(b >= 1 && b <= p.options.length)) { toast("Numéro de bonne option invalide", true); return; }
+      p.bonne_option = b - 1;
+    } else {
+      p.acceptees = lignes("fa");
+      if (!p.acceptees.length) { toast("Au moins une réponse acceptée", true); return; }
+    }
+    A.edit = null;
+    action(call("qz_admin_maj_question", { p_id: id, p: p }), "Question enregistrée, scores recalculés");
+  },
+  supprQuestion: function (id) {
+    if (!confirm("Supprimer cette question et les réponses des joueurs à cette question ?")) return;
+    action(call("qz_admin_suppr_question", { p_id: id }), "Question supprimée");
+  },
+  reglages: function () {
+    action(call("qz_admin_reglages", { p: {
+      titre: document.getElementById("rt").value,
+      intro: document.getElementById("ri").value,
+      ouvert: document.getElementById("ro").checked,
+      email_obligatoire: document.getElementById("re").checked,
+      correction_visible: document.getElementById("rc").checked
+    } }), "Réglages enregistrés");
+  },
+  copier: function () {
+    var l = lienPublic();
+    (navigator.clipboard ? navigator.clipboard.writeText(l) : Promise.reject()).then(
+      function () { toast("Lien copié"); }, function () { toast(l); });
+  },
+  exporter: function (fmt) {
+    var t = tableauExport(), date = new Date().toISOString().slice(0, 10);
+    if (fmt === "csv") {
+      var csv = t.resultats.map(function (l) {
+        return l.map(function (v) {
+          var s = String(v == null ? "" : v);
+          return /[";\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+        }).join(";");
+      }).join("\r\n");
+      telecharger("quiz-resultats-" + date + ".csv", new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" }));
+      return;
+    }
+    chargerXLSX().then(function () {
+      var wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(t.resultats), "Résultats");
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(t.questions), "Questions");
+      XLSX.writeFile(wb, "quiz-resultats-" + date + ".xlsx");
+    }).catch(function (e) { toast(e.message, true); });
+  }
+};
+
+render();
+if (A.jeton) charger();
+</script>
+</body>
+</html>

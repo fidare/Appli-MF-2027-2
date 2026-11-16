@@ -25,6 +25,24 @@ GitHub Pages (`/miss/`) avec une base **Supabase**.
 - Candidates et photos : Table Editor → `mf_candidates`, images dans
   Supabase Storage (bucket public `photos`).
 
+## Quiz : `site/quiz/`
+
+Quiz public (QCM et réponses libres) au style Marvel Miss France, sans
+compte joueur. Même projet Supabase que les Pronostics.
+
+- `quiz.sql` : tables et fonctions (préfixe `qz_`), à coller dans
+  Supabase → *SQL Editor* → Run. Réexécutable sans risque.
+- Mot de passe administrateur, une seule fois dans le SQL Editor (jamais
+  dans un fichier du dépôt, qui est public) :
+  `select qz_definir_mot_de_passe('ton-mot-de-passe');`
+- Joueurs : `/quiz/`. Administration : `/quiz/admin.html` (classement,
+  réponses à valider, import des questions, réglages, export CSV/Excel).
+- Correction côté serveur (`qz_match`) : sans majuscules, accents,
+  tirets, ponctuation ni espaces en trop ; 1 faute tolérée par mot de
+  4 à 7 lettres, 2 au-delà, aucune en dessous ; nombres exacts.
+- Une participation par appareil et par email. Chaque réponse est
+  enregistrée en base dès qu'elle est donnée.
+
 ## Mini-sondage — 2 questions, réponses stockées en base
 
 Application de sondage à partager à 3 personnes.
