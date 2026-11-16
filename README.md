@@ -42,6 +42,12 @@ compte joueur. Même projet Supabase que les Pronostics.
   4 à 7 lettres, 2 au-delà, aucune en dessous ; nombres exacts.
 - Une participation par appareil et par email. Chaque réponse est
   enregistrée en base dès qu'elle est donnée.
+- Contrôle du S.H.I.E.L.D. : score et correction visibles par le joueur
+  après validation de sa copie dans l'admin (désactivable).
+- Lien avec les Pronostics : dans l'admin, une participation peut être
+  reliée à un joueur de l'appli ; son score validé remplace ses points
+  QCM (la saisie manuelle de la Régie est écrasée pour ce joueur).
+  Aucun accès à l'appli n'est donné aux joueurs du quiz.
 
 ## Mini-sondage — 2 questions, réponses stockées en base
 

@@ -40,6 +40,10 @@
   .rep { margin: 0.25rem 0; }
   .rep b { color: var(--ink); font-weight: 600; }
   .corr .enonce { margin-bottom: 0.4rem; font-size: 1rem; }
+  @media (prefers-reduced-motion: no-preference) {
+    .shield.attente { animation: pulse 2.4s ease-in-out infinite; }
+    @keyframes pulse { 50% { transform: scale(1.07); filter: drop-shadow(0 0 22px rgba(230, 36, 41, 0.9)); } }
+  }
 </style>
 </head>
 <body>
@@ -242,22 +246,36 @@ function haut() { document.getElementById("scroller").scrollTop = 0; }
 function vueResultat() {
   var e = S.etat;
   var h = entete(false);
-  if (!e.correction_visible || !e.correction) {
+  if (e.en_attente) {
+    h = h.replace('class="shield"', 'class="shield attente"');
+    return h + '<div class="card center"><h3 style="margin-top:0">Copie transmise au S.H.I.E.L.D.</h3>'
+      + '<p class="muted" style="margin-top:0">Merci ' + esc(e.prenom) + ' ! Tes réponses sont bien enregistrées. '
+      + 'Nick Fury contrôle ta copie : ton score et ta correction apparaîtront ici dès qu\'elle sera validée.</p>'
+      + '<button class="btn dark" onclick="App.actualiser()">' + icon("refresh") + " Actualiser</button></div>";
+  }
+  var avecScore = e.score_visible && e.score != null;
+  if (!avecScore && !(e.correction_visible && e.correction)) {
     return h + '<div class="card center"><h3>Merci ' + esc(e.prenom) + ' !</h3>'
       + '<p class="muted">Tes réponses sont bien enregistrées. Les résultats seront annoncés plus tard.</p></div>';
   }
-  var pct = e.score_max > 0 ? Math.round(100 * e.score / e.score_max) : 0;
-  var msg = pct >= 90 ? "Digne des Avengers !" : pct >= 70 ? "Très belle mission." : pct >= 50 ? "Mission accomplie." : "Le S.H.I.E.L.D. te réentraîne…";
-  h += '<div class="card center"><div class="eyebrow">Ton score, ' + esc(e.prenom) + '</div>'
-    + '<div class="score">' + nb(e.score) + "<small> / " + nb(e.score_max) + "</small></div>"
-    + '<p style="margin:0.4rem 0 0" class="gold">' + msg + "</p></div>";
+  if (avecScore) {
+    var pct = e.score_max > 0 ? Math.round(100 * e.score / e.score_max) : 0;
+    var msg = pct >= 90 ? "Digne des Avengers !" : pct >= 70 ? "Très belle mission." : pct >= 50 ? "Mission accomplie." : "Le S.H.I.E.L.D. te réentraîne…";
+    h += '<div class="card center"><div class="eyebrow">Ton score, ' + esc(e.prenom) + '</div>'
+      + '<div class="score">' + nb(e.score) + "<small> / " + nb(e.score_max) + "</small></div>"
+      + '<p style="margin:0.4rem 0 0" class="gold">' + msg + "</p></div>";
+  } else {
+    h += '<div class="card center"><h3 style="margin-top:0">Merci ' + esc(e.prenom) + ' !</h3>'
+      + '<p class="muted" style="margin:0">Tes réponses sont bien enregistrées. Voici la correction.</p></div>';
+  }
+  if (!(e.correction_visible && e.correction)) return h;
   h += "<h2>Correction</h2>";
   var theme = null;
   e.correction.forEach(function (c, i) {
     if (c.theme !== theme && themes().length > 1) { theme = c.theme; h += "<h3>" + esc(theme) + "</h3>"; }
     h += '<div class="card corr ' + (c.correct ? "ok" : "ko") + '"><div class="qnum"><span class="eyebrow">Question ' + (i + 1) + "</span>"
-      + (c.correct ? '<span class="badge ok">' + icon("check") + " +" + pluriel(c.obtenus, "pt") + "</span>"
-                   : '<span class="badge bad">' + icon("x") + " 0 pt</span>") + "</div>"
+      + (c.correct ? '<span class="badge ok">' + icon("check") + (e.score_visible ? " +" + pluriel(c.obtenus, "pt") : " Juste") + "</span>"
+                   : '<span class="badge bad">' + icon("x") + (e.score_visible ? " 0 pt" : " Faux") + "</span>") + "</div>"
       + '<div class="enonce prewrap">' + esc(c.enonce) + "</div>"
       + '<div class="rep small">Ta réponse : <b>' + (c.reponse ? esc(c.reponse) : '<span class="muted">sans réponse</span>') + "</b></div>"
       + (c.correct ? "" : '<div class="rep small">Bonne réponse : <b class="gold">' + esc(c.bonne || "") + "</b></div>")
@@ -325,6 +343,9 @@ var App = {
     store(K_PAGE, S.page);
     render(); haut();
   },
+  actualiser: function () {
+    charger().then(function () { if (S.etat && S.etat.en_attente) toast("Toujours en cours de contrôle…"); });
+  },
   terminer: function () {
     var reste = toutesQuestions().length - nbRepondues();
     var msg = (reste > 0 ? "Il te reste " + pluriel(reste, "question") + " sans réponse.\n" : "")
@@ -352,6 +373,10 @@ window.addEventListener("pagehide", function () { if (S.vue === "jeu") envoyer(t
 window.addEventListener("online", function () { if (S.vue === "jeu") envoyer(); });
 
 charger();
+// En attente du contrôle : vérification automatique toutes les 20 secondes.
+setInterval(function () {
+  if (S.vue === "resultat" && S.etat && S.etat.en_attente && document.visibilityState === "visible") charger();
+}, 20000);
 </script>
 </body>
 </html>
