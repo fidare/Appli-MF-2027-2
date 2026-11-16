@@ -172,16 +172,35 @@ function statutJoueur(p) {
   return p.controle ? '<span class="badge ok">' + icon("check") + " Contrôlé</span>" : '<span class="badge gold">À contrôler</span>';
 }
 
+function nomAppli(id) {
+  var j = (A.d.joueurs_appli || []).filter(function (x) { return x.id === id; })[0];
+  return j ? j.nom : "?";
+}
+
+function choixAppli(p) {
+  var pris = {};
+  A.d.participations.forEach(function (x) { if (x.joueur_id && x.id !== p.id) pris[x.joueur_id] = x.prenom; });
+  var h = '<label class="lab" for="lien' + p.id + '">Joueur de l\'appli Pronostics</label>'
+    + '<select class="inp" id="lien' + p.id + '" onchange="Adm.lier(' + p.id + ', this.value)">'
+    + '<option value="">Aucun (joueur extérieur)</option>';
+  (A.d.joueurs_appli || []).forEach(function (j) {
+    h += '<option value="' + j.id + '"' + (p.joueur_id === j.id ? " selected" : "") + (pris[j.id] ? " disabled" : "") + ">"
+      + esc(j.nom) + (pris[j.id] ? " (déjà relié à " + esc(pris[j.id]) + ")" : "") + "</option>";
+  });
+  return h + '</select><div class="small muted" style="margin:-0.5rem 0 0.4rem">Son score, une fois la copie validée, devient ses points QCM dans les Pronostics. Aucun accès à l\'appli n\'est donné.</div>';
+}
+
 function carteJoueur(p, max) {
   var h = '<div class="card joueur" onclick="Adm.ouvrir(' + p.id + ', event)"><div class="row">'
     + '<span class="rk">' + p.rang + "</span>"
-    + '<div class="grow"><div class="nm">' + esc(p.prenom) + "</div>"
+    + '<div class="grow"><div class="nm">' + esc(p.prenom)
+    + (p.joueur_id ? ' <span class="badge pink">' + icon("link") + " " + esc(nomAppli(p.joueur_id)) + "</span>" : "") + "</div>"
     + '<div class="small muted" style="overflow-wrap:anywhere">' + esc(p.email || "sans email") + " · "
     + (p.fin ? "fini le " + dateFr(p.fin) : "commencé le " + dateFr(p.debut)) + "</div></div>"
     + '<div style="text-align:right"><div class="sc">' + nb(p.score) + '<span class="muted" style="font-size:1rem"> / ' + nb(max) + "</span></div>"
     + statutJoueur(p) + "</div></div>";
   if (A.ouvert === p.id) {
-    h += '<div class="det">';
+    h += '<div class="det">' + choixAppli(p);
     A.d.questions.forEach(function (q, i) {
       var r = p.reponses[q.id] || { r: "", auto: false, force: null, ok: false };
       var etat = r.force === true ? "ok" : r.force === false ? "ko" : "au";
@@ -431,11 +450,11 @@ function vueReglages() {
 // ---------------------------------------------------------------- export
 function tableauExport() {
   var qs = A.d.questions, max = scoreMax();
-  var tete = ["Rang", "Prénom", "Email", "Début", "Fin", "Statut", "Score", "Score max"];
+  var tete = ["Rang", "Prénom", "Email", "Joueur appli", "Début", "Fin", "Statut", "Score", "Score max"];
   qs.forEach(function (q, i) { tete.push("Q" + (i + 1) + " réponse", "Q" + (i + 1) + " correct"); });
   var lignes = [tete];
   classement().forEach(function (p) {
-    var l = [p.rang, p.prenom, p.email, dateFr(p.debut), dateFr(p.fin), !p.fin ? "En cours" : p.controle ? "Contrôlé" : "Terminé", Number(p.score), max];
+    var l = [p.rang, p.prenom, p.email, p.joueur_id ? nomAppli(p.joueur_id) : "", dateFr(p.debut), dateFr(p.fin), !p.fin ? "En cours" : p.controle ? "Contrôlé" : "Terminé", Number(p.score), max];
     qs.forEach(function (q) {
       var r = p.reponses[q.id];
       l.push(r ? r.r : "", r && r.ok ? 1 : 0);
@@ -494,6 +513,10 @@ var Adm = {
   },
   forcer: function (pid, qid, v) {
     action(call("qz_admin_forcer", { p_participation: pid, p_question: qid, p_valeur: v }));
+  },
+  lier: function (pid, v) {
+    action(call("qz_admin_lier", { p_participation: pid, p_joueur: v ? Number(v) : null }),
+      v ? "Relié : points QCM mis à jour" : "Lien retiré");
   },
   controler: function (pid, v) {
     call("qz_admin_controler", { p_participation: pid, p_valeur: v }).then(function (n) {
