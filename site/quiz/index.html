@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#06080f">
+<title>Le Quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="commun.css">
+<style>
+  .progress { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--muted); margin: 0.2rem 0 0.35rem; }
+  .bar { height: 4px; background: rgba(255,255,255,0.08); margin-bottom: 1rem; overflow: hidden; transform: skewX(-30deg); }
+  .bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--pink), var(--gold)); transition: width 0.3s; }
+  .qnum { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; }
+  .enonce { color: var(--ink); font-size: 1.08rem; font-weight: 600; margin: 0.35rem 0 0.75rem; line-height: 1.35; }
+  .opts { display: grid; gap: 0.5rem; }
+  .opt {
+    --cut: 10px; --bc: rgba(255, 255, 255, 0.16); --fill: rgba(255, 255, 255, 0.04);
+    display: flex; align-items: center; gap: 0.7rem; width: 100%; text-align: left; cursor: pointer;
+    color: var(--text); padding: 0.7rem 0.9rem; border: 1px solid var(--bc); background: var(--fill);
+    clip-path: polygon(var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%, 0 var(--cut));
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .opt .l {
+    flex: none; width: 1.7rem; height: 1.7rem; display: inline-flex; align-items: center; justify-content: center;
+    font-family: var(--serif); font-size: 1.05rem; border: 1px solid var(--line); color: var(--muted); border-radius: 50%;
+  }
+  .opt:hover { --bc: rgba(240, 207, 125, 0.5); }
+  .opt:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  .opt[aria-pressed="true"] { --bc: var(--gold); --fill: var(--gold-soft); color: var(--ink); }
+  .opt[aria-pressed="true"] .l { background: linear-gradient(135deg, #f3cf7a, #cf9a2c); color: #241a06; border: none; }
+  .navq { display: flex; gap: 0.6rem; margin-top: 1.2rem; }
+  .navq .btn { flex: 1; text-align: center; }
+  #sauv { text-align: center; font-size: 0.78rem; color: var(--muted); margin-top: 0.8rem; min-height: 1.2rem; }
+  #sauv.err { color: var(--bad); }
+  .score { font-family: var(--serif); font-size: 4.2rem; line-height: 1; color: var(--ink); text-shadow: 0 0 26px rgba(240, 207, 125, 0.45); }
+  .score small { font-size: 2rem; color: var(--gold); }
+  .rep { margin: 0.25rem 0; }
+  .rep b { color: var(--ink); font-weight: 600; }
+  .corr .enonce { margin-bottom: 0.4rem; font-size: 1rem; }
+</style>
+</head>
+<body>
+<div id="sky" aria-hidden="true"><i class="neb n1"></i><i class="neb n2"></i><i class="neb n3"></i><i class="shoot"></i></div>
+<div id="scroller"><div class="wrap"><div id="app" class="center muted" style="padding-top:4rem">Chargement…</div></div></div>
+<div id="toast" role="status"></div>
+<script src="commun.js"></script>
+<script>
+"use strict";
+
+var K_APPAREIL = "qz-appareil", K_JETON = "qz-jeton", K_BROUILLON = "qz-brouillon", K_PAGE = "qz-page";
+
+var S = {
+  vue: "chargement",
+  info: null,        // questions sans les réponses
+  etat: null,        // participation (réponses, correction)
+  jeton: store(K_JETON),
+  page: store(K_PAGE) || 0,
+  rep: {},           // id question -> réponse
+  attente: store(K_BROUILLON) || {}, // réponses pas encore enregistrées sur le serveur
+  envoi: false,
+  minuterie: null,
+  erreurSauv: false
+};
+
+function appareil() {
+  var a = store(K_APPAREIL);
+  if (!a) {
+    a = (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
+      : "a-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2);
+    store(K_APPAREIL, a);
+  }
+  return a;
+}
+
+function themes() { return (S.info && S.info.themes) || []; }
+function toutesQuestions() {
+  var l = [];
+  themes().forEach(function (t) { t.questions.forEach(function (q) { l.push(q); }); });
+  return l;
+}
+function nbRepondues() {
+  return toutesQuestions().filter(function (q) { return String(S.rep[q.id] || "").trim() !== ""; }).length;
+}
+
+function render() {
+  var app = document.getElementById("app");
+  app.className = "";
+  app.removeAttribute("style");
+  var h = "";
+  if (S.vue === "accueil") h = vueAccueil();
+  else if (S.vue === "jeu") h = vueJeu();
+  else if (S.vue === "resultat") h = vueResultat();
+  else h = '<div class="card center">' + esc(S.message || "Erreur") + '</div>';
+  app.innerHTML = h;
+  if (S.info) document.title = S.info.titre;
+}
+
+function entete(petit) {
+  return '<div class="masthead">' + (petit ? "" : SHIELD)
+    + '<div class="eyebrow">Quiz Marvel Miss France</div>'
+    + '<div class="brand"' + (petit ? ' style="font-size:1.7rem"' : "") + '>' + brandHtml(S.info.titre) + '</div></div>';
+}
+
+// ---------------------------------------------------------------- accueil
+function vueAccueil() {
+  var i = S.info, nq = toutesQuestions().length;
+  var h = entete(false);
+  if (!i.ouvert) {
+    return h + '<div class="card center"><h3>Le quiz est fermé</h3><p class="muted">Reviens plus tard !</p></div>';
+  }
+  if (!nq) return h + '<div class="card center muted">Les questions arrivent bientôt.</div>';
+  h += '<div class="card">';
+  if (i.intro) h += '<p class="prewrap" style="margin-top:0">' + esc(i.intro) + '</p>';
+  h += '<p class="small muted" style="margin-top:0">' + pluriel(nq, "question")
+    + (themes().length > 1 ? " · " + pluriel(themes().length, "thème") : "")
+    + ". Une seule participation par personne. Tes réponses sont enregistrées au fur et à mesure.</p>";
+  h += '<form onsubmit="App.commencer(event)">'
+    + '<label class="lab" for="prenom">Ton prénom</label>'
+    + '<input class="inp" id="prenom" autocomplete="given-name" maxlength="60" required>'
+    + '<label class="lab" for="email">Ton email' + (i.email_obligatoire ? "" : " (facultatif)") + '</label>'
+    + '<input class="inp" id="email" type="email" autocomplete="email" inputmode="email"' + (i.email_obligatoire ? " required" : "") + '>'
+    + '<button class="btn gold big full" id="go">C\'est parti !</button></form></div>';
+  return h;
+}
+
+// ---------------------------------------------------------------- jeu
+function vueJeu() {
+  var th = themes(), t = th[S.page];
+  if (!t) { S.page = 0; t = th[0]; }
+  var total = toutesQuestions().length, faites = nbRepondues();
+  var num = 0;
+  for (var k = 0; k < S.page; k++) num += th[k].questions.length;
+
+  var h = entete(true);
+  h += '<div class="progress"><span>' + (th.length > 1 ? "Partie " + (S.page + 1) + " / " + th.length : esc(S.etat.prenom))
+    + '</span><span id="compte">' + faites + " / " + total + " réponses</span></div>"
+    + '<div class="bar"><i id="barre" style="width:' + Math.round(100 * faites / Math.max(total, 1)) + '%"></i></div>';
+  if (th.length > 1 || t.intro) {
+    h += "<h2>" + esc(t.titre) + "</h2>";
+    if (t.intro) h += '<p class="prewrap muted" style="margin-top:0">' + esc(t.intro) + "</p>";
+  }
+  t.questions.forEach(function (q) {
+    num++;
+    var v = S.rep[q.id] || "";
+    h += '<div class="card"><div class="qnum"><span class="eyebrow">Question ' + num + "</span>"
+      + '<span class="badge gold">' + pluriel(q.points, "pt") + "</span></div>"
+      + '<div class="enonce prewrap" id="e' + q.id + '">' + esc(q.enonce) + "</div>";
+    if (q.type === "qcm") {
+      h += '<div class="opts" role="group" aria-labelledby="e' + q.id + '">';
+      q.options.forEach(function (o, i) {
+        h += '<button type="button" class="opt" aria-pressed="' + (v === o) + '" onclick="App.choisir(' + q.id + "," + i + ', this)">'
+          + '<span class="l">' + String.fromCharCode(65 + i) + "</span><span>" + esc(o) + "</span></button>";
+      });
+      h += "</div>";
+    } else {
+      h += '<input class="inp" style="margin-bottom:0" aria-labelledby="e' + q.id + '" placeholder="Ta réponse" maxlength="500"'
+        + ' autocomplete="off" autocapitalize="sentences" value="' + esc(v) + '"'
+        + ' oninput="App.saisir(' + q.id + ', this.value)" onblur="App.envoyer()"'
+        + ' onkeydown="if(event.key===\'Enter\'){this.blur();}">';
+    }
+    h += "</div>";
+  });
+  var dernier = S.page === th.length - 1;
+  h += '<div class="navq">'
+    + (S.page > 0 ? '<button class="btn dark" onclick="App.page(-1)">' + icon("left") + " Précédent</button>" : "")
+    + (dernier ? '<button class="btn gold" onclick="App.terminer()">Envoyer mes réponses</button>'
+               : '<button class="btn" onclick="App.page(1)">Suivant ' + icon("right") + "</button>")
+    + "</div>";
+  h += '<div id="sauv" aria-live="polite"></div>';
+  return h;
+}
+
+function majCompteur() {
+  var total = toutesQuestions().length, faites = nbRepondues();
+  var c = document.getElementById("compte"), b = document.getElementById("barre");
+  if (c) c.textContent = faites + " / " + total + " réponses";
+  if (b) b.style.width = Math.round(100 * faites / Math.max(total, 1)) + "%";
+}
+
+function etatSauv(txt, err) {
+  var e = document.getElementById("sauv");
+  if (!e) return;
+  e.className = err ? "err" : "";
+  e.innerHTML = txt;
+}
+
+// Enregistrement : chaque réponse est gardée sur l'appareil puis
+// envoyée au serveur (aussitôt pour un QCM, après une courte pause pour
+// une réponse écrite, et quand la page passe en arrière-plan).
+function noter(id, v) {
+  S.rep[id] = v;
+  S.attente[id] = v;
+  store(K_BROUILLON, S.attente);
+  majCompteur();
+}
+
+function planifier(delai) {
+  clearTimeout(S.minuterie);
+  S.minuterie = setTimeout(envoyer, delai);
+}
+
+function envoyer(keepalive) {
+  clearTimeout(S.minuterie);
+  var lot = {}, n = 0;
+  for (var k in S.attente) { lot[k] = S.attente[k]; n++; }
+  if (!n || !S.jeton) return Promise.resolve();
+  if (S.envoi && !keepalive) { planifier(400); return Promise.resolve(); }
+  S.envoi = true;
+  etatSauv(icon("cloud") + " Enregistrement…");
+  return rpc("qz_enregistrer", { p_jeton: S.jeton, p_reponses: lot }, keepalive).then(function () {
+    for (var k in lot) if (S.attente[k] === lot[k]) delete S.attente[k];
+    store(K_BROUILLON, S.attente);
+    S.envoi = false; S.erreurSauv = false;
+    etatSauv(icon("check") + " Réponses enregistrées");
+    if (Object.keys(S.attente).length) planifier(300);
+  }, function (e) {
+    S.envoi = false; S.erreurSauv = true;
+    if (e.serveur) { erreurServeur(e); return; }
+    etatSauv("Connexion perdue : tes réponses sont gardées sur ce téléphone, nouvel essai…", true);
+    planifier(4000);
+  });
+}
+
+function erreurServeur(e) {
+  if (/déjà été envoyées/.test(e.message)) { charger(); return; }
+  if (/introuvable/.test(e.message)) { oublier(); toast("Ta participation a été réinitialisée.", true); charger(); return; }
+  etatSauv(esc(e.message), true);
+  toast(e.message, true);
+}
+
+function oublier() {
+  S.jeton = null; S.etat = null; S.rep = {}; S.attente = {}; S.page = 0;
+  store(K_JETON, null); store(K_BROUILLON, null); store(K_PAGE, null);
+}
+
+function haut() { document.getElementById("scroller").scrollTop = 0; }
+
+// ---------------------------------------------------------------- résultat
+function vueResultat() {
+  var e = S.etat;
+  var h = entete(false);
+  if (!e.correction_visible || !e.correction) {
+    return h + '<div class="card center"><h3>Merci ' + esc(e.prenom) + ' !</h3>'
+      + '<p class="muted">Tes réponses sont bien enregistrées. Les résultats seront annoncés plus tard.</p></div>';
+  }
+  var pct = e.score_max > 0 ? Math.round(100 * e.score / e.score_max) : 0;
+  var msg = pct >= 90 ? "Digne des Avengers !" : pct >= 70 ? "Très belle mission." : pct >= 50 ? "Mission accomplie." : "Le S.H.I.E.L.D. te réentraîne…";
+  h += '<div class="card center"><div class="eyebrow">Ton score, ' + esc(e.prenom) + '</div>'
+    + '<div class="score">' + nb(e.score) + "<small> / " + nb(e.score_max) + "</small></div>"
+    + '<p style="margin:0.4rem 0 0" class="gold">' + msg + "</p></div>";
+  h += "<h2>Correction</h2>";
+  var theme = null;
+  e.correction.forEach(function (c, i) {
+    if (c.theme !== theme && themes().length > 1) { theme = c.theme; h += "<h3>" + esc(theme) + "</h3>"; }
+    h += '<div class="card corr ' + (c.correct ? "ok" : "ko") + '"><div class="qnum"><span class="eyebrow">Question ' + (i + 1) + "</span>"
+      + (c.correct ? '<span class="badge ok">' + icon("check") + " +" + pluriel(c.obtenus, "pt") + "</span>"
+                   : '<span class="badge bad">' + icon("x") + " 0 pt</span>") + "</div>"
+      + '<div class="enonce prewrap">' + esc(c.enonce) + "</div>"
+      + '<div class="rep small">Ta réponse : <b>' + (c.reponse ? esc(c.reponse) : '<span class="muted">sans réponse</span>') + "</b></div>"
+      + (c.correct ? "" : '<div class="rep small">Bonne réponse : <b class="gold">' + esc(c.bonne || "") + "</b></div>")
+      + "</div>";
+  });
+  return h;
+}
+
+// ---------------------------------------------------------------- chargement
+function charger() {
+  var pInfo = rpc("qz_infos");
+  var pEtat = S.jeton ? rpc("qz_etat", { p_jeton: S.jeton }).catch(function () { return undefined; }) : Promise.resolve(null);
+  return Promise.all([pInfo, pEtat]).then(function (r) {
+    S.info = r[0];
+    var etat = r[1];
+    if (etat === null && S.jeton) oublier();
+    if (etat) {
+      S.etat = etat;
+      if (etat.termine) {
+        S.vue = "resultat";
+        store(K_BROUILLON, null); S.attente = {};
+      } else {
+        S.rep = etat.reponses || {};
+        for (var k in S.attente) S.rep[k] = S.attente[k];
+        S.vue = "jeu";
+      }
+    } else {
+      S.vue = "accueil";
+    }
+    render();
+    if (S.vue === "jeu") envoyer();
+  }).catch(function (e) {
+    S.vue = "erreur";
+    S.message = "Impossible de charger le quiz (" + e.message + "). Vérifie ta connexion puis recharge la page.";
+    render();
+  });
+}
+
+var App = {
+  commencer: function (ev) {
+    ev.preventDefault();
+    var b = document.getElementById("go");
+    b.disabled = true;
+    rpc("qz_commencer", {
+      p_prenom: document.getElementById("prenom").value,
+      p_email: document.getElementById("email").value,
+      p_appareil: appareil()
+    }).then(function (r) {
+      S.jeton = r.jeton; store(K_JETON, S.jeton);
+      S.page = 0; store(K_PAGE, 0);
+      return charger();
+    }).then(haut).catch(function (e) { b.disabled = false; toast(e.message, true); });
+  },
+  choisir: function (id, i, el) {
+    var q = toutesQuestions().filter(function (x) { return x.id === id; })[0];
+    noter(id, q.options[i]);
+    el.parentNode.querySelectorAll(".opt").forEach(function (b) { b.setAttribute("aria-pressed", b === el); });
+    envoyer();
+  },
+  saisir: function (id, v) { noter(id, v); planifier(900); },
+  envoyer: function () { envoyer(); },
+  page: function (d) {
+    envoyer();
+    S.page = Math.max(0, Math.min(themes().length - 1, S.page + d));
+    store(K_PAGE, S.page);
+    render(); haut();
+  },
+  terminer: function () {
+    var reste = toutesQuestions().length - nbRepondues();
+    var msg = (reste > 0 ? "Il te reste " + pluriel(reste, "question") + " sans réponse.\n" : "")
+      + "Envoyer tes réponses ? Tu ne pourras plus les modifier.";
+    if (!confirm(msg)) return;
+    var tout = {};
+    toutesQuestions().forEach(function (q) { if (S.rep[q.id] != null) tout[q.id] = S.rep[q.id]; });
+    clearTimeout(S.minuterie);
+    etatSauv(icon("cloud") + " Envoi…");
+    rpc("qz_terminer", { p_jeton: S.jeton, p_reponses: tout }).then(function (etat) {
+      S.etat = etat; S.attente = {}; store(K_BROUILLON, null);
+      S.vue = "resultat"; render(); haut();
+    }, function (e) {
+      if (e.serveur) erreurServeur(e);
+      else etatSauv("Connexion perdue : réessaie dans un instant, tes réponses sont gardées.", true);
+    });
+  }
+};
+
+// Page fermée ou mise en arrière-plan : on envoie ce qui reste.
+document.addEventListener("visibilitychange", function () {
+  if (document.visibilityState === "hidden" && S.vue === "jeu") envoyer(true);
+});
+window.addEventListener("pagehide", function () { if (S.vue === "jeu") envoyer(true); });
+window.addEventListener("online", function () { if (S.vue === "jeu") envoyer(); });
+
+charger();
+</script>
+</body>
+</html>
